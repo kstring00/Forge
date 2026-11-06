@@ -1,0 +1,125 @@
+import Foundation
+import ForgeCore
+
+// Typed JSON contracts, one per action. The proxy validates the model's output
+// against the same shapes. Nothing here is written to the store without a
+// confirm step in the UI.
+
+public struct ExpandResult: Codable, Sendable {
+    public var proposedTitle: String?
+    public var proposedSummary: String?
+    public var clarifiedText: String
+    public var openQuestions: [String]
+}
+
+public struct SummarizeResult: Codable, Sendable {
+    public var notes: [String]
+    public var decisions: [String]
+    public var openQuestions: [String]
+}
+
+public struct ExperimentCard: Codable, Sendable {
+    public var hypothesis: String
+    public var test: String
+    public var metric: String
+    public var cost: String
+    public var timeboxDays: Int
+    public var decisionRule: String
+}
+
+public struct PlanResult: Codable, Sendable {
+    public struct MilestonePlan: Codable, Sendable {
+        public var title: String
+        public var tasks: [String]
+    }
+    public var milestones: [MilestonePlan]
+    public var firstDeliverable: String
+}
+
+public struct NextStepResult: Codable, Sendable {
+    public var action: String
+    public var why: String
+}
+
+public struct ExplainCriterionResult: Codable, Sendable {
+    public var primer: String
+    public var rulesForThisIdea: [String]
+}
+
+public struct CompareResult: Codable, Sendable {
+    public struct CriterionComparison: Codable, Sendable {
+        public var key: String
+        public var leftNote: String
+        public var rightNote: String
+        public var edge: String   // "left" | "right" | "even"
+    }
+    public var lens: LensType
+    public var comparisons: [CriterionComparison]
+    public var verdict: String
+}
+
+public struct PivotResult: Codable, Sendable {
+    public struct Variant: Codable, Sendable {
+        public var pivotType: PivotType
+        public var title: String
+        public var body: String
+        public var kept: String
+        public var changed: String
+        public var fixesCriterionKey: String
+        public var newRiskiestAssumption: String
+    }
+    public var variants: [Variant]
+}
+
+public struct PitchResult: Codable, Sendable {
+    public struct PitchDraft: Codable, Sendable {
+        public var title: String
+        public var body: String
+        public var forWhom: String
+        public var whyNow: String
+        public var advantageUsed: String
+        public var riskiestAssumption: String
+        public var cluster: PitchCluster
+        public var sphere: Sphere?
+        /// Source IDs that back any demand claim. Empty means "assumption".
+        public var groundedIn: [UUID]
+    }
+    public var pitches: [PitchDraft]
+}
+
+/// §6C. The proxy returns one verdict per Sphere and at most one crossfire reply per pair.
+public struct RoundResult: Codable, Sendable {
+    public struct VerdictDraft: Codable, Sendable {
+        public var sphere: Sphere
+        public var verdict: VerdictKind
+        public var criterionKey: String
+        public var reason: String
+        public var sourceIDs: [UUID]
+        public var evidenceNeeded: String?
+    }
+    public struct CrossfireDraft: Codable, Sendable {
+        public var from: Sphere
+        public var to: Sphere
+        public var text: String
+    }
+    public var verdicts: [VerdictDraft]
+    public var crossfire: [CrossfireDraft]
+}
+
+/// Sugar so each action names its payload type in one place.
+public extension AIAction {
+    var payloadDescription: String {
+        switch self {
+        case .expand: "ExpandResult"
+        case .runRound: "RoundResult"
+        case .compare: "CompareResult"
+        case .designExperiment: "ExperimentCard"
+        case .plan: "PlanResult"
+        case .nextStep: "NextStepResult"
+        case .summarize: "SummarizeResult"
+        case .explainCriterion: "ExplainCriterionResult"
+        case .pivot: "PivotResult"
+        case .pitch: "PitchResult"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+// Shared build settings. Personal values go in Local.xcconfig (git-ignored).
+PRODUCT_BUNDLE_IDENTIFIER = app.forge.ios
+PRODUCT_NAME = Forge
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+
+// Proxy. Empty until Phase 2. Overridden by Local.xcconfig.
+PROXY_URL =
+PROXY_TOKEN =
+
+#include? "Local.xcconfig"

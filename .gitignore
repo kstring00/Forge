@@ -1,0 +1,23 @@
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
+*.xcscmblueprint
+.swiftpm/
+Packages/
+*.moved-aside
+
+# Local secrets (proxy URL + token for the dev build; never committed)
+Forge/Config/Local.xcconfig
+
+# Proxy
+proxy/node_modules/
+proxy/.wrangler/
+proxy/.dev.vars
+proxy/.env*
+
+# OS
+.DS_Store

@@ -1,8 +1,8 @@
 import SwiftUI
 import ForgeCore
 
-/// The pair under Next move: Run a Round (three orbs) and Reality Check.
-/// Both need the proxy; until it is connected they say so calmly.
+/// Under Next move: Run a Round (three orbs). The Reality Check lives on the
+/// Brief and on the idea before its first check, so it is not repeated here.
 struct RoundRealityRow: View {
     let idea: Idea
     @Environment(AppEnvironment.self) private var env
@@ -25,13 +25,6 @@ struct RoundRealityRow: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Run a Round with the Sphere panel")
-
-                Button { tap("Reality Check") } label: {
-                    Text("Reality Check")
-                        .frame(maxWidth: .infinity)
-                        .modifier(SecondaryButtonChrome())
-                }
-                .buttonStyle(.plain)
             }
             if let message {
                 HStack(alignment: .top) {

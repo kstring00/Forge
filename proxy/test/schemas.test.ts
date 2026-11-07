@@ -81,7 +81,18 @@ test("cost accounting", () => {
   assert.equal(Math.round(c * 100) / 100, 2.03);
   const est = realityCheckEstimateUSD();
   assert.ok(est.low < est.high);
+  // The target is 10 to 20 cents a check; the estimate must stay near it.
+  assert.ok(est.low >= 0.05 && est.high <= 0.3, `estimate ${est.low}-${est.high}`);
 });
+
+test("Haiku switches rate card past 100K prompt tokens", () => {
+  const short = costUSD("claude-haiku-5-5", { input_tokens: 100_000, output_tokens: 0 });
+  assert.equal(Math.round(short * 1000) / 1000, 0.01);
+  const long = costUSD("claude-haiku-5-5", { input_tokens: 90_000, cache_read_input_tokens: 20_000, output_tokens: 1000 });
+  // 90K * 0.5 + 20K * 0.05 + 1K * 2.5, per million
+  assert.equal(Math.round(long * 100000) / 100000, 0.0485);
+});
+
 
 test("the bearer token is compared trimmed on both sides", async () => {
   process.env.FORGE_PROXY_TOKEN = "  abc123\n";
@@ -93,4 +104,14 @@ test("the bearer token is compared trimmed on both sides", async () => {
   assert.doesNotThrow(() => requireAuth(ok));
   const bad = { headers: { authorization: "Bearer abc124" } } as never;
   assert.throws(() => requireAuth(bad), /invalid proxy token/);
+});
+
+test("research runs on Haiku with the basic web tools and capped page size", async () => {
+  const { researchTools } = await import("../api/research.js");
+  const haiku = researchTools("claude-haiku-5-5") as Array<{ type: string; max_uses?: number; max_content_tokens?: number }>;
+  assert.deepEqual(haiku.map((t) => t.type), ["web_search_20250305", "web_fetch_20250910"]);
+  assert.ok((haiku[0].max_uses ?? 99) <= 5);
+  assert.ok((haiku[1].max_content_tokens ?? 99_999) <= 4000);
+  const sonnet = researchTools("claude-sonnet-5-5") as Array<{ type: string }>;
+  assert.deepEqual(sonnet.map((t) => t.type), ["web_search_20260209", "web_fetch_20260209"]);
 });

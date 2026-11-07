@@ -16,7 +16,7 @@ struct WorkshopView: View {
                 if projects.isEmpty {
                     EmptyState(symbol: "hammer",
                                title: "No project yet",
-                               message: "Open an idea and tap Make it real. The Workshop will then always tell you the one next step.")
+                               message: "When the panel checks an idea and you say it looks right, the first step lands here.")
                 } else {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: ForgeSpacing.l) {

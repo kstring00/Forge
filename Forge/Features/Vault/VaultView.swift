@@ -4,9 +4,13 @@ import ForgeCore
 
 /// Every idea, as cards. Search, filter by lens, stage and tag, sort, archive.
 struct VaultView: View {
+    var onCapture: () -> Void = {}
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var lastOffset: CGFloat = 0
+    /// The capture button hides while the list moves, and comes back once it rests or nears the top.
+    @State private var fabHidden = false
+    @State private var restTask: Task<Void, Never>?
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @State private var filter = VaultFilter()
     @State private var pendingArchive: Idea?
@@ -36,7 +40,7 @@ struct VaultView: View {
                                 Text("\(shown.count) \(shown.count == 1 ? "idea" : "ideas")").forgeLabel()
                                 ForEach(shown) { idea in
                                     NavigationLink(value: VaultRoute.idea(idea.id)) {
-                                        IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id)))
+                                        IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu { contextMenu(for: idea) }
@@ -51,18 +55,21 @@ struct VaultView: View {
                     }
                     .coordinateSpace(name: "vaultScroll")
                     .onPreferenceChange(ScrollOffsetKey.self) { offset in
-                        // Scrolling down hides the capture button; up, or near the top, shows it.
-                        let delta = offset - lastOffset
-                        if offset > -24 { env.vaultScrollHidesFAB = false }
-                        else if delta < -8 { env.vaultScrollHidesFAB = true }
-                        else if delta > 8 { env.vaultScrollHidesFAB = false }
-                        lastOffset = offset
+                        scrolled(to: offset)
                     }
-                    .onDisappear { env.vaultScrollHidesFAB = false }
                     .searchable(text: $filter.searchText, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search ideas")
                     .forgeAnimation(ForgeMotion.settle, value: shown.map(\.id))
                 }
             }
+            .overlay(alignment: .bottomTrailing) {
+                if !fabHidden {
+                    EmberButton.floating(title: "Capture", symbol: "plus", action: onCapture)
+                        .padding(.trailing, ForgeSpacing.l)
+                        .padding(.bottom, ForgeSpacing.l)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
+            }
+            .forgeAnimation(ForgeMotion.fade, value: fabHidden)
             .background(ForgeColor.canvas)
             .navigationTitle(filter.showArchived ? "Archived" : "Vault")
             .toolbar {
@@ -80,6 +87,24 @@ struct VaultView: View {
             } message: {
                 Text("It moves out of the Vault but nothing is deleted. You can bring it back any time.")
             }
+        }
+    }
+
+    /// Any movement hides the button so it never sits over a card while the
+    /// user reads; it returns near the top, or after the list has rested.
+    private func scrolled(to offset: CGFloat) {
+        defer { lastOffset = offset }
+        guard abs(offset - lastOffset) > 2 else { return }
+        if offset > -24 {
+            fabHidden = false
+            restTask?.cancel()
+            return
+        }
+        fabHidden = true
+        restTask?.cancel()
+        restTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.2))
+            if !Task.isCancelled { fabHidden = false }
         }
     }
 

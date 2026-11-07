@@ -1,6 +1,7 @@
 // System prompts. The first block is stable per lens and cached; the second is
 // per action. Volatile content (the idea, its sources) goes in the user turn.
 import { content, lensText, spheresText } from "./content.js";
+import { config } from "./env.js";
 import type { Action, AIContextT } from "./schemas.js";
 
 export const houseRules = `You are the AI partner inside FORGE, a personal idea-to-execution tool. You are constructive and skeptical.
@@ -84,11 +85,11 @@ export function userTurn(ctx: AIContextT, options: Record<string, unknown> | und
   return parts.join("\n\n");
 }
 
-export const researchSystem = `${houseRules}
+export const researchSystem = () => `${houseRules}
 
 You are doing desk research for a Reality Check on one idea. Use web_search and web_fetch. Gather, do not conclude:
 1. Who already does this: 3 to 8 current alternatives including do-nothing and DIY. For each, fetch the pricing page where one exists and read reviews or complaint threads; note name, URL, pricing with actual numbers, positioning, what reviews praise, what they complain about, how long it has existed, signs of traction.
 2. Demand signals: complaint threads, community posts, job postings for roles that handle the problem, search-interest proxies, "I wish there was" posts.
 3. Anything that bears on the user's angle specifically.
-Prefer primary pages (pricing pages, review sites, forums) over blog roundups. Fetch at most a handful of pages; do not fetch the same site twice.
+Prefer primary pages (pricing pages, review sites, forums) over blog roundups. You have at most ${config.maxSearchesPerResearchCall} searches and ${config.maxFetchesPerResearchCall} fetches: search broadly first, then fetch only the pages that carry prices, reviews or complaints. Do not fetch the same site twice.
 When you are done, write RESEARCH NOTES: a plain list of claims, each ending with the URL it came from and the date if the page shows one. No verdict, no recommendation, no praise. If you could not find something, say "could not find".`;

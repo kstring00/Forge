@@ -1,12 +1,14 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import ForgeCore
 
 /// Settings. Phase 1b: export and import of the whole Vault. Later phases add
 /// the AI-sharing disclosure, Advantages, Constraints and the Steward charter.
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query private var ideas: [Idea]
+    @Query(sort: \RealityCheck.createdAt, order: .reverse) private var checks: [RealityCheck]
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
@@ -76,17 +78,30 @@ struct SettingsView: View {
                     ForEach(AIConsent.neverSent, id: \.self) { Text($0).font(.footnote) }
                 }
                 LabeledContent("Proxy", value: AIConsent.proxyURL ?? "Not configured")
-                LabeledContent("Spent this month", value: AISpend.format(spendMonth == AISpend.currentMonth() ? spentThisMonth : 0))
                 Picker("Monthly ceiling", selection: $ceiling) {
                     ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
-                }
-                if let last = AISpend.lastRealityCheckUSD {
-                    LabeledContent("Last Reality Check", value: AISpend.format(last))
                 }
             } header: {
                 Text("AI")
             } footer: {
                 Text("Sent only when you tap an AI action, only for that idea, through your own proxy. You'll be asked before the first call.")
+            }
+
+            Section {
+                let month = RealityCheckCost.month(checks.map { (date: $0.createdAt, costUSD: $0.actualCostUSD) })
+                LabeledContent("Reality Checks this month", value: "\(month.count)")
+                LabeledContent("Their cost this month", value: AISpend.format(month.spentUSD))
+                if let avg = RealityCheckCost.average(ofRecent: checks.compactMap(\.actualCostUSD)) {
+                    LabeledContent("Average per check", value: RealityCheckCost.cents(avg))
+                }
+                if let last = checks.first(where: { ($0.actualCostUSD ?? 0) > 0 })?.actualCostUSD {
+                    LabeledContent("Last check", value: RealityCheckCost.cents(last))
+                }
+                LabeledContent("All AI this month", value: AISpend.format(spendMonth == AISpend.currentMonth() ? spentThisMonth : 0))
+            } header: {
+                Text("Spend")
+            } footer: {
+                Text("Checks count the ones that finished, at the cost the proxy reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
             }
 
             Section("Vault") {
@@ -101,7 +116,6 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(ForgeColor.canvas)
         .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.folder, .json], allowsMultipleSelection: false) { result in
             handleImport(result)
         }

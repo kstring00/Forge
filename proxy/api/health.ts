@@ -19,8 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       contentVersion: content.version,
       authorized,
       missing: authorized ? missing : undefined,
-      models: authorized ? { research: config.researchModel, fast: config.fastModel } : undefined,
-      estimate: { realityCheckUSD: realityCheckEstimateUSD() },
+      models: authorized ? { research: config.researchModel, spheres: config.sphereModel, fast: config.fastModel } : undefined,
+      limits: authorized ? { searches: config.maxSearchesPerResearchCall, fetches: config.maxFetchesPerResearchCall, tokensPerFetch: config.maxTokensPerFetch } : undefined,
+      estimate: { realityCheckUSD: realityCheckEstimateUSD(config.maxSearchesPerResearchCall) },
     });
   } catch (err) {
     sendError(res, err, "health");

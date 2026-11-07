@@ -54,6 +54,16 @@ struct IdeaCard: View {
                 SphereDots(lit: Set(Sphere.phase3Panel))
                 Text("Checking").forgeLabel()
             }
+        case .checkFailed:
+            HStack(spacing: ForgeSpacing.s) {
+                Image(systemName: "exclamationmark.circle").font(.caption).foregroundStyle(ForgeColor.emberText)
+                Text("Check failed · open to see why").forgeLabel().foregroundStyle(ForgeColor.emberText)
+            }
+        case .impact:
+            HStack(spacing: ForgeSpacing.s) {
+                EvidenceChip(pattern: .dots, size: 10)
+                Text("Judged by impact").forgeLabel()
+            }
         case .checked(let verdict, let confidence):
             HStack(spacing: ForgeSpacing.m) {
                 Text(verdict.displayName)
@@ -70,6 +80,8 @@ struct IdeaCard: View {
         switch resolved {
         case .notChecked: parts.append("not yet checked")
         case .checking: parts.append("checking")
+        case .checkFailed: parts.append("the last Reality Check failed")
+        case .impact: parts.append("judged by impact")
         case .checked(let v, let c): parts.append("\(v.displayName), confidence \(c)")
         }
         return parts.joined(separator: ", ")

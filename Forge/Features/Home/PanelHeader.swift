@@ -58,6 +58,14 @@ struct PanelHeader: View {
                     Text(f.idea.title).font(.caption).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
                 }
                 .transition(.opacity)
+            } else if let f = focus, f.idea.latestRealityCheck == nil, center.failure(for: f.idea.id) != nil {
+                NavigationLink(value: VaultRoute.idea(f.idea.id)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("The check didn't finish").font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
+                        Text("\(f.idea.title) · open to see why").font(.caption).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                    }
+                }
+                .buttonStyle(.plain)
             } else if let held, let check = held.latestRealityCheck {
                 NavigationLink(value: VaultRoute.idea(held.id)) {
                     VStack(alignment: .leading, spacing: 2) {

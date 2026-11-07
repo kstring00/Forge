@@ -11,8 +11,6 @@ final class AppEnvironment {
     let realityChecks: RealityCheckCenter
     /// §7: the idea just saved; Home turns the orbs toward it until the user runs a check or taps Later.
     var justCapturedIdeaID: UUID?
-    /// The Vault hides the capture button while the list scrolls down.
-    var vaultScrollHidesFAB = false
 
     init(ai: any AIClient, speech: SpeechCapture) {
         self.ai = ai

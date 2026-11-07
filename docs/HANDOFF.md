@@ -25,7 +25,7 @@ Before 3c, these still need the developer:
 - **A run survives navigation, not app suspension.** If iOS suspends the app mid-check, the run stops. Saved pages persist; the prefill does not resume.
 - **Re-running a Reality Check does not diff** the competitor set and verdict (§6D).
 - **Rate limiting is per serverless instance**, so it bounds bursts, not totals. The monthly ceiling in the app is the real control.
-- **The cost estimate is static** ($0.15–$0.60 in `proxy/lib/pricing.ts`). Tune it once real costs are known.
+- **The cost estimate before the first real run is static** (10–25¢ in `proxy/lib/pricing.ts`). After one finished check, the button quotes the average of the last five (decision 0012).
 
 ## Polish not done
 

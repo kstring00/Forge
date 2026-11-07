@@ -11,6 +11,8 @@ public final class CriterionScore {
     public var note: String = ""
     /// For A2: independent people counted at `evidenceLevel`.
     public var peopleAtRung: Int = 0
+    /// True while this score is the Spheres' proposal; false once the user picks an anchor or rung.
+    public var aiProposed: Bool = false
     public var evaluation: Evaluation?
     @Relationship(deleteRule: .cascade, inverse: \Evidence.criterionScore) public var evidence: [Evidence] = []
 

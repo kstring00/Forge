@@ -48,6 +48,13 @@ struct ProjectionCard: View {
             Spacer()
             Text("\(p.assumedUnits) assumed").forgeLabelSmall()
         }
+        if p.isEmpty, let suggestion = evaluation.projectionSuggestion, !suggestion.isEmpty {
+            HStack(alignment: .top, spacing: ForgeSpacing.xs) {
+                SparkGlyph()
+                Text("Estimate from the panel: \(suggestion) Tap to accept or edit; nothing is a projection until you type it.")
+                    .font(ForgeType.aiText).foregroundStyle(ForgeColor.spark)
+            }
+        }
         note(p.isEmpty
              ? "Tap to enter a price and a count. Every figure stays yours, drawn as an assumption until a real payment is attached as evidence at rung 4."
              : "Every figure here is yours until someone pays for month two. A slice goes solid only when a real payment is attached as evidence at rung 4 or above.")

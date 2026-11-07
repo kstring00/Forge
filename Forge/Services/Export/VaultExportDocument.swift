@@ -84,6 +84,8 @@ struct EvaluationExport: Codable {
     var impactSignal: String?
     var riskiestAssumptionConsequence: String?
     var nextStepText: String?
+    var aiFilledAt: Date?
+    var projectionSuggestion: String?
     var criteria: [CriterionScoreExport]
     var experiment: ExperimentExport?
 }
@@ -95,6 +97,7 @@ struct CriterionScoreExport: Codable {
     var evidenceLevel: Int
     var note: String
     var peopleAtRung: Int
+    var aiProposed: Bool?
     var evidence: [EvidenceExport]
 }
 
@@ -195,6 +198,9 @@ struct RealityCheckExport: Codable {
     var fitNotes: String
     var limitsNote: String
     var costEstimate: String
+    var rationale: String?
+    var actualCostUSD: Double?
+    var draftedAssetSourceID: UUID?
     var sourceIDs: [UUID]
     var competitors: [CompetitorExport]
     var experiment: ExperimentExport?

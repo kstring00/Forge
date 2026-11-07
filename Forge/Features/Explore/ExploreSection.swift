@@ -71,7 +71,9 @@ struct ExploreSection: View {
     // MARK: Rows
 
     private func promptRow(_ prompt: ExplorePrompt) -> some View {
-        let answer = ExploreActions.latest(for: prompt.key, on: idea)?.userText ?? ""
+        let latest = ExploreActions.latest(for: prompt.key, on: idea)
+        let answer = latest?.userText ?? ""
+        let proposed = answer.isEmpty ? (latest?.aiText ?? "") : ""
         return Button {
             editing = prompt
         } label: {
@@ -85,7 +87,9 @@ struct ExploreSection: View {
                     Text(prompt.question)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(ForgeColor.ink)
-                    if answer.isEmpty {
+                    if !proposed.isEmpty {
+                        AIText(text: proposed)
+                    } else if answer.isEmpty {
                         Text(prompt.hint)
                             .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
@@ -107,7 +111,7 @@ struct ExploreSection: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(prompt.question)
-        .accessibilityValue(answer.isEmpty ? "Not answered" : answer)
+        .accessibilityValue(!proposed.isEmpty ? "Proposed by the panel: \(proposed)" : (answer.isEmpty ? "Not answered" : answer))
     }
 
     // MARK: AI

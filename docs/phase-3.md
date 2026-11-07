@@ -67,7 +67,18 @@ Split across PRs.
 - `prefill` action and `PrefillResult` contract declared in Swift, mirrored from `proxy/lib/schemas.ts`.
 - `proxy/lib/content.json` generated from ForgeCore (`swift run forge-lens-export`).
 
-**3b.2 (next): the Reality Check flow and the Brief screen.**
+**3b.2 (this PR): the Reality Check flow and the Brief screen.** Built:
+- `CaptureStateSection`: before a check, the idea shows the sky, the original text and one ember Reality Check button with the cost estimate from the proxy's health endpoint; everything else (Explore, Make it real, tags, notes) sits under a collapsed "More". The first run shows the consent sheet.
+- `RealityCheckRunner`: research turns through `/api/research` until done (at most four), pages saved as chunked `ai-found` web Sources plus a "Research notes" source, then `prefill`, then `PrefillApplier`. Orbs light one at a time while the panel works. Offline, failure and over-ceiling are calm states; nothing is written on failure.
+- `PrefillApplier`: a RealityCheck with competitors, demand signals and the drafted asset as a Source; proposed Explore answers as unconfirmed AI text (never over the user's own); a new evaluation version with every score flagged `aiProposed`, rungs capped at 2, evidence pointing at unreviewed sources so Confidence stays honest; riskiest assumption, next move, Experiment card; the projection range as an estimate string, never as figures; the panel as a Round.
+- `BriefSection`: verdict row, six orbs (Steward dim) with speaking state and disagreement hairlines, what we found with source chips, striped rings while everything is still proposed, the one human task with the drafted asset, and the three buttons. Looks right confirms the proposed Explore answers, writes a Journal ruling, converts to a project with the step and the drafted asset, and opens it: three taps to a task. Not quite expands to the 3a Lab; proposed scores read in the AI colour and the panel's number shows struck through once overridden. I know something you don't saves a user-verified Source and re-scores only the criteria the panel says it touches, in a new version.
+- Orbs per §8: layered radial gradients with blur and highlight, idle drift (still under Reduce Motion), working, speaking, dim.
+- Settings: spent this month, monthly ceiling, last Reality Check cost. The runner refuses to start past the ceiling.
+- Tests: `PrefillApplierTests` (honest records, no overwrite of user answers, rung caps, flag clearing, chunked sources, spend, JSON passthrough).
+
+Known limits: "I know something you don't" is text only (voice reuses Phase 1's capture in Phase 4); its re-score keeps the desk rung cap even for user-verified facts, so a rung above 2 is set by hand in the Lab for now; the research loop runs while the screen is open and resumes from the Library if the app is backgrounded mid-run only in the sense that saved pages persist.
+
+**Original 3b.2 plan, for reference.**
 - Capture state: sky, original text, one Reality Check button, nothing else (§0A).
 - Cost estimate and the one-time consent note, then research calls looping on `paused`, saving fetched pages as `ai-found` Sources with chunks; then `prefill`; orbs light in sequence.
 - Applying the prefill: explorations as confirmed AI notes, a new evaluation version with striped scores and rungs, projection range as an estimate, riskiest assumption, next move, drafted assets as a Source.

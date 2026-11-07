@@ -10,6 +10,9 @@ struct SettingsView: View {
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
+    @AppStorage(AISpend.ceilingKey) private var ceiling: Double = AISpend.defaultCeiling
+    @AppStorage(AISpend.totalKey) private var spentThisMonth: Double = 0
+    @AppStorage(AISpend.monthKey) private var spendMonth: String = ""
     @State private var exportURL: URL?
     @State private var isExporting = false
     @State private var isImporting = false
@@ -73,6 +76,13 @@ struct SettingsView: View {
                     ForEach(AIConsent.neverSent, id: \.self) { Text($0).font(.footnote) }
                 }
                 LabeledContent("Proxy", value: AIConsent.proxyURL ?? "Not configured")
+                LabeledContent("Spent this month", value: AISpend.format(spendMonth == AISpend.currentMonth() ? spentThisMonth : 0))
+                Picker("Monthly ceiling", selection: $ceiling) {
+                    ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
+                }
+                if let last = AISpend.lastRealityCheckUSD {
+                    LabeledContent("Last Reality Check", value: AISpend.format(last))
+                }
             } header: {
                 Text("AI")
             } footer: {

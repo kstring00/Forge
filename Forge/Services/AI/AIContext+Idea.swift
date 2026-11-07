@@ -15,6 +15,10 @@ extension AIContext {
             }
         let notes = idea.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         if !notes.isEmpty { ctx.explorations.append("Notes: \(notes)") }
+        ctx.sources = idea.sources.sorted { $0.capturedAt < $1.capturedAt }.map { s in
+            SourceSnapshot(id: s.id, title: s.title, sourceClass: s.sourceClass, reviewed: s.reviewed,
+                           chunks: s.chunks.sorted { $0.index < $1.index }.map { ChunkSnapshot(id: $0.id, index: $0.index, text: $0.text) })
+        }
         if let project = idea.project {
             ctx.milestones = project.orderedMilestones.map(\.title)
             ctx.decisions = project.decisions.sorted { $0.date < $1.date }.map(\.text)

@@ -11,6 +11,9 @@ struct IdeaDetailView: View {
     @State private var confirmingArchive = false
     @State private var converting = false
     @State private var playback = AudioPlayback()
+    /// "Not quite" expands the Brief into the full Lab; also the state for ideas with no check yet.
+    @State private var expanded = false
+    @State private var showingMore = false
 
     private var audioURL: URL? {
         guard let name = idea.audioFileName, RecordingStore.exists(name) else { return nil }
@@ -38,15 +41,39 @@ struct IdeaDetailView: View {
 
                     metadata
 
-                    LabSection(idea: idea)
+                    if idea.latestRealityCheck != nil && !expanded {
+                        BriefSection(idea: idea) { withAnimation(ForgeMotion.settle) { expanded = true } }
+                    } else if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
+                        CaptureStateSection(idea: idea)
+                    } else {
+                        if idea.latestRealityCheck != nil {
+                            Button { withAnimation(ForgeMotion.settle) { expanded = false } } label: {
+                                Label("Back to the Brief", systemImage: "chevron.up").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        LabSection(idea: idea)
+                        ExploreSection(idea: idea)
+                        makeItReal
+                    }
 
-                    ExploreSection(idea: idea)
-
-                    makeItReal
-
-                    tags
-
-                    notes
+                    if idea.latestRealityCheck != nil && !expanded || (idea.latestRealityCheck == nil && idea.latestEvaluation == nil) {
+                        DisclosureGroup(isExpanded: $showingMore) {
+                            VStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                                if idea.latestRealityCheck == nil { ExploreSection(idea: idea) }
+                                makeItReal
+                                tags
+                                notes
+                            }
+                            .padding(.top, ForgeSpacing.m)
+                        } label: {
+                            Text("More").forgeLabel()
+                        }
+                        .tint(ForgeColor.inkSecondary)
+                    } else {
+                        tags
+                        notes
+                    }
 
                     footer
                 }

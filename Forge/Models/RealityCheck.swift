@@ -32,6 +32,11 @@ public final class RealityCheck {
     public var limitsNote: String = RealityCheck.standardLimitsNote
     public var costEstimate: String = ""
     public var summary: String = ""
+    /// The panel's three-sentence rationale and the actual cost once known.
+    public var rationale: String?
+    public var actualCostUSD: Double?
+    /// The drafted asset (interview questions, outreach script, landing copy) saved as a Source.
+    public var draftedAssetSourceID: UUID?
     public var idea: Idea?
     public var sources: [Source] = []
     @Relationship(deleteRule: .cascade, inverse: \Competitor.realityCheck) public var competitors: [Competitor] = []

@@ -11,6 +11,9 @@ struct CriterionDetailView: View {
     @Environment(\.modelContext) private var context
     @State private var note = ""
     @State private var addingEvidence = false
+    /// The panel's proposal when the screen opened, shown struck through after an override.
+    @State private var proposedScore: Int?
+    @State private var proposedRung: Int?
 
     private var score: CriterionScore? { evaluation.criterionScore(for: criterion.key) }
     private var locked: Bool { evaluation.isFinal }
@@ -35,7 +38,10 @@ struct CriterionDetailView: View {
         .background(ForgeColor.canvas)
         .scrollDismissesKeyboard(.interactively)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { note = score?.note ?? "" }
+        .onAppear {
+            note = score?.note ?? ""
+            if score?.aiProposed == true { proposedScore = score?.score; proposedRung = score?.evidenceLevel }
+        }
         .sheet(isPresented: $addingEvidence) {
             AddEvidenceSheet(evaluation: evaluation, criterion: criterion)
         }
@@ -54,11 +60,21 @@ struct CriterionDetailView: View {
             }
             HStack(spacing: ForgeSpacing.l) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(score.map { String($0.score) } ?? "–").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink)
-                    Text("Score").forgeLabelSmall()
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(score.map { String($0.score) } ?? "–").font(ForgeType.numeral).foregroundStyle(score?.aiProposed == true ? ForgeColor.spark : ForgeColor.ink)
+                        if let p = proposedScore, score?.aiProposed == false, p != score?.score {
+                            Text("\(p)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.spark).strikethrough()
+                        }
+                    }
+                    Text(score?.aiProposed == true ? "Score · panel's proposal" : "Score").forgeLabelSmall()
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(score.map { String($0.evidenceLevel) } ?? "–").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(score.map { String($0.evidenceLevel) } ?? "–").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
+                        if let p = proposedRung, score?.aiProposed == false, p != score?.evidenceLevel {
+                            Text("\(p)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.spark).strikethrough()
+                        }
+                    }
                     Text("Evidence rung").forgeLabelSmall()
                 }
                 Spacer()

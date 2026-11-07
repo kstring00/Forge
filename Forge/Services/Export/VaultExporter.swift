@@ -65,10 +65,12 @@ enum VaultExporter {
             impactSignal: e.impactSignal,
             riskiestAssumptionConsequence: e.riskiestAssumptionConsequence,
             nextStepText: e.nextStepText,
+            aiFilledAt: e.aiFilledAt,
+            projectionSuggestion: e.projectionSuggestion,
             criteria: e.criteria.sorted { $0.key < $1.key }.map { c in
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,
-                    note: c.note, peopleAtRung: c.peopleAtRung,
+                    note: c.note, peopleAtRung: c.peopleAtRung, aiProposed: c.aiProposed,
                     evidence: c.evidence.sorted { $0.createdAt < $1.createdAt }.map(export))
             },
             experiment: e.experiment.map(export)
@@ -115,7 +117,9 @@ enum VaultExporter {
         RealityCheckExport(
             id: rc.id, createdAt: rc.createdAt, verdict: rc.verdictRaw, summary: rc.summary,
             demandSignals: rc.demandSignals, gapMap: rc.gapMap, fitNotes: rc.fitNotes,
-            limitsNote: rc.limitsNote, costEstimate: rc.costEstimate, sourceIDs: rc.sources.map(\.id),
+            limitsNote: rc.limitsNote, costEstimate: rc.costEstimate,
+            rationale: rc.rationale, actualCostUSD: rc.actualCostUSD, draftedAssetSourceID: rc.draftedAssetSourceID,
+            sourceIDs: rc.sources.map(\.id),
             competitors: rc.competitors.map {
                 CompetitorExport(id: $0.id, name: $0.name, url: $0.url, pricing: $0.pricing, positioning: $0.positioning,
                                  praises: $0.praises, complaints: $0.complaints, tractionSignals: $0.tractionSignals,

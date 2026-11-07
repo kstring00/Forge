@@ -258,10 +258,13 @@ enum VaultImporter {
         evaluation.impactSignal = e.impactSignal
         evaluation.riskiestAssumptionConsequence = e.riskiestAssumptionConsequence
         evaluation.nextStepText = e.nextStepText
+        evaluation.aiFilledAt = e.aiFilledAt
+        evaluation.projectionSuggestion = e.projectionSuggestion
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id
             score.peopleAtRung = c.peopleAtRung
+            score.aiProposed = c.aiProposed ?? false
             for ev in c.evidence {
                 let item = Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text,
                                     source: ev.sourceID.flatMap { sources[$0] })
@@ -286,6 +289,9 @@ enum VaultImporter {
         check.gapMap = rc.gapMap
         check.fitNotes = rc.fitNotes
         check.limitsNote = rc.limitsNote
+        check.rationale = rc.rationale
+        check.actualCostUSD = rc.actualCostUSD
+        check.draftedAssetSourceID = rc.draftedAssetSourceID
         check.sources = rc.sourceIDs.compactMap { sources[$0] }
         for c in rc.competitors {
             let competitor = Competitor(name: c.name, url: c.url, pricing: c.pricing, positioning: c.positioning,

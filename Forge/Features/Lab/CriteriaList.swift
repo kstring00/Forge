@@ -44,6 +44,8 @@ struct CriterionRow: View {
         return "Not scored yet"
     }
 
+    private var proposed: Bool { score?.aiProposed ?? false }
+
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
@@ -71,13 +73,13 @@ struct CriterionRow: View {
 
             Text(score.map { String($0.score) } ?? "–")
                 .font(ForgeType.numeralSmall)
-                .foregroundStyle(ForgeColor.ink)
+                .foregroundStyle(proposed ? ForgeColor.spark : ForgeColor.ink)
                 .frame(width: 22, alignment: .trailing)
         }
         .padding(.vertical, 13)
         .overlay(alignment: .bottom) { Rectangle().fill(ForgeColor.line).frame(height: 1) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(criterion.title), \(score.map { "scored \($0.score) of 5" } ?? "not scored"). \(note)")
+        .accessibilityLabel("\(criterion.title), \(score.map { "scored \($0.score) of 5" } ?? "not scored")\(proposed ? ", proposed by the panel" : ""). \(note)")
     }
 }

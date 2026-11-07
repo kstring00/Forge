@@ -35,6 +35,12 @@ public final class Evaluation {
     public var riskiestAssumptionConsequence: String?
     public var nextStepText: String?
 
+    /// §0A. Set when the Spheres pre-filled this version; cleared field by field
+    /// as the user touches values. A projection range the AI suggested, shown
+    /// as an estimate until the user accepts or edits it.
+    public var aiFilledAt: Date?
+    public var projectionSuggestion: String?
+
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []
     @Relationship(deleteRule: .cascade, inverse: \Experiment.evaluation) public var experiment: Experiment?
@@ -64,6 +70,7 @@ public final class Evaluation {
             existing.score = score
             existing.evidenceLevel = evidenceLevel
             existing.note = note
+            existing.aiProposed = false
         } else {
             criteria.append(CriterionScore(key: key, score: score, evidenceLevel: evidenceLevel, note: note))
         }

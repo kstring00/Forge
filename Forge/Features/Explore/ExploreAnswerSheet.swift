@@ -11,7 +11,9 @@ struct ExploreAnswerSheet: View {
     init(prompt: ExplorePrompt, idea: Idea) {
         self.prompt = prompt
         self.idea = idea
-        _text = State(initialValue: ExploreActions.latest(for: prompt.key, on: idea)?.userText ?? "")
+        let latest = ExploreActions.latest(for: prompt.key, on: idea)
+        let user = latest?.userText ?? ""
+        _text = State(initialValue: user.isEmpty ? (latest?.aiText ?? "") : user)
     }
 
     var body: some View {

@@ -92,8 +92,8 @@ struct RoundView: View {
             HStack(spacing: 10) {
                 ForEach(tally.splits.prefix(3)) { p in
                     HStack(spacing: -4) {
-                        SphereOrb(sphere: p.a, size: 16)
-                        SphereOrb(sphere: p.b, size: 16)
+                        OrbView(sphere: p.a, size: 16)
+                        OrbView(sphere: p.b, size: 16)
                     }
                 }
                 Text(tally.splits.count == 1 ? "Crossfire · one split" : "Crossfire · \(tally.splits.count) splits")
@@ -163,7 +163,7 @@ struct VerdictCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            SphereOrb(sphere: verdict.sphere, size: 40, state: verdict.ruling == nil ? .idle : .dim)
+            OrbView(sphere: verdict.sphere, state: .verdict(verdict.kind), size: 40)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(verdict.sphere.displayName).font(.system(size: 14, weight: .semibold)).foregroundStyle(ForgeColor.ink)
@@ -188,7 +188,7 @@ struct VerdictCard: View {
                     Button { onCrossfire?(p) } label: {
                         HStack(spacing: 6) {
                             Rectangle().fill(ForgeColor.line).frame(width: 14, height: 1)
-                            SphereOrb(sphere: p.other(than: verdict.sphere), size: 12)
+                            OrbView(sphere: p.other(than: verdict.sphere), size: 12)
                             Text("Splits with the \(p.other(than: verdict.sphere).displayName) · crossfire").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
@@ -303,9 +303,9 @@ struct CrossfireSheet: View {
                 VStack(alignment: .leading, spacing: ForgeSpacing.l) {
                     HStack(spacing: 0) {
                         Spacer()
-                        SphereOrb(sphere: pair.a, size: 56)
+                        OrbView(sphere: pair.a, state: verdict(pair.a).map { .verdict($0.kind) } ?? .idle, size: 56)
                         Rectangle().fill(ForgeColor.line).frame(width: 48, height: 1)
-                        SphereOrb(sphere: pair.b, size: 56)
+                        OrbView(sphere: pair.b, state: verdict(pair.b).map { .verdict($0.kind) } ?? .idle, size: 56)
                         Spacer()
                     }
                     .padding(.top, ForgeSpacing.m)
@@ -328,7 +328,7 @@ struct CrossfireSheet: View {
                         }
                         ForEach(exchange) { c in
                             HStack(alignment: .top, spacing: ForgeSpacing.s) {
-                                SphereOrb(sphere: c.fromSphere, size: 20)
+                                OrbView(sphere: c.fromSphere, size: 20)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("\(c.fromSphere.displayName) to the \(c.toSphere.displayName)").forgeLabelSmall()
                                     Text(c.text).font(ForgeType.statement).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)

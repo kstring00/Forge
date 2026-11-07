@@ -27,7 +27,7 @@ struct CaptureStateSection: View {
         return VStack(alignment: .leading, spacing: ForgeSpacing.m) {
             HStack(spacing: ForgeSpacing.m) {
                 ForEach(Sphere.phase3Panel) { s in
-                    SphereOrb(sphere: s, size: 44, state: working.contains(s) ? .working : .idle)
+                    OrbView(sphere: s, state: working.contains(s) ? .working : .idle, size: 44)
                 }
             }
             ForEach(RealityCheckCenter.narration(for: runner.phase, lit: runner.litSpheres), id: \.0) { sphere, line in

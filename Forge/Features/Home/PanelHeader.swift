@@ -34,7 +34,7 @@ struct PanelHeader: View {
                     Button {
                         withAnimation(ForgeMotion.settle) { tapped = tapped == s ? nil : s }
                     } label: {
-                        SphereOrb(sphere: s, size: 48, state: orbState(s, working: working))
+                        OrbView(sphere: s, state: orbState(s, working: working), size: 48)
                     }
                     .buttonStyle(.plain)
                     .frame(maxWidth: .infinity)
@@ -51,7 +51,7 @@ struct PanelHeader: View {
                 VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
                     ForEach(RealityCheckCenter.narration(for: phase, lit: lit), id: \.0) { sphere, line in
                         HStack(spacing: ForgeSpacing.s) {
-                            Circle().fill(SphereOrb.palette(for: sphere).base).frame(width: 6, height: 6)
+                            Circle().fill(OrbView.palette(for: sphere).base).frame(width: 6, height: 6)
                             Text("\(sphere.displayName) · \(line)").font(.system(size: 13)).foregroundStyle(ForgeColor.ink)
                         }
                     }
@@ -79,7 +79,7 @@ struct PanelHeader: View {
     }
 
     private func orbState(_ s: Sphere, working: Set<Sphere>) -> OrbState {
-        if s == .steward { return .dim }
+        if s == .steward { return .dormant }
         if working.contains(s) { return .working }
         if let tapped { return tapped == s ? .speaking : .dim }
         return .idle
@@ -99,7 +99,7 @@ struct EmptyPanel: View {
                     Button {
                         withAnimation(ForgeMotion.settle) { tapped = tapped == s ? nil : s }
                     } label: {
-                        SphereOrb(sphere: s, size: 64, state: tapped == nil ? .idle : (tapped == s ? .speaking : .dim))
+                        OrbView(sphere: s, state: tapped == nil ? .idle : (tapped == s ? .speaking : .dim), size: 64)
                             .offset(y: offsets[i])
                     }
                     .buttonStyle(.plain)

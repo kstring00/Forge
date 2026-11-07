@@ -14,9 +14,9 @@ struct RoundRealityRow: View {
                 Button { tap("Run a Round") } label: {
                     HStack(spacing: 10) {
                         HStack(spacing: -4) {
-                            SphereOrb(sphere: .investor, size: 14)
-                            SphereOrb(sphere: .customer, size: 14)
-                            SphereOrb(sphere: .strategist, size: 14)
+                            OrbView(sphere: .investor, size: 14)
+                            OrbView(sphere: .customer, size: 14)
+                            OrbView(sphere: .strategist, size: 14)
                         }
                         Text("Run a Round")
                     }

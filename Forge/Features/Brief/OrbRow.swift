@@ -23,9 +23,10 @@ struct OrbRow: View {
     private func verdict(for s: Sphere) -> Verdict? { verdicts.first { $0.sphere == s } }
 
     private func state(for s: Sphere) -> OrbState {
-        if s == .steward { return .dim }
+        if s == .steward { return .dormant }
         if isWorking { return lit.contains(s) ? .idle : .working }
         if let speaking { return speaking == s ? .speaking : .dim }
+        if let v = verdict(for: s) { return .verdict(v.kind) }
         return .idle
     }
 
@@ -46,7 +47,7 @@ struct OrbRow: View {
                             guard s != .steward, !isWorking else { return }
                             withAnimation(ForgeMotion.settle) { speaking = speaking == s ? nil : s }
                         } label: {
-                            SphereOrb(sphere: s, size: st == .speaking ? speakingSize : idleSize, state: st)
+                            OrbView(sphere: s, state: st, size: st == .speaking ? speakingSize : idleSize)
                         }
                         .buttonStyle(.plain)
                         .position(x: slot * (CGFloat(i) + 0.5), y: centerY)
@@ -126,7 +127,7 @@ struct OrbRow: View {
                 Button { onCrossfire?(pair) } label: {
                     HStack(spacing: ForgeSpacing.xs) {
                         Rectangle().fill(ForgeColor.line).frame(width: 14, height: 1)
-                        SphereOrb(sphere: pair.other(than: sphere), size: 12)
+                        OrbView(sphere: pair.other(than: sphere), size: 12)
                         Text("Disagrees with the \(pair.other(than: sphere).displayName) · crossfire").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }

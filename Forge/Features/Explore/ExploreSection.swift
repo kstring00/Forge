@@ -79,7 +79,7 @@ struct ExploreSection: View {
         } label: {
             HStack(alignment: .top, spacing: ForgeSpacing.m) {
                 if let sphere = prompt.sphere {
-                    SphereOrb(sphere: sphere, size: 16).padding(.top, 3)
+                    OrbView(sphere: sphere, size: 16).padding(.top, 3)
                 } else {
                     Color.clear.frame(width: 16, height: 16)
                 }

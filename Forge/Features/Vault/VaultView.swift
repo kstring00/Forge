@@ -5,6 +5,8 @@ import ForgeCore
 /// Every idea, as cards. Search, filter by lens, stage and tag, sort, archive.
 struct VaultView: View {
     @Environment(\.modelContext) private var context
+    @Environment(AppEnvironment.self) private var env
+    @State private var lastOffset: CGFloat = 0
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @State private var filter = VaultFilter()
     @State private var pendingArchive: Idea?
@@ -34,7 +36,7 @@ struct VaultView: View {
                                 Text("\(shown.count) \(shown.count == 1 ? "idea" : "ideas")").forgeLabel()
                                 ForEach(shown) { idea in
                                     NavigationLink(value: VaultRoute.idea(idea.id)) {
-                                        IdeaCard(idea: idea)
+                                        IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id)))
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu { contextMenu(for: idea) }
@@ -43,7 +45,20 @@ struct VaultView: View {
                         }
                         .padding(ForgeSpacing.m)
                         .padding(.bottom, ForgeSpacing.xxl * 2)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: ScrollOffsetKey.self, value: geo.frame(in: .named("vaultScroll")).minY)
+                        })
                     }
+                    .coordinateSpace(name: "vaultScroll")
+                    .onPreferenceChange(ScrollOffsetKey.self) { offset in
+                        // Scrolling down hides the capture button; up, or near the top, shows it.
+                        let delta = offset - lastOffset
+                        if offset > -24 { env.vaultScrollHidesFAB = false }
+                        else if delta < -8 { env.vaultScrollHidesFAB = true }
+                        else if delta > 8 { env.vaultScrollHidesFAB = false }
+                        lastOffset = offset
+                    }
+                    .onDisappear { env.vaultScrollHidesFAB = false }
                     .searchable(text: $filter.searchText, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search ideas")
                     .forgeAnimation(ForgeMotion.settle, value: shown.map(\.id))
                 }
@@ -157,4 +172,9 @@ struct VaultView: View {
             Button { pendingArchive = idea } label: { Label("Archive", systemImage: "archivebox") }
         }
     }
+}
+
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }

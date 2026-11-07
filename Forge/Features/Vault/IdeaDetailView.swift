@@ -7,6 +7,7 @@ import ForgeCore
 struct IdeaDetailView: View {
     @Bindable var idea: Idea
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppEnvironment.self) private var env
     @State private var tagText = ""
     @State private var confirmingArchive = false
     @State private var converting = false
@@ -110,7 +111,10 @@ struct IdeaDetailView: View {
             Text("It moves out of the Vault but nothing is deleted. You can bring it back any time.")
         }
         .sheet(isPresented: $converting) { ConvertToProjectSheet(idea: idea) }
-        .onAppear { tagText = idea.tags.joined(separator: ", ") }
+        .onAppear {
+            tagText = idea.tags.joined(separator: ", ")
+            env.realityChecks.markSeen(idea.id)
+        }
         .onDisappear { playback.stop() }
         .onChange(of: idea.title) { idea.touch() }
         .onChange(of: idea.notes) { idea.touch() }

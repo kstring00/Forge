@@ -4,6 +4,7 @@ import SwiftData
 /// Capture in seconds: type, paste, or speak. A voice transcript stays
 /// editable until Save (decision 0005); after Save the text never changes.
 struct CaptureSheet: View {
+    var autoStartVoice = false
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(AppEnvironment.self) private var env
@@ -83,7 +84,10 @@ struct CaptureSheet: View {
                         .fontWeight(.semibold)
                 }
             }
-            .onAppear { focused = true }
+            .onAppear {
+                focused = true
+                if autoStartVoice { Task { await startVoice() } }
+            }
             .onDisappear {
                 if !saved { speech.discardRecording() }
             }
@@ -180,8 +184,10 @@ struct CaptureSheet: View {
         let audio = usedVoice ? speech.recordingURL?.lastPathComponent : nil
         let idea = Idea(originalText: text, audioFileName: audio)
         context.insert(idea)
+        try? context.save()
         saved = true
         speech.reset()
+        env.justCapturedIdeaID = idea.id
         dismiss()
     }
 

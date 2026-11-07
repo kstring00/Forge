@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RootTabView: View {
+    @Environment(AppEnvironment.self) private var env
     @State private var tab: ForgeTab = .home
     @State private var showingCapture = false
 
@@ -9,6 +10,7 @@ struct RootTabView: View {
             TabView(selection: $tab) {
                 HomeView(onCapture: { showingCapture = true })
                     .tabItem { Label(ForgeTab.home.title, systemImage: ForgeTab.home.symbol) }
+                    .badge(env.realityChecks.unseenBriefs.isEmpty ? 0 : env.realityChecks.unseenBriefs.count)
                     .tag(ForgeTab.home)
                 VaultView()
                     .tabItem { Label(ForgeTab.vault.title, systemImage: ForgeTab.vault.symbol) }
@@ -18,8 +20,8 @@ struct RootTabView: View {
                     .tag(ForgeTab.workshop)
             }
 
-            // Home has its own Quick Capture card; the Vault gets the floating button.
-            if tab == .vault {
+            // Home has its own capture field; the Vault gets the floating button, hidden while scrolling down.
+            if tab == .vault && !env.vaultScrollHidesFAB {
                 EmberButton.floating(title: "Capture", symbol: "plus") {
                     showingCapture = true
                 }
@@ -29,8 +31,13 @@ struct RootTabView: View {
             }
         }
         .forgeAnimation(ForgeMotion.settle, value: tab)
+        .forgeAnimation(ForgeMotion.fade, value: env.vaultScrollHidesFAB)
         .sheet(isPresented: $showingCapture) {
             CaptureSheet()
+        }
+        // §7: saving an idea never lands on a static card; Home turns the orbs toward it.
+        .onChange(of: env.justCapturedIdeaID) { _, id in
+            if id != nil { withAnimation(ForgeMotion.settle) { tab = .home } }
         }
     }
 }

@@ -14,6 +14,7 @@ public enum AIAction: String, Codable, CaseIterable, Sendable {
     case explainCriterion
     case pivot
     case pitch
+    case realityCheck      // §6D: desk research with four verdicts; the costliest action
 }
 
 public enum AIError: Error, Equatable, Sendable {

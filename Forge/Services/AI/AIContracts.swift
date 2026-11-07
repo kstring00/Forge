@@ -106,6 +106,35 @@ public struct RoundResult: Codable, Sendable {
     public var crossfire: [CrossfireDraft]
 }
 
+/// §6D. The proxy returns competitors, demand signals, the gap map and one verdict.
+/// Every claim must point at a saved source ID; the app drops claims that don't.
+public struct RealityCheckResult: Codable, Sendable {
+    public struct CompetitorDraft: Codable, Sendable {
+        public var name: String
+        public var url: String?
+        public var pricing: String
+        public var positioning: String
+        public var praises: [String]
+        public var complaints: [String]
+        public var tractionSignals: [String]
+        public var sourceID: UUID?
+    }
+    public struct DemandSignalDraft: Codable, Sendable {
+        public var text: String
+        public var url: String?
+        public var rung: Int
+        public var sourceID: UUID?
+    }
+    public var verdict: RealityVerdict
+    public var summary: String
+    public var competitors: [CompetitorDraft]
+    public var demandSignals: [DemandSignalDraft]
+    public var gapMap: String
+    public var fitNotes: String
+    public var experiment: ExperimentCard?
+    public var costEstimate: String
+}
+
 /// Sugar so each action names its payload type in one place.
 public extension AIAction {
     var payloadDescription: String {
@@ -120,6 +149,7 @@ public extension AIAction {
         case .explainCriterion: "ExplainCriterionResult"
         case .pivot: "PivotResult"
         case .pitch: "PitchResult"
+        case .realityCheck: "RealityCheckResult"
         }
     }
 }

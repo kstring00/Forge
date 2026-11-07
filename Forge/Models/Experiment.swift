@@ -15,6 +15,7 @@ public final class Experiment {
     public var createdAt: Date = Date()
     public var evaluation: Evaluation?
     public var ruling: Ruling?
+    public var realityCheck: RealityCheck?
 
     public init(hypothesis: String, test: String, metric: String, cost: String, timeboxDays: Int, decisionRule: String) {
         self.hypothesis = hypothesis

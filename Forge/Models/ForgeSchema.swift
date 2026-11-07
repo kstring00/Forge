@@ -2,7 +2,11 @@ import Foundation
 import SwiftData
 
 /// Versioned schema so CloudKit sync and migrations can be added without
-/// touching the models. V1 is the Phase 0 schema: every model the brief names.
+/// touching the models. V1 is every model the brief names, including the v3
+/// additions (RealityCheck, Competitor, the Journal shape of Decision). Those
+/// were added before any real data existed, as lightweight-compatible changes
+/// (new models, new attributes with defaults, new optional relationships), so
+/// V1 stays V1.
 public enum ForgeSchemaV1: VersionedSchema {
     public static let versionIdentifier = Schema.Version(1, 0, 0)
 
@@ -13,7 +17,8 @@ public enum ForgeSchemaV1: VersionedSchema {
             Source.self, SourceChunk.self, LibraryArtifact.self,
             Project.self, Milestone.self, ProjectTask.self, Decision.self,
             Pitch.self, Advantage.self, Constraint.self,
-            Round.self, Verdict.self, Crossfire.self, Ruling.self, StewardCharter.self
+            Round.self, Verdict.self, Crossfire.self, Ruling.self, StewardCharter.self,
+            RealityCheck.self, Competitor.self
         ]
     }
 }

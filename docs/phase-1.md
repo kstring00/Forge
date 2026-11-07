@@ -18,6 +18,7 @@ and usually no on-device speech model).
 ## Deliberately skipped
 
 - Compare two ideas (Phase 5).
+- Export and re-import: next, as Phase 1b under brief v3.
 - Opportunity Filter chip on cards (Phase 3; the card already shows "Screened" once a triage exists).
 - Convert to project (Phase 6).
 - AI title and summary proposals (Phase 2).

@@ -13,12 +13,14 @@ extension View {
             .navigationDestination(for: WorkshopRoute.self) { route in
                 switch route {
                 case .project(let id): ProjectDestination(id: id)
+                case .journal: JournalView()
                 }
             }
             .navigationDestination(for: LabRoute.self) { route in
                 switch route {
                 case .criterion(let evaluationID, let key): CriterionDestination(evaluationID: evaluationID, key: key)
                 case .history(let ideaID): HistoryDestination(ideaID: ideaID)
+                case .round(let roundID): RoundDestination(roundID: roundID)
                 }
             }
     }
@@ -89,6 +91,23 @@ struct HistoryDestination: View {
             EvaluationHistoryView(idea: idea)
         } else {
             EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct RoundDestination: View {
+    @Query private var rounds: [Round]
+
+    init(roundID: UUID) {
+        _rounds = Query(filter: #Predicate<Round> { $0.id == roundID })
+    }
+
+    var body: some View {
+        if let round = rounds.first {
+            RoundView(round: round)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Round not found", message: "It may have been removed.")
                 .background(ForgeColor.canvas)
         }
     }

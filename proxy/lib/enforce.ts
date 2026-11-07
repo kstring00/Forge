@@ -15,16 +15,25 @@ export function knownOnly(ids: string[], known: Set<string>): string[] {
 }
 
 export function enforceRound(r: z.infer<typeof RoundResult>, known: Set<string>): z.infer<typeof RoundResult> {
+  const verdicts = r.verdicts.map((v) => {
+    const sourceIDs = knownOnly(v.sourceIDs, known);
+    const verdict = sourceIDs.length === 0 ? "cantTell" : v.verdict;
+    return { ...v, sourceIDs, verdict, evidenceNeeded: verdict === "cantTell" ? (v.evidenceNeeded ?? "What evidence would change this is not stated.") : v.evidenceNeeded };
+  });
+  // Crossfire only where two Spheres' verdicts conflict (on track against off
+  // track, after the no-source rule above). "Can't tell" argues with nobody.
+  const kind = new Map<string, string>();
+  for (const v of verdicts) if (!kind.has(v.sphere)) kind.set(v.sphere, v.verdict);
+  const conflicts = (a: string, b: string) => {
+    const x = kind.get(a), y = kind.get(b);
+    return (x === "onTrack" && y === "offTrack") || (x === "offTrack" && y === "onTrack");
+  };
   const seenPairs = new Set<string>();
   return {
-    verdicts: r.verdicts.map((v) => {
-      const sourceIDs = knownOnly(v.sourceIDs, known);
-      const verdict = sourceIDs.length === 0 ? "cantTell" : v.verdict;
-      return { ...v, sourceIDs, verdict, evidenceNeeded: verdict === "cantTell" ? (v.evidenceNeeded ?? "What evidence would change this is not stated.") : v.evidenceNeeded };
-    }),
+    verdicts,
     // One exchange per pair, never a reply to oneself.
     crossfire: r.crossfire.filter((c) => {
-      if (c.from === c.to) return false;
+      if (c.from === c.to || !conflicts(c.from, c.to)) return false;
       const key = [c.from, c.to].sort().join("|");
       if (seenPairs.has(key)) return false;
       seenPairs.add(key);

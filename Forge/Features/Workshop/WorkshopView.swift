@@ -33,7 +33,7 @@ struct WorkshopView: View {
             .navigationTitle("Workshop")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink { JournalView() } label: {
+                    NavigationLink(value: WorkshopRoute.journal) {
                         Image(systemName: "book.closed").accessibilityLabel("Journal")
                     }
                 }

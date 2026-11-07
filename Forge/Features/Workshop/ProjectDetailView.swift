@@ -218,13 +218,14 @@ struct JournalRow: View {
                 Text("Believed: \(decision.beliefs)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             }
             if !decision.expectedResult.isEmpty {
-                Text("Expected: \(decision.expectedResult)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Expected: \(decision.expectedResult)\(decision.expectedBy.map { " · by \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "")")
+                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             }
             if let actual = decision.actualResult {
                 Text("Actually: \(actual)")
                     .font(.footnote)
                     .foregroundStyle(ForgeColor.ink)
-            } else if decision.kind == .commit, let onRecord {
+            } else if decision.kind == .commit || (decision.kind == .ruling && !decision.expectedResult.isEmpty), let onRecord {
                 Button("Record what happened", action: onRecord)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(ForgeColor.ink)

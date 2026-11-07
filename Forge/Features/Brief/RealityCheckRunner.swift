@@ -99,7 +99,7 @@ final class RealityCheckRunner {
             switch error {
             case .offline, .notConfigured: phase = .offline("AI isn't reachable right now. Nothing was changed.")
             case .rateLimited: phase = .failed("The proxy is rate limiting. Try again in a minute.")
-            case .invalidResponse(let d): phase = .failed("The AI's answer didn't match the contract: \(d)")
+            case .invalidResponse(let d): phase = .failed("The AI step failed. \(d)")
             case .server(let s): phase = .failed("The proxy answered with status \(s).")
             }
         } catch {

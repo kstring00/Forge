@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ],
       output_config: { effort: "medium" },
       messages,
-    });
+    }, { timeout: 110_000, maxRetries: 1 });
 
     if (response.stop_reason === "refusal") throw new HttpError(502, "refused", "The model declined this request.");
 
@@ -84,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     res.status(200).json(out);
   } catch (err) {
-    sendError(res, err);
+    sendError(res, err, "research");
   }
 }
 

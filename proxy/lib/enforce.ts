@@ -1,7 +1,7 @@
 // The honesty rules, enforced on the server regardless of what the model wrote.
 import { content } from "./content.js";
 import type { z } from "zod";
-import type { PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
+import type { PitchResult, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
 
 const ceiling = content.deskResearchRungCeiling;
 
@@ -63,4 +63,9 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
     panel: round.verdicts,
     crossfire: round.crossfire,
   };
+}
+
+/// A pitch may only claim evidence it can point at.
+export function enforcePitch(p: z.infer<typeof PitchResult>, known: Set<string>): z.infer<typeof PitchResult> {
+  return { pitches: p.pitches.map((x) => ({ ...x, groundedIn: knownOnly(x.groundedIn, known) })) };
 }

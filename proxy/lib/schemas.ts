@@ -9,7 +9,12 @@ export const actions = [
 ] as const;
 export type Action = (typeof actions)[number];
 
+/// Request side: the app sends real UUIDs, so validate them.
 const uuid = z.string().uuid();
+/// Output side: a plain string. A `format` on every ID field adds grammar the
+/// structured-output compiler has to build, and `enforce.ts` already drops any
+/// ID the app did not send, so the check lives there instead.
+const sourceId = z.string();
 const recommendation = z.enum(["exploreFurther", "testRiskiestAssumption", "buildSmallPrototype", "startBuilding", "revisitLater", "archive"]);
 const verdictKind = z.enum(["onTrack", "offTrack", "cantTell"]);
 const sphere = z.enum(["investor", "customer", "builder", "strategist", "skeptic", "steward"]);
@@ -94,13 +99,13 @@ export const PivotResult = z.object({
 export const PitchResult = z.object({
   pitches: z.array(z.object({
     title: z.string(), body: z.string(), forWhom: z.string(), whyNow: z.string(), advantageUsed: z.string(),
-    riskiestAssumption: z.string(), cluster, sphere: sphere.nullable(), groundedIn: z.array(uuid),
+    riskiestAssumption: z.string(), cluster, sphere: sphere.nullable(), groundedIn: z.array(sourceId),
   })),
 });
 
 export const VerdictDraft = z.object({
   sphere, verdict: verdictKind, criterionKey: z.string(), reason: z.string(),
-  sourceIDs: z.array(uuid), evidenceNeeded: z.string().nullable(),
+  sourceIDs: z.array(sourceId), evidenceNeeded: z.string().nullable(),
 });
 export const CrossfireDraft = z.object({ from: sphere, to: sphere, text: z.string() });
 export const RoundResult = z.object({ verdicts: z.array(VerdictDraft), crossfire: z.array(CrossfireDraft) });
@@ -108,9 +113,9 @@ export const RoundResult = z.object({ verdicts: z.array(VerdictDraft), crossfire
 export const CompetitorDraft = z.object({
   name: z.string(), url: z.string().nullable(), pricing: z.string(), positioning: z.string(),
   praises: z.array(z.string()), complaints: z.array(z.string()), tractionSignals: z.array(z.string()),
-  sourceID: uuid.nullable(),
+  sourceID: sourceId.nullable(),
 });
-export const DemandSignalDraft = z.object({ text: z.string(), url: z.string().nullable(), rung: z.number().int(), sourceID: uuid.nullable() });
+export const DemandSignalDraft = z.object({ text: z.string(), url: z.string().nullable(), rung: z.number().int(), sourceID: sourceId.nullable() });
 
 export const RealityCheckResult = z.object({
   verdict: realityVerdict,
@@ -126,14 +131,14 @@ export const RealityCheckResult = z.object({
 /// §0A. One typed object that pre-fills the whole Lab, every field carrying source IDs.
 export const PrefillResult = z.object({
   realityCheck: RealityCheckResult,
-  explorations: z.array(z.object({ promptKey: z.string(), answer: z.string(), sourceIDs: z.array(uuid) })),
-  criteria: z.array(z.object({ key: z.string(), score: z.number().int(), evidenceLevel: z.number().int(), note: z.string(), sourceIDs: z.array(uuid) })),
+  explorations: z.array(z.object({ promptKey: z.string(), answer: z.string(), sourceIDs: z.array(sourceId) })),
+  criteria: z.array(z.object({ key: z.string(), score: z.number().int(), evidenceLevel: z.number().int(), note: z.string(), sourceIDs: z.array(sourceId) })),
   projection: z.object({
     pricePerUnitLow: z.number(), pricePerUnitHigh: z.number(),
     unitsYearOneLow: z.number().int(), unitsYearOneHigh: z.number().int(),
     rationale: z.string(),
   }).nullable(),
-  riskiestAssumption: z.object({ belief: z.string(), consequence: z.string(), sourceIDs: z.array(uuid) }),
+  riskiestAssumption: z.object({ belief: z.string(), consequence: z.string(), sourceIDs: z.array(sourceId) }),
   nextMove: z.object({ recommendation, step: z.string(), experiment: ExperimentCard.nullable() }),
   draftedAssets: z.object({ kind: z.enum(["interviewQuestions", "outreachScript", "landingCopy"]), title: z.string(), body: z.string() }),
   panel: z.array(VerdictDraft),

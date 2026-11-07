@@ -7,8 +7,14 @@ import ForgeCore
 /// and never touches version n.
 @MainActor
 final class EvaluationAppendOnlyTests: XCTestCase {
+    private var store: TestStore!
+
+    override func setUp() async throws {
+        store = try TestStore()
+    }
+
     private func makeContext() throws -> ModelContext {
-        try ModelContainer.forge(inMemory: true).mainContext
+        store.context
     }
 
     func testReEvaluationAppendsANewVersion() throws {

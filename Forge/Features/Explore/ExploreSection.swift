@@ -1,0 +1,189 @@
+import SwiftUI
+import ForgeCore
+
+/// The Explore stage inside idea detail: six guided prompts, the AI notes the
+/// user has accepted, and the Expand / Summarize actions behind consent.
+struct ExploreSection: View {
+    @Bindable var idea: Idea
+    @Environment(AppEnvironment.self) private var env
+    @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
+
+    @State private var editing: ExplorePrompt?
+    @State private var controller: ExploreAIController?
+    @State private var pendingAction: AIAction?
+    @State private var showingConsent = false
+
+    private var answered: Int { ExploreActions.answeredCount(on: idea) }
+    private var aiNotes: [Exploration] { ExploreActions.aiNotes(on: idea) }
+    private var state: ExploreAIController.State { controller?.state ?? .idle }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
+            HStack {
+                Text("Explore").forgeLabel()
+                Spacer()
+                Text("\(answered) of \(ExplorePrompts.all.count)").forgeLabel()
+            }
+
+            VStack(spacing: ForgeSpacing.s) {
+                ForEach(ExplorePrompts.all) { prompt in
+                    promptRow(prompt)
+                }
+            }
+
+            if !aiNotes.isEmpty {
+                VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                    Text("AI notes").forgeLabel()
+                    ForEach(aiNotes) { note in
+                        VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
+                            Text(ExplorePrompts.aiLabel(for: note.promptKey)).forgeLabel()
+                            AIText(text: note.aiText ?? "")
+                        }
+                    }
+                }
+            }
+
+            aiActions
+        }
+        .sheet(item: $editing) { prompt in
+            ExploreAnswerSheet(prompt: prompt, idea: idea)
+        }
+        .sheet(isPresented: $showingConsent) {
+            AIConsentSheet { agreed in
+                showingConsent = false
+                if agreed {
+                    AIConsent.grant()
+                    consentStamp = AIConsent.grantedAt?.timeIntervalSince1970 ?? 0
+                    if let action = pendingAction { Task { await start(action) } }
+                }
+                pendingAction = nil
+            }
+        }
+        .sheet(isPresented: proposalPresented) {
+            if case .proposal(let proposal) = state, let controller {
+                AIProposalSheet(proposal: proposal, idea: idea,
+                                onAccept: { controller.accept(into: idea) },
+                                onDiscard: { controller.discard() })
+            }
+        }
+    }
+
+    // MARK: Rows
+
+    private func promptRow(_ prompt: ExplorePrompt) -> some View {
+        let answer = ExploreActions.latest(for: prompt.key, on: idea)?.userText ?? ""
+        return Button {
+            editing = prompt
+        } label: {
+            HStack(alignment: .top, spacing: ForgeSpacing.m) {
+                if let sphere = prompt.sphere {
+                    SphereOrb(sphere: sphere, size: 16).padding(.top, 3)
+                } else {
+                    Color.clear.frame(width: 16, height: 16)
+                }
+                VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
+                    Text(prompt.question)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(ForgeColor.ink)
+                    if answer.isEmpty {
+                        Text(prompt.hint)
+                            .font(.footnote)
+                            .foregroundStyle(ForgeColor.inkSecondary)
+                    } else {
+                        Text(answer)
+                            .font(ForgeType.body)
+                            .foregroundStyle(ForgeColor.ink)
+                    }
+                }
+                Spacer(minLength: ForgeSpacing.s)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(ForgeColor.inkSecondary)
+            }
+            .padding(ForgeSpacing.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(prompt.question)
+        .accessibilityValue(answer.isEmpty ? "Not answered" : answer)
+    }
+
+    // MARK: AI
+
+    private var aiActions: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            HStack(spacing: ForgeSpacing.m) {
+                aiButton("Expand", symbol: "sparkle") { await start(.expand) }
+                aiButton("Summarize", symbol: "text.alignleft") { await start(.summarize) }
+                    .disabled(answered == 0)
+                Spacer()
+                if case .running = state { ProgressView().controlSize(.small) }
+            }
+            switch state {
+            case .offline(let message), .failed(let message):
+                HStack(alignment: .top, spacing: ForgeSpacing.s) {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(ForgeColor.inkSecondary)
+                    Spacer()
+                    Button("OK") { controller?.dismissMessage() }
+                        .font(.caption.weight(.medium))
+                }
+            case .running:
+                Text("Thinking. Nothing is saved until you accept.")
+                    .font(.caption)
+                    .foregroundStyle(ForgeColor.inkSecondary)
+            default:
+                Text("AI proposals are shown in full and saved only when you accept them.")
+                    .font(.caption)
+                    .foregroundStyle(ForgeColor.inkSecondary)
+            }
+        }
+    }
+
+    private func aiButton(_ title: String, symbol: String, action: @escaping () async -> Void) -> some View {
+        Button {
+            Task { await action() }
+        } label: {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.weight(.medium))
+                .padding(.horizontal, ForgeSpacing.m)
+                .padding(.vertical, ForgeSpacing.s)
+                .foregroundStyle(ForgeColor.ink)
+                .background(ForgeColor.surface, in: Capsule())
+                .overlay(Capsule().strokeBorder(ForgeColor.line))
+        }
+        .buttonStyle(.plain)
+        .disabled(controller?.isRunning ?? false)
+    }
+
+    private var proposalPresented: Binding<Bool> {
+        Binding(
+            get: { if case .proposal = state { return true } else { return false } },
+            set: { if !$0 { controller?.discard() } }
+        )
+    }
+
+    private func ensureController() -> ExploreAIController {
+        if let controller { return controller }
+        let c = ExploreAIController(client: env.ai)
+        controller = c
+        return c
+    }
+
+    private func start(_ action: AIAction) async {
+        guard AIConsent.isGranted else {
+            pendingAction = action
+            showingConsent = true
+            return
+        }
+        let c = ensureController()
+        switch action {
+        case .expand: await c.expand(idea)
+        case .summarize: await c.summarize(idea)
+        default: break
+        }
+    }
+}

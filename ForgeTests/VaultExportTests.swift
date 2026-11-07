@@ -102,7 +102,8 @@ final class VaultExportTests: XCTestCase {
     }
 
     func testExportImportRoundTripIntoFreshStore() throws {
-        let source = try ModelContainer.forge(inMemory: true).mainContext
+        let sourceStore = try TestStore()
+        let source = sourceStore.context
         let fx = try buildFixture(in: source)
 
         let doc = try VaultExporter.document(from: source)
@@ -112,7 +113,8 @@ final class VaultExportTests: XCTestCase {
         XCTAssertEqual(decoded.ideas.count, 2)
         XCTAssertEqual(decoded.decisions.count, 2)
 
-        let fresh = try ModelContainer.forge(inMemory: true).mainContext
+        let freshStore = try TestStore()
+        let fresh = freshStore.context
         let summary = try VaultImporter.importDocument(decoded, into: fresh)
         XCTAssertEqual(summary.ideasImported, 2)
         XCTAssertEqual(summary.ideasSkipped, 0)
@@ -197,7 +199,8 @@ final class VaultExportTests: XCTestCase {
     }
 
     func testMarkdownIsReadable() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         let fx = try buildFixture(in: context)
         let md = VaultExporter.markdown(try VaultExporter.document(from: context))
         XCTAssertTrue(md.contains("## Marina booking"))
@@ -209,7 +212,8 @@ final class VaultExportTests: XCTestCase {
     }
 
     func testBundleWritesJSONAndMarkdown() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         _ = try buildFixture(in: context)
         let doc = try VaultExporter.document(from: context)
         let parent = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -224,7 +228,8 @@ final class VaultExportTests: XCTestCase {
     }
 
     func testNewerSchemaIsRefused() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         var doc = try VaultExporter.document(from: context)
         doc.schemaVersion = VaultExportDocument.currentSchemaVersion + 1
         XCTAssertThrowsError(try VaultImporter.importDocument(doc, into: context))

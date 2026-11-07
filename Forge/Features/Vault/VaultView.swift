@@ -53,16 +53,7 @@ struct VaultView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) { filterMenu }
             }
-            .navigationDestination(for: VaultRoute.self) { route in
-                switch route {
-                case .idea(let id):
-                    if let idea = ideas.first(where: { $0.id == id }) {
-                        IdeaDetailView(idea: idea)
-                    } else {
-                        EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
-                    }
-                }
-            }
+            .forgeDestinations()
             .confirmationDialog("Archive this idea?",
                                 isPresented: Binding(get: { pendingArchive != nil }, set: { if !$0 { pendingArchive = nil } }),
                                 titleVisibility: .visible) {

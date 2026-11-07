@@ -9,6 +9,7 @@ struct IdeaDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tagText = ""
     @State private var confirmingArchive = false
+    @State private var converting = false
     @State private var playback = AudioPlayback()
 
     private var audioURL: URL? {
@@ -36,6 +37,10 @@ struct IdeaDetailView: View {
                 if let summary = idea.aiSummary, idea.aiSummaryConfirmed {
                     AIText(text: summary)
                 }
+
+                ExploreSection(idea: idea)
+
+                makeItReal
 
                 tags
 
@@ -71,6 +76,7 @@ struct IdeaDetailView: View {
         } message: {
             Text("It moves out of the Vault but nothing is deleted. You can bring it back any time.")
         }
+        .sheet(isPresented: $converting) { ConvertToProjectSheet(idea: idea) }
         .onAppear { tagText = idea.tags.joined(separator: ", ") }
         .onDisappear { playback.stop() }
         .onChange(of: idea.title) { idea.touch() }
@@ -142,6 +148,53 @@ struct IdeaDetailView: View {
             }
             OriginalText(text: idea.originalText)
                 .padding(.vertical, ForgeSpacing.xs)
+        }
+    }
+
+    @ViewBuilder
+    private var makeItReal: some View {
+        if let project = idea.project {
+            NavigationLink(value: WorkshopRoute.project(project.id)) {
+                VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
+                    Text("In the Workshop").forgeLabel()
+                    Text(project.name)
+                        .font(ForgeType.ideaTitle)
+                        .foregroundStyle(ForgeColor.ink)
+                    if let next = project.nextStep, project.status == .active {
+                        Text("Next: \(next)")
+                            .font(ForgeType.secondary)
+                            .foregroundStyle(ForgeColor.ink)
+                            .lineLimit(2)
+                    }
+                }
+                .padding(ForgeSpacing.cardPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+            }
+            .buttonStyle(.plain)
+        } else if !idea.isArchived {
+            Button { converting = true } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
+                        Text("Make it real")
+                            .font(ForgeType.ideaTitle)
+                            .foregroundStyle(ForgeColor.ink)
+                        Text("Commit to one next step and say what launched means. No evaluation required.")
+                            .font(.caption)
+                            .foregroundStyle(ForgeColor.inkSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .foregroundStyle(ForgeColor.ink)
+                }
+                .padding(ForgeSpacing.cardPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Make it real")
         }
     }
 

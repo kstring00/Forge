@@ -8,13 +8,14 @@ import ForgeCore
 @MainActor
 final class ModelContainerTests: XCTestCase {
     func testContainerOpensWithEverySchemaModel() throws {
-        let container = try ModelContainer.forge(inMemory: true)
+        let store = try TestStore()
         XCTAssertEqual(ForgeSchemaV1.models.count, 24)
-        XCTAssertNotNil(container.mainContext)
+        XCTAssertNotNil(store.context)
     }
 
     func testRoundGraphRoundTrips() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         let idea = Idea(originalText: "pitch me")
         context.insert(idea)
         let source = Source(kind: .note, title: "Interview 1", fullText: "They pay $40/mo for a workaround.", sourceClass: .userVerified)
@@ -41,7 +42,8 @@ final class ModelContainerTests: XCTestCase {
     }
 
     func testRealityCheckAndJournalRoundTrip() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         let idea = Idea(originalText: "a booking tool for marinas")
         idea.lensType = .business
         context.insert(idea)

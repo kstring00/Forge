@@ -1,28 +1,29 @@
 import SwiftUI
 
-/// Soft gradient with fine grain, from the sunset reference. Used as the
-/// header material on idea detail. Grain is deterministic and cheap.
+/// The idea's sky: a gradient with fine grain multiplied over it, from the
+/// design canvas. Grain is deterministic so it never shimmers.
 struct GrainGradient: View {
     var colors: [Color]
-    var grain: Double = 0.10
+    /// Overall strength of the grain overlay. The brief's reference is about 0.35.
+    var grain: Double = 0.35
 
     var body: some View {
         LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
             .overlay {
                 Canvas(opaque: false, rendersAsynchronously: true) { context, size in
                     var rng = SeededGenerator(seed: 0x5EED)
-                    let count = Int(size.width * size.height / 28)
+                    let count = Int(size.width * size.height / 22)
                     for _ in 0..<count {
                         let x = Double.random(in: 0..<size.width, using: &rng)
                         let y = Double.random(in: 0..<size.height, using: &rng)
-                        let alpha = Double.random(in: 0.2...1.0, using: &rng) * grain
-                        let light = Bool.random(using: &rng)
+                        let alpha = Double.random(in: 0.15...1.0, using: &rng) * grain
                         context.fill(
                             Path(CGRect(x: x, y: y, width: 1, height: 1)),
-                            with: .color((light ? Color.white : Color.black).opacity(alpha))
+                            with: .color(Color.black.opacity(alpha))
                         )
                     }
                 }
+                .blendMode(.multiply)
                 .allowsHitTesting(false)
             }
             .drawingGroup()
@@ -46,6 +47,10 @@ struct SeededGenerator: RandomNumberGenerator {
 }
 
 #Preview {
-    GrainGradient(colors: ForgeColor.headerGradient(.business))
-        .frame(height: 260)
+    VStack {
+        GrainGradient(colors: ForgeColor.sky(for: .capture)).frame(height: 120)
+        GrainGradient(colors: ForgeColor.sky(for: .build)).frame(height: 120)
+    }
+    .padding()
+    .background(ForgeColor.canvas)
 }

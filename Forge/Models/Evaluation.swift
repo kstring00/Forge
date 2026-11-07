@@ -20,6 +20,16 @@ public final class Evaluation {
     public var shortfallTexts: [String] = []
     public var riskiestAssumption: String = ""
     public var recommendationRaw: String?
+
+    // §4.0 Projection (Business lens) or Impact (Growth, Creative) card. All
+    // user-entered, all optional, advisory only; never feeds Potential or Confidence.
+    public var projectionPricePerUnit: Double?
+    public var projectionUnitsYearOne: Int?
+    public var projectionRecurringPerMonth: Double?
+    public var impactWho: String?
+    public var impactWhatChanges: String?
+    public var impactSignal: String?
+
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []
     @Relationship(deleteRule: .cascade, inverse: \Experiment.evaluation) public var experiment: Experiment?
@@ -65,6 +75,15 @@ public final class Evaluation {
             ScoredCriterion(key: $0.key, score: $0.score, evidenceLevel: $0.evidenceLevel, peopleAtRung: $0.peopleAtRung)
         }
         shortfallTexts = Shortfalls.compute(scored, lens: lens).map { "\($0.title): \($0.whatWouldHaveToBeTrue)" }
+    }
+
+    /// Import only. Restores the computed fields of an evaluation rebuilt from
+    /// an export. Refuses once this instance has been finalized here.
+    func restore(potential: Int, confidence: Int, finalizedAt: Date?) {
+        guard !isFinal else { return }
+        self.potential = potential
+        self.confidence = confidence
+        self.finalizedAt = finalizedAt
     }
 
     public func finalize() throws {

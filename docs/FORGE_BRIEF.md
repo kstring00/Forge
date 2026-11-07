@@ -71,6 +71,15 @@ The Lab must also produce, for every evaluation:
 - **Recommended next move** — one of: *Explore further / Test the riskiest assumption / Build a small prototype / Start building / Revisit later / Archive*. Advisory, never automatic.
 - **Experiment card** (when the move is "test"): Hypothesis · Test · Metric · Cost · Timebox · Decision rule.
 
+### 4.0 Projection / Impact card
+
+Every evaluated idea shows one card under the rings. Which card depends on the lens:
+
+- **Business lens → Projection.** Three user-entered figures (price per unit, units in year one, derived recurring per month), each editable. Beneath them a bar splits *verified* (customers actually paying, solid fill) from *assumed* (striped). All figures are drawn as assumptions until a real payment is attached as Evidence at rung 4+; then that slice goes solid. The card never shows a projection the user did not type; the AI may suggest a range, labeled as an estimate, and the user accepts or edits it.
+- **Personal Growth or Creative lens → Impact.** No dollar figures anywhere on the screen. The card holds: who this helps (a person, a group, or the user), what changes for them, and how the user would know (an observable signal, not a feeling). The same solid/striped bar shows what has been observed vs. hoped for.
+
+The card is advisory. It feeds nothing into Potential or Confidence directly; it exists so the user sees the gap between the story and the receipts.
+
 ### 4.1 Opportunity Filter (60-second triage, any lens)
 
 Ten yes/no/unsure questions shown before a full evaluation. Not scored to 100; just surfaces red flags.
@@ -402,8 +411,12 @@ No stats, no streaks, no charts on Home.
 
 ## 8. Design direction
 
-- **Feel:** a quiet studio, not a dashboard. Warm neutrals, generous whitespace, one ember-orange accent used sparingly for capture and "next step." Dark mode is first-class.
-- **Type:** one display face for idea titles, system text for everything else. Idea titles are the hero of every card.
+- **Feel:** a quiet studio at night, not a dashboard. The default theme is deep matte charcoal (ground #1C1916, cards #272320, hairlines #3A342E, text #F1EBE2, muted #A39B8F) with one ember accent (#C4441C on fills, #E58A62 as text) used only for capture, "next step," and the Confidence ring. A light theme is secondary and inverts the same tokens.
+- **The idea's sky:** every idea detail opens with a grainy gradient header (lavender → ember, SVG turbulence overlay at ~35% multiply) whose blend shifts with the idea's stage: cool and quiet at Capture, warming toward ember as it moves to Build. It is the only large color field in the app.
+- **Type:** Fraunces (or system New York) for idea titles, the user's own words, and every number that matters; IBM Plex Mono small caps with wide tracking for structure labels; Inter/system for body. The user's original text is always italic serif with a 2px ember rule on the left; AI text is small sans in muted with a spark glyph.
+- **Evidence as pattern, not color:** verified = solid fill, AI-found = diagonal stripes, assumption = dot grid. These three fills appear on the Confidence breakdown, on every criterion row chip, and on the Projection/Impact bar, so evidence shape is readable without reading.
+- **Spheres are orbs:** each Sphere is a blurred radial-gradient sphere with its own palette (Customer blue, Investor ember, Strategist violet, Builder green, Skeptic stone, Steward gold). No faces, no icons, no catchphrases; the orb is the whole identity.
+- Reference canvas: see the "FORGE Idea Detail" design artifact for the idea detail and Round screens.
 - **Motion:** subtle — cards settle, stages slide. Nothing bounces for attention.
 - **Hierarchy:** the original idea text is always visually distinct from AI-generated text (e.g., AI text in a secondary color with a small spark glyph).
 - **Evidence ladder** renders as an actual vertical ladder with the current rung lit.

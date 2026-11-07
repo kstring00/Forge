@@ -82,3 +82,15 @@ test("cost accounting", () => {
   const est = realityCheckEstimateUSD();
   assert.ok(est.low < est.high);
 });
+
+test("the bearer token is compared trimmed on both sides", async () => {
+  process.env.FORGE_PROXY_TOKEN = "  abc123\n";
+  process.env.ANTHROPIC_API_KEY = "sk-test";
+  const { requireAuth } = await import("../lib/http.js?" + Date.now());
+  const { config } = await import("../lib/env.js?" + Date.now());
+  assert.equal(config.proxyToken, "abc123");
+  const ok = { headers: { authorization: "Bearer abc123 " } } as never;
+  assert.doesNotThrow(() => requireAuth(ok));
+  const bad = { headers: { authorization: "Bearer abc124" } } as never;
+  assert.throws(() => requireAuth(bad), /invalid proxy token/);
+});

@@ -8,3 +8,7 @@ Tokens in `Forge/Design/Tokens/` and colours in `Forge/Design/Assets.xcassets` f
 brief v3.1 §8 and this canvas. Fonts: the brief names Fraunces, IBM Plex Mono and Inter;
 the app currently uses the system equivalents (New York, SF Mono, SF) so no font files
 ship. Swapping to the named faces is a one-line change per token in `ForgeType.swift`.
+
+- `source/` holds the original "FORGE Idea Detail" artifact and the two unpacked page
+  templates (idea detail, Round) with their CSS and sample data. The fonts it bundled
+  (Fraunces, Inter; OFL) are described in `docs/decisions/0009-fonts-from-the-design-bundle.md`.

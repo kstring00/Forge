@@ -30,6 +30,11 @@ public final class Evaluation {
     public var impactWhatChanges: String?
     public var impactSignal: String?
 
+    /// "If wrong, …" under the riskiest assumption, and the concrete step shown
+    /// on the Next move button. Both the user's words.
+    public var riskiestAssumptionConsequence: String?
+    public var nextStepText: String?
+
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []
     @Relationship(deleteRule: .cascade, inverse: \Experiment.evaluation) public var experiment: Experiment?

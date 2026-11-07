@@ -15,6 +15,12 @@ extension View {
                 case .project(let id): ProjectDestination(id: id)
                 }
             }
+            .navigationDestination(for: LabRoute.self) { route in
+                switch route {
+                case .criterion(let evaluationID, let key): CriterionDestination(evaluationID: evaluationID, key: key)
+                case .history(let ideaID): HistoryDestination(ideaID: ideaID)
+                }
+            }
     }
 }
 
@@ -47,6 +53,42 @@ struct ProjectDestination: View {
             ProjectDetailView(project: project)
         } else {
             EmptyState(symbol: "questionmark", title: "Project not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct CriterionDestination: View {
+    @Query private var evaluations: [Evaluation]
+    let key: String
+
+    init(evaluationID: UUID, key: String) {
+        self.key = key
+        _evaluations = Query(filter: #Predicate<Evaluation> { $0.id == evaluationID })
+    }
+
+    var body: some View {
+        if let evaluation = evaluations.first, let criterion = evaluation.lens.criterion(key) {
+            CriterionDetailView(evaluation: evaluation, criterion: criterion)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Criterion not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct HistoryDestination: View {
+    @Query private var ideas: [Idea]
+
+    init(ideaID: UUID) {
+        _ideas = Query(filter: #Predicate<Idea> { $0.id == ideaID })
+    }
+
+    var body: some View {
+        if let idea = ideas.first {
+            EvaluationHistoryView(idea: idea)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
                 .background(ForgeColor.canvas)
         }
     }

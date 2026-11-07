@@ -27,3 +27,8 @@ enum VaultRoute: Hashable {
 enum WorkshopRoute: Hashable {
     case project(UUID)
 }
+
+enum LabRoute: Hashable {
+    case criterion(evaluationID: UUID, key: String)
+    case history(ideaID: UUID)
+}

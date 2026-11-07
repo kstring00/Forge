@@ -32,6 +32,12 @@
 	<string>FORGE records voice captures so you can speak an idea instead of typing it. Recordings stay on this device.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>FORGE turns voice captures into text so the idea can be searched and read later.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fraunces-Regular.ttf</string>
+		<string>Fraunces-SemiBold.ttf</string>
+		<string>Fraunces-Italic.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -89,11 +89,36 @@ public final class Idea {
     }
 
     /// Starts a new, append-only evaluation version. Never mutates earlier versions.
+    /// With `copying`, scores, evidence levels, notes, evidence links and the
+    /// narrative fields carry forward so a re-evaluation starts where the last one ended.
     @discardableResult
-    public func beginEvaluation(lens: LensType) -> Evaluation {
+    public func beginEvaluation(lens: LensType, copying previous: Evaluation? = nil) -> Evaluation {
         let next = (evaluations.map(\.version).max() ?? 0) + 1
         let evaluation = Evaluation(lens: lens, version: next)
+        if let previous, previous.lensType == lens {
+            for old in previous.criteria {
+                let score = CriterionScore(key: old.key, score: old.score, evidenceLevel: old.evidenceLevel, note: old.note)
+                score.peopleAtRung = old.peopleAtRung
+                for ev in old.evidence {
+                    score.evidence.append(Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text, source: ev.source))
+                }
+                evaluation.criteria.append(score)
+            }
+            evaluation.riskiestAssumption = previous.riskiestAssumption
+            evaluation.riskiestAssumptionConsequence = previous.riskiestAssumptionConsequence
+            evaluation.recommendationRaw = previous.recommendationRaw
+            evaluation.nextStepText = previous.nextStepText
+            evaluation.projectionPricePerUnit = previous.projectionPricePerUnit
+            evaluation.projectionUnitsYearOne = previous.projectionUnitsYearOne
+            evaluation.projectionRecurringPerMonth = previous.projectionRecurringPerMonth
+            evaluation.impactWho = previous.impactWho
+            evaluation.impactWhatChanges = previous.impactWhatChanges
+            evaluation.impactSignal = previous.impactSignal
+            evaluation.recompute()
+        }
         evaluations.append(evaluation)
+        if lensType == nil { lensTypeRaw = lens.rawValue }
+        if stage == .capture || stage == .explore { stage = .evaluate }
         touch()
         return evaluation
     }

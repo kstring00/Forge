@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query private var ideas: [Idea]
 
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     @State private var exportURL: URL?
     @State private var isExporting = false
     @State private var isImporting = false
@@ -43,6 +44,16 @@ struct SettingsView: View {
                 Text("Backup")
             } footer: {
                 Text("Export writes a folder with vault.json, vault.md and your voice recordings. Save it to Files or AirDrop it. Import adds anything that isn't already here; nothing is overwritten or deleted.")
+            }
+
+            Section {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(Appearance.allCases) { Text($0.displayName).tag($0) }
+                }
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Dark is the studio's default. Light inverts the same palette.")
             }
 
             Section("Vault") {

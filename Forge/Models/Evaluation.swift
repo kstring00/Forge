@@ -20,6 +20,16 @@ public final class Evaluation {
     public var shortfallTexts: [String] = []
     public var riskiestAssumption: String = ""
     public var recommendationRaw: String?
+
+    // §4.0 Projection (Business lens) or Impact (Growth, Creative) card. All
+    // user-entered, all optional, advisory only; never feeds Potential or Confidence.
+    public var projectionPricePerUnit: Double?
+    public var projectionUnitsYearOne: Int?
+    public var projectionRecurringPerMonth: Double?
+    public var impactWho: String?
+    public var impactWhatChanges: String?
+    public var impactSignal: String?
+
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []
     @Relationship(deleteRule: .cascade, inverse: \Experiment.evaluation) public var experiment: Experiment?

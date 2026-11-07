@@ -41,6 +41,8 @@ final class VaultExportTests: XCTestCase {
         for c in Lenses.business.criteria { try e.set(key: c.key, score: 3, evidenceLevel: 2) }
         e.riskiestAssumption = "Small marinas will pay"
         e.recommendation = .testRiskiestAssumption
+        e.projectionPricePerUnit = 149
+        e.projectionUnitsYearOne = 12
         e.criterionScore(for: "A2")?.evidence.append(Evidence(criterionKey: "A2", ladderRung: 2, text: "They pay for a workaround", source: src))
         e.experiment = Experiment(hypothesis: "h", test: "t", metric: "m", cost: "c", timeboxDays: 7, decisionRule: "d")
         try e.finalize()
@@ -142,6 +144,9 @@ final class VaultExportTests: XCTestCase {
         XCTAssertEqual(e.confidence, fx.confidence)
         XCTAssertEqual(e.criteria.count, 6)
         XCTAssertEqual(e.recommendation, .testRiskiestAssumption)
+        XCTAssertEqual(e.projectionPricePerUnit, 149)
+        XCTAssertEqual(e.projectionUnitsYearOne, 12)
+        XCTAssertNil(e.impactWho)
         XCTAssertEqual(e.experiment?.hypothesis, "h")
         let a2 = try XCTUnwrap(e.criterionScore(for: "A2"))
         XCTAssertEqual(a2.evidence.count, 1)

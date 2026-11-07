@@ -250,6 +250,12 @@ enum VaultImporter {
         evaluation.shortfallTexts = e.shortfallTexts
         evaluation.riskiestAssumption = e.riskiestAssumption
         evaluation.recommendationRaw = e.recommendation
+        evaluation.projectionPricePerUnit = e.projectionPricePerUnit
+        evaluation.projectionUnitsYearOne = e.projectionUnitsYearOne
+        evaluation.projectionRecurringPerMonth = e.projectionRecurringPerMonth
+        evaluation.impactWho = e.impactWho
+        evaluation.impactWhatChanges = e.impactWhatChanges
+        evaluation.impactSignal = e.impactSignal
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id

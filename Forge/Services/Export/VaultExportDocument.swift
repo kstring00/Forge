@@ -76,6 +76,12 @@ struct EvaluationExport: Codable {
     var shortfallTexts: [String]
     var riskiestAssumption: String
     var recommendation: String?
+    var projectionPricePerUnit: Double?
+    var projectionUnitsYearOne: Int?
+    var projectionRecurringPerMonth: Double?
+    var impactWho: String?
+    var impactWhatChanges: String?
+    var impactSignal: String?
     var criteria: [CriterionScoreExport]
     var experiment: ExperimentExport?
 }

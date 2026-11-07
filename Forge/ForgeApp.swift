@@ -5,6 +5,7 @@ import SwiftData
 struct ForgeApp: App {
     private let container: ModelContainer
     private let environment = AppEnvironment.live
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     init() {
         do {
@@ -20,6 +21,7 @@ struct ForgeApp: App {
             RootTabView()
                 .environment(environment)
                 .tint(ForgeColor.ember)
+                .preferredColorScheme(appearance.colorScheme)
         }
         .modelContainer(container)
     }

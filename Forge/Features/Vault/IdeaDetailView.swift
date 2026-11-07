@@ -19,7 +19,7 @@ struct IdeaDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                GrainGradient(colors: ForgeColor.headerGradient(idea.lensType))
+                GrainGradient(colors: ForgeColor.sky(for: idea.stage))
                     .frame(height: 160)
                     .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
 
@@ -135,19 +135,13 @@ struct IdeaDetailView: View {
                     } label: {
                         Image(systemName: playback.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(ForgeColor.ember)
+                            .foregroundStyle(ForgeColor.ink)
                     }
                     .accessibilityLabel(playback.isPlaying ? "Pause recording" : "Play recording")
                 }
             }
-            Text(idea.originalText)
-                .font(ForgeType.body)
-                .foregroundStyle(ForgeColor.ink)
-                .textSelection(.enabled)
-                .padding(ForgeSpacing.cardPadding)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
+            OriginalText(text: idea.originalText)
+                .padding(.vertical, ForgeSpacing.xs)
         }
     }
 

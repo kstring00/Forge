@@ -11,6 +11,14 @@ Linux container; the app target needs its first build on the Mac.
 - **Settings screen.** Reached from the gear on Home. Backup section with Export, Share and Import, the Vault counts, and the version.
 - **Tests.** `VaultExportTests` builds a graph that touches every model, exports it, imports it into a fresh in-memory store and checks the graph came back whole, including the original text byte for byte, the evaluation's version and scores, evidence pointing at the right source, a ruling pointing at the right decision, the pivot link, and the project tree. A second import changes nothing. Markdown and the written folder are checked too.
 
+## Also on this branch: design tokens for brief v3.1
+
+Dark default theme with the brief's exact hex tokens, an Appearance setting, serif
+numerals and italic serif original text with the ember rule, pattern fills for
+evidence, orb Spheres, and a stage-driven sky header. See `docs/decisions/0008-brief-v3-1-design-tokens.md`
+and `docs/design/`. Check on first launch: the app opens dark, the Vault cards sit
+on #272320 over #1C1916, and only capture controls are ember.
+
 ## Decisions made here
 
 - **A folder, not a zip.** Foundation has no zip reader on iOS, and a dependency for it would be the app's first. A folder shares and re-imports cleanly through Files and avoids base64-inflating recordings into the JSON.

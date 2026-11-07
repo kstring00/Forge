@@ -57,6 +57,12 @@ enum VaultExporter {
             finalizedAt: e.finalizedAt, potential: e.potential, confidence: e.confidence,
             shortfallTexts: e.shortfallTexts, riskiestAssumption: e.riskiestAssumption,
             recommendation: e.recommendationRaw,
+            projectionPricePerUnit: e.projectionPricePerUnit,
+            projectionUnitsYearOne: e.projectionUnitsYearOne,
+            projectionRecurringPerMonth: e.projectionRecurringPerMonth,
+            impactWho: e.impactWho,
+            impactWhatChanges: e.impactWhatChanges,
+            impactSignal: e.impactSignal,
             criteria: e.criteria.sorted { $0.key < $1.key }.map { c in
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,

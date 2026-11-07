@@ -57,6 +57,15 @@ struct HomeView: View {
             }
             .background(ForgeColor.canvas)
             .navigationTitle("Home")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Image(systemName: "gearshape").accessibilityLabel("Settings")
+                    }
+                }
+            }
             .navigationDestination(for: VaultRoute.self) { route in
                 switch route {
                 case .idea(let id):

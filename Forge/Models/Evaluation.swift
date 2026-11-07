@@ -67,6 +67,15 @@ public final class Evaluation {
         shortfallTexts = Shortfalls.compute(scored, lens: lens).map { "\($0.title): \($0.whatWouldHaveToBeTrue)" }
     }
 
+    /// Import only. Restores the computed fields of an evaluation rebuilt from
+    /// an export. Refuses once this instance has been finalized here.
+    func restore(potential: Int, confidence: Int, finalizedAt: Date?) {
+        guard !isFinal else { return }
+        self.potential = potential
+        self.confidence = confidence
+        self.finalizedAt = finalizedAt
+    }
+
     public func finalize() throws {
         guard !isFinal else { throw EvaluationError.alreadyFinal }
         recompute()

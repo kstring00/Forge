@@ -5,6 +5,7 @@ import ForgeCore
 
 @MainActor
 final class VaultFilterTests: XCTestCase {
+    private var store: TestStore!
     private var context: ModelContext!
     private var a: Idea!
     private var b: Idea!
@@ -12,7 +13,8 @@ final class VaultFilterTests: XCTestCase {
     private var archived: Idea!
 
     override func setUp() async throws {
-        context = try ModelContainer.forge(inMemory: true).mainContext
+        store = try TestStore()
+        context = store.context
         let a = Idea(originalText: "A newsletter for horse boarding barns")
         a.tags = ["Email", "equine"]
         a.lensType = .business

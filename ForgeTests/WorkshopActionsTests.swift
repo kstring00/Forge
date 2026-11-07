@@ -6,8 +6,14 @@ import ForgeCore
 /// Phase 2 done-check in code: capture → commit → next step done → outcome recorded, no Lab involved.
 @MainActor
 final class WorkshopActionsTests: XCTestCase {
+    private var store: TestStore!
+
+    override func setUp() async throws {
+        store = try TestStore()
+    }
+
     private func makeContext() throws -> ModelContext {
-        try ModelContainer.forge(inMemory: true).mainContext
+        store.context
     }
 
     func testConvertCreatesProjectAndCommitEntry() throws {

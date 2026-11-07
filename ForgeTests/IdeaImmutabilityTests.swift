@@ -8,8 +8,14 @@ import SwiftData
 /// Runtime: it survives every other edit, save and fetch unchanged.
 @MainActor
 final class IdeaImmutabilityTests: XCTestCase {
+    private var store: TestStore!
+
+    override func setUp() async throws {
+        store = try TestStore()
+    }
+
     private func makeContext() throws -> ModelContext {
-        try ModelContainer.forge(inMemory: true).mainContext
+        store.context
     }
 
     func testOriginalTextSurvivesEditsSaveAndFetch() throws {

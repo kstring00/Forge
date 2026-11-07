@@ -6,7 +6,8 @@ import ForgeCore
 @MainActor
 final class ExploreActionsTests: XCTestCase {
     func testAnswersUpsertPerPromptAndMoveStageToExplore() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         let idea = Idea(originalText: "x")
         context.insert(idea)
         XCTAssertEqual(idea.stage, .capture)
@@ -26,7 +27,8 @@ final class ExploreActionsTests: XCTestCase {
     }
 
     func testAcceptedAINotesAreSeparateAndConfirmed() throws {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let store = try TestStore()
+        let context = store.context
         let idea = Idea(originalText: "x")
         idea.stage = .evaluate
         context.insert(idea)

@@ -5,8 +5,14 @@ import ForgeCore
 
 @MainActor
 final class ExploreAIControllerTests: XCTestCase {
+    private var store: TestStore!
+
+    override func setUp() async throws {
+        store = try TestStore()
+    }
+
     private func makeIdea() throws -> Idea {
-        let context = try ModelContainer.forge(inMemory: true).mainContext
+        let context = store.context
         let idea = Idea(originalText: "retainer for rv parks, cheap site + monthly fee")
         context.insert(idea)
         ExploreActions.answer("Parks have a Facebook page and nothing else", promptKey: "today", on: idea)

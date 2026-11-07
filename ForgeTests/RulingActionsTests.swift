@@ -34,7 +34,8 @@ final class RulingActionsTests: XCTestCase {
         let v = Verdict(sphere: .investor, kind: .onTrack, criterionKey: "A5", reason: "Retainers beat one-offs.", sources: [page])
         _ = round([v])
         let e = try XCTUnwrap(idea.latestEvaluation)
-        let before = (e.potential, e.confidence)
+        let potentialBefore = e.potential
+        let confidenceBefore = e.confidence
 
         let ruling = RulingActions.rule(v, .agree, on: idea, in: store.context)
 
@@ -54,7 +55,8 @@ final class RulingActionsTests: XCTestCase {
         XCTAssertEqual(e.criterionScore(for: "A5")?.evidenceLevel, 2)
         XCTAssertEqual(e.criterionScore(for: "A5")?.aiProposed, true, "a ruling never counts as the user picking an anchor")
         e.recompute()
-        XCTAssertEqual((e.potential, e.confidence), before)
+        XCTAssertEqual(e.potential, potentialBefore)
+        XCTAssertEqual(e.confidence, confidenceBefore)
         XCTAssertNil(ruling.resultingAssumption)
         XCTAssertNil(ruling.resultingExperiment)
     }

@@ -38,14 +38,14 @@ public final class Evaluation {
         set { recommendationRaw = newValue?.rawValue }
     }
 
-    public func score(for key: String) -> CriterionScore? {
+    public func criterionScore(for key: String) -> CriterionScore? {
         criteria.first { $0.key == key }
     }
 
     /// Sets or updates one criterion. Throws once the version is final.
     public func set(key: String, score: Int, evidenceLevel: Int, note: String = "") throws {
         guard !isFinal else { throw EvaluationError.alreadyFinal }
-        if let existing = score(for: key) {
+        if let existing = criterionScore(for: key) {
             existing.score = score
             existing.evidenceLevel = evidenceLevel
             existing.note = note
@@ -58,7 +58,7 @@ public final class Evaluation {
     /// Recomputes Potential, Confidence and shortfalls from the criteria.
     public func recompute() {
         guard !isFinal else { return }
-        let ordered = lens.criteria.compactMap { score(for: $0.key) }
+        let ordered = lens.criteria.compactMap { criterionScore(for: $0.key) }
         potential = Scoring.potential(scores: ordered.map(\.score))
         confidence = Scoring.confidence(evidenceLevels: ordered.map(\.evidenceLevel))
         let scored = ordered.map {

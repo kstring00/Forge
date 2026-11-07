@@ -54,7 +54,7 @@ final class EvaluationAppendOnlyTests: XCTestCase {
             XCTAssertEqual(error as? EvaluationError, .alreadyFinal)
         }
         XCTAssertThrowsError(try v1.finalize())
-        XCTAssertEqual(v1.score(for: "C1")?.score, 3)
+        XCTAssertEqual(v1.criterionScore(for: "C1")?.score, 3)
     }
 
     func testPotentialAndConfidenceStaySeparate() throws {

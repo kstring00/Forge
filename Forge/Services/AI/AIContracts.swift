@@ -135,6 +135,57 @@ public struct RealityCheckResult: Codable, Sendable {
     public var costEstimate: String
 }
 
+/// §0A. One typed object that pre-fills the whole Lab. Every field carries the
+/// source IDs it leans on; the proxy has already clamped rungs to the desk
+/// ceiling and turned source-less verdicts into cantTell. Everything here is
+/// AI-found until the user touches it.
+public struct PrefillResult: Codable, Sendable {
+    public struct ExplorationDraft: Codable, Sendable {
+        public var promptKey: String
+        public var answer: String
+        public var sourceIDs: [UUID]
+    }
+    public struct CriterionDraft: Codable, Sendable {
+        public var key: String
+        public var score: Int
+        public var evidenceLevel: Int
+        public var note: String
+        public var sourceIDs: [UUID]
+    }
+    public struct ProjectionRange: Codable, Sendable {
+        public var pricePerUnitLow: Double
+        public var pricePerUnitHigh: Double
+        public var unitsYearOneLow: Int
+        public var unitsYearOneHigh: Int
+        public var rationale: String
+    }
+    public struct RiskiestAssumptionDraft: Codable, Sendable {
+        public var belief: String
+        public var consequence: String
+        public var sourceIDs: [UUID]
+    }
+    public struct NextMoveDraft: Codable, Sendable {
+        public var recommendation: Recommendation
+        public var step: String
+        public var experiment: ExperimentCard?
+    }
+    public struct DraftedAssets: Codable, Sendable {
+        public enum Kind: String, Codable, Sendable { case interviewQuestions, outreachScript, landingCopy }
+        public var kind: Kind
+        public var title: String
+        public var body: String
+    }
+    public var realityCheck: RealityCheckResult
+    public var explorations: [ExplorationDraft]
+    public var criteria: [CriterionDraft]
+    public var projection: ProjectionRange?
+    public var riskiestAssumption: RiskiestAssumptionDraft
+    public var nextMove: NextMoveDraft
+    public var draftedAssets: DraftedAssets
+    public var panel: [RoundResult.VerdictDraft]
+    public var crossfire: [RoundResult.CrossfireDraft]
+}
+
 /// Sugar so each action names its payload type in one place.
 public extension AIAction {
     var payloadDescription: String {
@@ -150,6 +201,7 @@ public extension AIAction {
         case .pivot: "PivotResult"
         case .pitch: "PitchResult"
         case .realityCheck: "RealityCheckResult"
+        case .prefill: "PrefillResult"
         }
     }
 }

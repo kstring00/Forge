@@ -13,5 +13,6 @@ final class AppEnvironment {
         self.speech = speech
     }
 
-    static let live = AppEnvironment(ai: OfflineAIClient(), speech: SpeechCapture())
+    /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.
+    static let live = AppEnvironment(ai: ProxyAIClient.configured() ?? OfflineAIClient(), speech: SpeechCapture())
 }

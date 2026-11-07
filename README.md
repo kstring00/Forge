@@ -20,7 +20,7 @@ Spheres, and turn the worthwhile ones into projects.
   profiles, scoring, triage, shortfalls, shared enums. It builds and tests on Linux and macOS.
 - `Forge/` is the iOS app: SwiftData models, services (capture, export, AI contract), design tokens, views.
 - `ForgeTests/` are the app-target tests (SwiftData immutability, append-only evaluations, schema).
-- `proxy/` is reserved for the Phase 2 Vercel proxy.
+- `proxy/` is the Vercel AI proxy (TypeScript). Deploy steps in `proxy/README.md`.
 
 ## Run
 

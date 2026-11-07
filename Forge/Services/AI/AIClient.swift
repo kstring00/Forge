@@ -15,6 +15,7 @@ public enum AIAction: String, Codable, CaseIterable, Sendable {
     case pivot
     case pitch
     case realityCheck      // §6D: desk research with four verdicts; the costliest action
+    case prefill           // §0A: five Spheres pre-fill the whole Lab from the Library
 }
 
 public enum AIError: Error, Equatable, Sendable {
@@ -74,9 +75,27 @@ public struct ChunkSnapshot: Codable, Sendable {
 
 /// Every action returns a typed payload plus a short plain-text rationale.
 public struct AIEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
+    public struct Usage: Codable, Sendable {
+        public var inputTokens: Int
+        public var outputTokens: Int
+        public var cacheReadTokens: Int
+        public var cacheWriteTokens: Int
+        public var webSearches: Int
+    }
     public var payload: Payload
     public var rationale: String
     public var model: String?
+    /// Filled by the proxy; absent from canned and offline clients.
+    public var usage: Usage?
+    public var costUSD: Double?
+
+    public init(payload: Payload, rationale: String, model: String? = nil, usage: Usage? = nil, costUSD: Double? = nil) {
+        self.payload = payload
+        self.rationale = rationale
+        self.model = model
+        self.usage = usage
+        self.costUSD = costUSD
+    }
 }
 
 public protocol AIClient: Sendable {

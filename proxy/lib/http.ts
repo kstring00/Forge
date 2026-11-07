@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { config, missingConfig } from "./env.js";
+import { logUpstream, upstreamMessage } from "./upstream.js";
 
 export class HttpError extends Error {
   constructor(public status: number, public code: string, message: string) {
@@ -53,18 +54,25 @@ export function readJSON<T>(req: VercelRequest): T {
   return body as T;
 }
 
-export function sendError(res: VercelResponse, err: unknown): void {
+export function sendError(res: VercelResponse, err: unknown, route = "proxy"): void {
   if (err instanceof HttpError) {
+    // Our own 4xx are expected (bad token, bad body); log the 5xx ones.
+    if (err.status >= 500) console.error(JSON.stringify({ at: route, status: err.status, code: err.code, message: err.message }));
     res.status(err.status).json({ error: { code: err.code, message: err.message } });
     return;
   }
-  // Anthropic SDK errors carry a status; surface it without the body.
+  // Claude API errors: log Anthropic's full body, and pass its message on so
+  // the app can show what was rejected.
   const status = (err as { status?: number })?.status;
   if (typeof status === "number") {
+    logUpstream(route, err);
     const code = status === 429 ? "upstream_rate_limited" : status >= 500 ? "upstream_error" : "upstream_rejected";
-    res.status(status === 429 ? 429 : 502).json({ error: { code, message: `Claude API answered ${status}.` } });
+    const detail = upstreamMessage(err);
+    res.status(status === 429 ? 429 : 502).json({
+      error: { code, message: `Claude API answered ${status}${detail ? `: ${detail}` : "."}` },
+    });
     return;
   }
-  console.error(err);
+  logUpstream(route, err);
   res.status(500).json({ error: { code: "internal", message: "Something failed in the proxy." } });
 }

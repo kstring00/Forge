@@ -77,9 +77,25 @@ block, so repeated calls on the same lens pay the cache-read rate. Every respons
 
 ## Time limits
 
-Each function has a 60-second cap (`vercel.json`). Research is one model turn per HTTP
-call so a long search loop spans several calls instead of timing out. If `/api/research`
-still times out on the Hobby plan, enable Fluid Compute or move the project to Pro.
+`vercel.json` gives `/api/action` 300 seconds, `/api/research` 120 and `/api/health` 10.
+A prefill writes the whole Lab in one answer and can take a couple of minutes. Limits
+above 60 seconds need Fluid Compute, which is on by default for Vercel projects created
+since April 2025; if a deploy is rejected for `maxDuration`, turn it on under Settings →
+Functions, or lower the values.
+
+## When something fails
+
+Every non-200 from the Claude API is logged with Anthropic's full error body and request
+ID, under Vercel → the project → Logs, filtered to the function. The same message is
+returned to the app in the error body. If the API rejects a structured-output schema
+(400), the proxy logs why, then retries once with the schema in the prompt and validates
+the answer itself; a successful retry carries the header `X-Forge-Mode: json-fallback`.
+
+Check a schema against the documented limits without calling the API:
+
+```bash
+npm run schema -- prefill
+```
 
 ## Content
 

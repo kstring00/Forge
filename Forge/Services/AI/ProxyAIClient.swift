@@ -40,7 +40,8 @@ struct ProxyAIClient: AIClient {
         _ action: AIAction, context: AIContext, options: [String: String]?, expecting: Payload.Type
     ) async throws -> AIEnvelope<Payload> {
         let body = ActionRequest(action: action.rawValue, context: context, options: options)
-        let data = try await post(path: "api/action", body: body, timeout: 90)
+        // The proxy allows an action up to 300 s (vercel.json); a prefill can take minutes.
+        let data = try await post(path: "api/action", body: body, timeout: 290)
         do {
             return try JSONDecoder().decode(AIEnvelope<Payload>.self, from: data)
         } catch {

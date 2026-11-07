@@ -23,6 +23,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       estimate: { realityCheckUSD: realityCheckEstimateUSD() },
     });
   } catch (err) {
-    sendError(res, err);
+    sendError(res, err, "health");
   }
 }

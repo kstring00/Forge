@@ -105,8 +105,11 @@ enum PrefillApplier {
     @MainActor
     static func saveResearch(_ sources: [ResearchResponse.Source], notes: String, to idea: Idea) -> [Source] {
         var saved: [Source] = []
-        let existingURLs = Set(idea.sources.compactMap(\.url))
-        for s in sources where s.kind == "fetched" && !s.text.isEmpty && !existingURLs.contains(s.url) {
+        // Seeded with what the Library already holds, then grown as this batch is
+        // saved, so two fetches of one URL in the same run save once.
+        var seenURLs = Set(idea.sources.compactMap(\.url))
+        for s in sources where s.kind == "fetched" && !s.text.isEmpty && !seenURLs.contains(s.url) {
+            seenURLs.insert(s.url)
             let source = Source(kind: .web, title: s.title.isEmpty ? s.url : s.title, fullText: s.text, sourceClass: .aiFound, url: s.url)
             for (i, chunk) in chunks(of: s.text).enumerated() {
                 source.chunks.append(SourceChunk(index: i, text: chunk))

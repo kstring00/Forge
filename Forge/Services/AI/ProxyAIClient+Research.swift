@@ -31,7 +31,7 @@ extension ProxyAIClient {
                   advantages: [String], constraints: [String], messages: [JSONValue]?) async throws -> ResearchResponse {
         let body = ResearchRequest(idea: .init(id: ideaID, title: title, originalText: originalText),
                                    advantages: advantages, constraints: constraints, messages: messages)
-        let data = try await post(path: "api/research", body: body, timeout: 95)
+        let data = try await post(path: "api/research", body: body, timeout: 125)
         do {
             return try JSONDecoder().decode(ResearchResponse.self, from: data)
         } catch {

@@ -113,6 +113,18 @@ Status as of the end of the 3b session. Everything was checked on the iPhone 18 
 - Expand and Summarize through the live proxy (3b.1's own check).
 - Export after a Reality Check: the new records (RealityCheck, Round, `aiProposed` scores) round-tripping through import.
 
+## Polish pass before 3c
+
+One PR, decision 0012. Screen titles in Fraunces; the Workshop empty state points to the
+panel; the Reality Check only on Business ideas (and ideas with no lens yet), the Impact
+card for Growth and Creative; one shared button with "Runs on AI · about X¢ · your idea
+text is sent to the model.", using the average of real runs once one exists; research on
+Haiku with 5 searches and 4 capped fetches, Spheres on Sonnet; a Spend section in
+Settings; the Vault capture button inside the list and hidden while it moves; a failed
+run keeps its error on the card until dismissed. Tests: ForgeCore
+`RealityCheckPolicyTests`; app `HomeLogicTests` (lens rule, failed-check priority,
+failure persistence, failure messages); proxy cost and research-tool tests.
+
 **3c: Rounds and rulings** on top of the pre-fill. See `docs/HANDOFF.md`.
 
 ## Original scope note (brief v3.1 §11)

@@ -23,7 +23,7 @@ final class RealityCheckRunner {
     private(set) var phase: Phase = .idle
     private(set) var litSpheres: Set<Sphere> = []
     private(set) var spentUSD: Double = 0
-    private(set) var estimate: ClosedRange<Double> = 0.15...0.60
+    private(set) var estimate: ClosedRange<Double> = 0.10...0.25
 
     private let proxy: ProxyAIClient?
     private var lightingTask: Task<Void, Never>?
@@ -60,6 +60,8 @@ final class RealityCheckRunner {
         }
         litSpheres = []
         spentUSD = 0
+        var step = Step.research
+        var pagesSaved = 0
         do {
             // 1. Research, one turn per call.
             var messages: [JSONValue]? = nil
@@ -76,10 +78,11 @@ final class RealityCheckRunner {
                 if r.status == "done" { break }
                 messages = r.messages
             }
-            _ = PrefillApplier.saveResearch(gathered, notes: notes, to: idea)
+            pagesSaved = PrefillApplier.saveResearch(gathered, notes: notes, to: idea).count
             try? context.save()
 
             // 2. The Spheres pre-fill the Lab.
+            step = .prefill
             phase = .prefilling
             startLighting()
             let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea), expecting: PrefillResult.self)
@@ -94,17 +97,39 @@ final class RealityCheckRunner {
             applied.realityCheck.actualCostUSD = spentUSD
             try? context.save()
             phase = .done
-        } catch let error as AIError {
-            stopLighting()
-            switch error {
-            case .offline, .notConfigured: phase = .offline("AI isn't reachable right now. Nothing was changed.")
-            case .rateLimited: phase = .failed("The proxy is rate limiting. Try again in a minute.")
-            case .invalidResponse(let d): phase = .failed("The AI step failed. \(d)")
-            case .server(let s): phase = .failed("The proxy answered with status \(s).")
-            }
         } catch {
             stopLighting()
-            phase = .failed(error.localizedDescription)
+            litSpheres = []
+            phase = Self.failurePhase(error, step: step, pagesSaved: pagesSaved, spentUSD: spentUSD)
+        }
+    }
+
+    enum Step { case research, prefill }
+
+    /// Every failure says what broke, what was kept and what it cost, so the
+    /// card can show it rather than quietly going back to idle.
+    static func failurePhase(_ error: Error, step: Step, pagesSaved: Int, spentUSD: Double) -> Phase {
+        let what = step == .research ? "The desk research stopped" : "The panel stopped before the Brief"
+        let kept = pagesSaved > 0
+            ? " \(pagesSaved) \(pagesSaved == 1 ? "source it found is" : "sources it found are") saved in the Library."
+            : " Nothing was saved."
+        let spent = spentUSD > 0 ? " This attempt cost \(AISpend.format(spentUSD))." : ""
+        guard let ai = error as? AIError else {
+            let d = error.localizedDescription
+            return .failed("\(what): \(d.hasSuffix(".") ? d : d + ".")\(kept)\(spent)")
+        }
+        switch ai {
+        case .offline:
+            return .offline("\(what): the connection to the proxy dropped or timed out.\(kept)\(spent) Try again when you're online.")
+        case .notConfigured:
+            return .failed("\(what): the proxy refused the request. Check PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and that ANTHROPIC_API_KEY is set.\(kept)")
+        case .rateLimited:
+            return .failed("\(what): the proxy is rate limiting. Try again in a minute.\(kept)\(spent)")
+        case .invalidResponse(let d):
+            let detail = d.hasSuffix(".") ? d : d + "."
+            return .failed("\(what): \(detail)\(kept)\(spent)")
+        case .server(let s):
+            return .failed("\(what): the proxy answered with status \(s).\(kept)\(spent) Vercel → Logs has the detail.")
         }
     }
 

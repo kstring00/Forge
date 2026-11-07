@@ -8,20 +8,18 @@ import ForgeCore
 struct CaptureStateSection: View {
     @Bindable var idea: Idea
     @Environment(AppEnvironment.self) private var env
-    @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
 
     private var runner: RealityCheckRunner { env.realityChecks.runner(for: idea.id) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.m) {
+            // The button carries the cost line and any failure, the same on every surface.
             if runner.isRunning {
                 progress
             } else {
                 RealityCheckButton(idea: idea)
             }
-            footnote
         }
-        .task { await runner.loadEstimate() }
     }
 
     private var progress: some View {
@@ -47,30 +45,10 @@ struct CaptureStateSection: View {
 
     private var progressText: String {
         switch runner.phase {
-        case .researching(let turn, let sources): "Pass \(turn), \(sources) \(sources == 1 ? "page" : "pages") saved to the Library."
+        case .researching(let turn, let sources): "Pass \(turn), \(sources) \(sources == 1 ? "page" : "pages") found so far."
         case .prefilling: "Filling in the Lab from what came back."
         case .applying: "Writing it down."
         default: ""
-        }
-    }
-
-    @ViewBuilder
-    private var footnote: some View {
-        switch runner.phase {
-        case .offline(let m), .failed(let m):
-            HStack(alignment: .top) {
-                Text(m).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                Spacer()
-                Button("OK") { runner.reset() }.font(.caption.weight(.medium))
-            }
-        case .idle, .done:
-            let est = runner.estimate
-            Text(consentStamp > 0
-                 ? "About \(AISpend.format(est.lowerBound)) to \(AISpend.format(est.upperBound)). Sent through your proxy."
-                 : "About \(AISpend.format(est.lowerBound)) to \(AISpend.format(est.upperBound)). The first run asks before sending your idea text to the AI through your proxy.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-        default:
-            EmptyView()
         }
     }
 }

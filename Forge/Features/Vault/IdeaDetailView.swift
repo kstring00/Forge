@@ -16,6 +16,8 @@ struct IdeaDetailView: View {
     @State private var expanded = false
     @State private var showingMore = false
 
+    private var offersCheck: Bool { RealityCheckPolicy.isOffered(for: idea.lensType) }
+
     private var audioURL: URL? {
         guard let name = idea.audioFileName, RecordingStore.exists(name) else { return nil }
         return RecordingStore.url(for: name)
@@ -45,13 +47,22 @@ struct IdeaDetailView: View {
                     if idea.latestRealityCheck != nil && !expanded {
                         BriefSection(idea: idea) { withAnimation(ForgeMotion.settle) { expanded = true } }
                     } else if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
-                        CaptureStateSection(idea: idea)
+                        // §6D: the check is for Business ideas (or ones with no lens yet);
+                        // Growth and Creative get the Impact card (§4.0).
+                        if let lens = idea.lensType, !offersCheck {
+                            ImpactStartSection(idea: idea, lens: lens)
+                        } else {
+                            CaptureStateSection(idea: idea)
+                        }
                     } else {
                         if idea.latestRealityCheck != nil {
                             Button { withAnimation(ForgeMotion.settle) { expanded = false } } label: {
                                 Label("Back to the Brief", systemImage: "chevron.up").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
                             }
                             .buttonStyle(.plain)
+                        } else if offersCheck && !idea.isArchived {
+                            // Scored by hand in the Lab, never checked: the button still belongs here.
+                            CaptureStateSection(idea: idea)
                         }
                         LabSection(idea: idea)
                         ExploreSection(idea: idea)

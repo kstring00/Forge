@@ -18,6 +18,25 @@ const ResearchRequest = z.object({
   messages: z.array(z.any()).optional(),
 });
 
+/// Dynamic filtering (the _20260209 tools) is documented for Opus and Sonnet;
+/// Haiku gets the basic tools. Either way searches and fetches are capped, and
+/// each fetched page is cut to a token budget before the model reads it.
+export function researchTools(model: string): Anthropic.ToolUnion[] {
+  const searches = config.maxSearchesPerResearchCall;
+  const fetches = config.maxFetchesPerResearchCall;
+  const pageTokens = config.maxTokensPerFetch;
+  if (model.includes("haiku")) {
+    return [
+      { type: "web_search_20250305", name: "web_search", max_uses: searches },
+      { type: "web_fetch_20250910", name: "web_fetch", max_uses: fetches, max_content_tokens: pageTokens },
+    ];
+  }
+  return [
+    { type: "web_search_20260209", name: "web_search", max_uses: searches },
+    { type: "web_fetch_20260209", name: "web_fetch", max_uses: fetches, max_content_tokens: pageTokens },
+  ];
+}
+
 export interface ResearchSource {
   url: string;
   title: string;
@@ -53,11 +72,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const response = await anthropic().messages.create({
       model: config.researchModel,
       max_tokens: 12000,
-      system: [{ type: "text", text: researchSystem, cache_control: { type: "ephemeral" } }],
-      tools: [
-        { type: "web_search_20260209", name: "web_search", max_uses: config.maxSearchesPerResearchCall },
-        { type: "web_fetch_20260209", name: "web_fetch", max_uses: config.maxFetchesPerResearchCall, max_content_tokens: 8000 },
-      ],
+      system: [{ type: "text", text: researchSystem(), cache_control: { type: "ephemeral" } }],
+      tools: researchTools(config.researchModel),
       output_config: { effort: "medium" },
       messages,
     }, { timeout: 110_000, maxRetries: 1 });

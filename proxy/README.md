@@ -21,9 +21,10 @@ evidence rules server-side, and runs desk research for Reality Checks.
    | `ANTHROPIC_API_KEY` | your key from console.anthropic.com |
    | `FORGE_PROXY_TOKEN` | a long random string; generate with `openssl rand -hex 32` |
 
-   Optional: `FORGE_RESEARCH_MODEL` (default `claude-sonnet-5-5`),
-   `FORGE_FAST_MODEL` (default `claude-haiku-5-5`), `FORGE_MAX_SEARCHES` (8),
-   `FORGE_MAX_FETCHES` (8), `FORGE_REQUESTS_PER_MINUTE` (30).
+   Optional: `FORGE_RESEARCH_MODEL` (default `claude-haiku-5-5`),
+   `FORGE_SPHERE_MODEL` (default `claude-sonnet-5-5`), `FORGE_FAST_MODEL`
+   (default `claude-haiku-5-5`), `FORGE_MAX_SEARCHES` (5), `FORGE_MAX_FETCHES` (4),
+   `FORGE_MAX_FETCH_TOKENS` (4000), `FORGE_REQUESTS_PER_MINUTE` (30).
 
 3. Deploy to production:
 
@@ -70,10 +71,26 @@ evidence rules server-side, and runs desk research for Reality Checks.
 
 ## Models and cost
 
-Sonnet 5.5 for Spheres, synthesis and research; Haiku 5.5 for expand, summarize, next
-step and criterion explanations. The lens content and house rules are one cached system
-block, so repeated calls on the same lens pay the cache-read rate. Every response carries
-`costUSD` from `lib/pricing.ts`; the app sums it against the monthly ceiling in Settings.
+Haiku 5.5 does the desk research (`/api/research`): reading pages is most of the
+tokens and needs little judgment. It uses the basic web tools (`web_search_20250305`,
+`web_fetch_20250910`); dynamic filtering is documented for Opus and Sonnet, and Sonnet
+gets it if `FORGE_RESEARCH_MODEL` points there. Sonnet 5.5 runs the Spheres: the
+prefill and every action with a verdict. Haiku 5.5 also runs expand, summarize, next
+step and criterion explanations.
+
+A Reality Check targets 10 to 20 cents:
+
+- Web searches are $0.01 each and capped at 5 per check (`FORGE_MAX_SEARCHES`; a paused
+  turn's continuations count against the same cap). This is the main research cost.
+- Web fetches cost only the tokens they add: at most 4 pages, each cut to about 4,000
+  tokens before the model reads it.
+- The prefill on Sonnet is the rest, mostly its output.
+
+The lens content and house rules are one cached system block per lens, so repeated
+calls pay the cache-read rate. Every response carries `costUSD` from `lib/pricing.ts`
+(Haiku's over-100K-token rate card included); the app sums it against the monthly
+ceiling and shows the average of real runs once one exists. `/api/health` reports the
+models and caps in use.
 
 ## Time limits
 

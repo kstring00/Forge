@@ -6,32 +6,21 @@ struct RootTabView: View {
     @State private var showingCapture = false
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            TabView(selection: $tab) {
-                HomeView(onCapture: { showingCapture = true })
-                    .tabItem { Label(ForgeTab.home.title, systemImage: ForgeTab.home.symbol) }
-                    .badge(env.realityChecks.unseenBriefs.isEmpty ? 0 : env.realityChecks.unseenBriefs.count)
-                    .tag(ForgeTab.home)
-                VaultView()
-                    .tabItem { Label(ForgeTab.vault.title, systemImage: ForgeTab.vault.symbol) }
-                    .tag(ForgeTab.vault)
-                WorkshopView()
-                    .tabItem { Label(ForgeTab.workshop.title, systemImage: ForgeTab.workshop.symbol) }
-                    .tag(ForgeTab.workshop)
-            }
-
-            // Home has its own capture field; the Vault gets the floating button, hidden while scrolling down.
-            if tab == .vault && !env.vaultScrollHidesFAB {
-                EmberButton.floating(title: "Capture", symbol: "plus") {
-                    showingCapture = true
-                }
-                .padding(.trailing, ForgeSpacing.l)
-                .padding(.bottom, ForgeSpacing.xxl + ForgeSpacing.l)
-                .transition(.scale(scale: 0.9).combined(with: .opacity))
-            }
+        TabView(selection: $tab) {
+            HomeView(onCapture: { showingCapture = true })
+                .tabItem { Label(ForgeTab.home.title, systemImage: ForgeTab.home.symbol) }
+                .badge(env.realityChecks.unseenBriefs.isEmpty ? 0 : env.realityChecks.unseenBriefs.count)
+                .tag(ForgeTab.home)
+            // Home has its own capture field; the Vault list carries the floating
+            // button itself, so it never follows the user into an idea.
+            VaultView(onCapture: { showingCapture = true })
+                .tabItem { Label(ForgeTab.vault.title, systemImage: ForgeTab.vault.symbol) }
+                .tag(ForgeTab.vault)
+            WorkshopView()
+                .tabItem { Label(ForgeTab.workshop.title, systemImage: ForgeTab.workshop.symbol) }
+                .tag(ForgeTab.workshop)
         }
         .forgeAnimation(ForgeMotion.settle, value: tab)
-        .forgeAnimation(ForgeMotion.fade, value: env.vaultScrollHidesFAB)
         .sheet(isPresented: $showingCapture) {
             CaptureSheet()
         }

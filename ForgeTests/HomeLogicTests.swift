@@ -89,4 +89,62 @@ final class HomeLogicTests: XCTestCase {
         center.markSeen(id)
         XCTAssertTrue(center.unseenBriefs.isEmpty)
     }
+
+    // MARK: Polish pass: lens rule and failures
+
+    func testGrowthAndCreativeIdeasAreNotOfferedACheck() {
+        let g = idea("run every morning", at: 2)
+        g.lensType = .growth
+        let c = idea("a zine", at: 3)
+        c.lensType = .creative
+        XCTAssertEqual(IdeaStatus.of(g), .impact)
+        XCTAssertEqual(IdeaStatus.of(c, failed: true), .impact)
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, g], projects: [], unseenBriefs: []), .none)
+        let b = idea("a business", at: 1)
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, g, b], projects: [], unseenBriefs: []), .unchecked(ideaID: b.id))
+    }
+
+    func testAFailedCheckShowsOnItsCardAndOutranksTheNextStep() throws {
+        let a = idea("failed", at: 1)
+        let c = idea("with project", at: 2)
+        let p = WorkshopActions.convert(c, with: .init(name: "P", desiredOutcome: "", nextStep: "call"), in: store.context)
+        XCTAssertEqual(IdeaStatus.of(a, failed: true), .checkFailed)
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, a], projects: [p], unseenBriefs: []), .nextStep(projectID: p.id))
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, a], projects: [p], unseenBriefs: [], failedChecks: [a.id]), .unchecked(ideaID: a.id))
+    }
+
+    func testCenterKeepsAFailureUntilDismissedAndAcrossLaunches() throws {
+        let suite = "HomeLogicTests.failures.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let id = UUID()
+
+        let center = RealityCheckCenter(proxy: nil, defaults: defaults)
+        center.record(.failed("The panel stopped before the Brief: truncated."), for: id)
+        XCTAssertEqual(center.failure(for: id), "The panel stopped before the Brief: truncated.")
+        center.markSeen(id)
+        XCTAssertNotNil(center.failure(for: id), "opening the idea must not clear the error")
+
+        let relaunched = RealityCheckCenter(proxy: nil, defaults: defaults)
+        XCTAssertEqual(relaunched.failure(for: id), "The panel stopped before the Brief: truncated.")
+        relaunched.dismissFailure(id)
+        XCTAssertNil(relaunched.failure(for: id))
+        XCTAssertNil(RealityCheckCenter(proxy: nil, defaults: defaults).failure(for: id))
+
+        relaunched.record(.done, for: id)
+        XCTAssertTrue(relaunched.unseenBriefs.contains(id))
+    }
+
+    func testFailureMessagesSayWhatBrokeAndWhatWasKept() {
+        let research = RealityCheckRunner.failurePhase(AIError.offline, step: .research, pagesSaved: 0, spentUSD: 0)
+        guard case .offline(let m1) = research else { return XCTFail("expected offline") }
+        XCTAssertTrue(m1.hasPrefix("The desk research stopped"))
+        XCTAssertTrue(m1.contains("Nothing was saved."))
+
+        let prefill = RealityCheckRunner.failurePhase(AIError.invalidResponse("The model ran out of room"), step: .prefill, pagesSaved: 6, spentUSD: 0.04)
+        guard case .failed(let m2) = prefill else { return XCTFail("expected failed") }
+        XCTAssertTrue(m2.hasPrefix("The panel stopped before the Brief: The model ran out of room."))
+        XCTAssertTrue(m2.contains("6 sources it found are saved in the Library."))
+        XCTAssertTrue(m2.contains("$0.04"))
+    }
 }

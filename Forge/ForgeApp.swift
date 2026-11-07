@@ -8,6 +8,7 @@ struct ForgeApp: App {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
 
     init() {
+        NavigationBarStyle.apply()
         do {
             container = try ModelContainer.forge()
         } catch {

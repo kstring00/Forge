@@ -13,11 +13,44 @@ final class RealityCheckCenter {
     private(set) var unseenBriefs: Set<UUID> = []
     /// The idea most recently started, for the panel on Home.
     private(set) var focusIdeaID: UUID?
+    /// The last failed run per idea, in words. Kept until the user dismisses it
+    /// or runs again, and across launches, so a failed check never quietly
+    /// turns back into an unchecked idea.
+    private(set) var failures: [UUID: String] = [:]
 
     let proxy: ProxyAIClient?
+    private let defaults: UserDefaults
+    static let failuresKey = "realityCheck.failures"
 
-    init(proxy: ProxyAIClient?) {
+    init(proxy: ProxyAIClient?, defaults: UserDefaults = .standard) {
         self.proxy = proxy
+        self.defaults = defaults
+        if let stored = defaults.dictionary(forKey: Self.failuresKey) as? [String: String] {
+            failures = Dictionary(uniqueKeysWithValues: stored.compactMap { k, v in UUID(uuidString: k).map { ($0, v) } })
+        }
+    }
+
+    func failure(for ideaID: UUID) -> String? { failures[ideaID] }
+
+    /// The user has read the error. The idea goes back to showing the button.
+    func dismissFailure(_ ideaID: UUID) {
+        failures[ideaID] = nil
+        saveFailures()
+        if let r = runners[ideaID], !r.isRunning { r.reset() }
+    }
+
+    /// Records how a finished run ended. Exposed for tests.
+    func record(_ phase: RealityCheckRunner.Phase, for ideaID: UUID) {
+        switch phase {
+        case .failed(let m), .offline(let m): failures[ideaID] = m
+        case .done: failures[ideaID] = nil; unseenBriefs.insert(ideaID)
+        default: break
+        }
+        saveFailures()
+    }
+
+    private func saveFailures() {
+        defaults.set(Dictionary(uniqueKeysWithValues: failures.map { ($0.key.uuidString, $0.value) }), forKey: Self.failuresKey)
     }
 
     var isConfigured: Bool { proxy != nil }
@@ -48,9 +81,11 @@ final class RealityCheckCenter {
         let r = runner(for: ideaID)
         guard !r.isRunning else { return }
         focusIdeaID = ideaID
+        failures[ideaID] = nil
+        saveFailures()
         Task { @MainActor [weak self] in
             await r.run(on: idea, in: context, advantages: advantages, constraints: constraints)
-            if case .done = r.phase { self?.unseenBriefs.insert(ideaID) }
+            self?.record(r.phase, for: ideaID)
         }
     }
 

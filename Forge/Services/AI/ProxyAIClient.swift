@@ -83,7 +83,13 @@ struct ProxyAIClient: AIClient {
         case 400, 502:
             let message = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error.message ?? "status \(http.statusCode)"
             throw AIError.invalidResponse(message)
+        case 504:
+            // Vercel's own timeout page, not the proxy's JSON.
+            throw AIError.invalidResponse("the proxy ran out of time (504). Vercel stopped the function at its limit; check Fluid Compute and maxDuration in vercel.json.")
         default:
+            if let message = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error.message {
+                throw AIError.invalidResponse("status \(http.statusCode): \(message)")
+            }
             throw AIError.server(status: http.statusCode)
         }
     }

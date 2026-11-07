@@ -5,13 +5,19 @@ import ForgeCore
 enum IdeaStatus: Equatable {
     case notChecked
     case checking
+    /// The last run failed; the card says so instead of "Not yet checked".
+    case checkFailed
     case checked(verdict: RealityVerdict, confidence: Int)
+    /// Growth and Creative ideas: no Reality Check, the Impact card instead.
+    case impact
 
-    static func of(_ idea: Idea, checking: Bool = false) -> IdeaStatus {
+    static func of(_ idea: Idea, checking: Bool = false, failed: Bool = false) -> IdeaStatus {
         if checking { return .checking }
         if let check = idea.latestRealityCheck {
             return .checked(verdict: check.verdict, confidence: idea.latestEvaluation?.confidence ?? 0)
         }
+        if !RealityCheckPolicy.isOffered(for: idea.lensType) { return .impact }
+        if failed { return .checkFailed }
         return .notChecked
     }
 }
@@ -24,9 +30,11 @@ enum HomeCard: Equatable {
     case unchecked(ideaID: UUID)
     case none
 
-    /// Priority: the idea just captured; a Brief waiting for review; a step owed
-    /// in the Workshop; else the most recent idea nobody has checked.
-    static func choose(justCaptured: UUID?, ideas: [Idea], projects: [Project], unseenBriefs: Set<UUID>) -> HomeCard {
+    /// Priority: the idea just captured; a Brief waiting for review; a check
+    /// that failed (its card carries the error); a step owed in the Workshop;
+    /// else the most recent idea nobody has checked. Only Business ideas (or
+    /// ideas with no lens yet) are offered a check.
+    static func choose(justCaptured: UUID?, ideas: [Idea], projects: [Project], unseenBriefs: Set<UUID>, failedChecks: Set<UUID> = []) -> HomeCard {
         if let id = justCaptured, ideas.contains(where: { $0.id == id && !$0.isArchived }) {
             return .afterCapture(ideaID: id)
         }
@@ -35,10 +43,14 @@ enum HomeCard: Equatable {
             .filter { $0.latestRealityCheck != nil && $0.project == nil && (unseenBriefs.contains($0.id) || !$0.hasRuling) }
             .max { ($0.latestRealityCheck?.createdAt ?? .distantPast) < ($1.latestRealityCheck?.createdAt ?? .distantPast) }
         if let waiting { return .briefReady(ideaID: waiting.id) }
+        let checkable = live.filter { $0.latestRealityCheck == nil && $0.project == nil && RealityCheckPolicy.isOffered(for: $0.lensType) }
+        if let failed = checkable.filter({ failedChecks.contains($0.id) }).max(by: { $0.createdAt < $1.createdAt }) {
+            return .unchecked(ideaID: failed.id)
+        }
         if let owed = projects.filter({ $0.status == .active && $0.nextStep != nil }).max(by: { $0.createdAt < $1.createdAt }) {
             return .nextStep(projectID: owed.id)
         }
-        if let fresh = live.filter({ $0.latestRealityCheck == nil && $0.project == nil }).max(by: { $0.createdAt < $1.createdAt }) {
+        if let fresh = checkable.max(by: { $0.createdAt < $1.createdAt }) {
             return .unchecked(ideaID: fresh.id)
         }
         return .none

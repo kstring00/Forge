@@ -8,7 +8,7 @@ import { enforcePitch, enforcePrefill, enforceRealityCheck, enforceRound } from 
 import { content, lens } from "../lib/content.js";
 import { callStructured } from "../lib/structured.js";
 
-/// Which actions run on the fast model. Everything with a Sphere or a verdict runs on the research model.
+/// Which actions run on the fast model. Everything with a Sphere or a verdict runs on the Sphere model (Sonnet).
 const fastActions: Action[] = ["expand", "summarize", "explainCriterion", "nextStep"];
 
 /// Output budget per action. Prefill writes the whole Lab in one object.
@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     const { action, context, options } = parsed.data;
     const lensType = context.lens ?? "business";
-    const model = fastActions.includes(action) ? config.fastModel : config.researchModel;
+    const model = fastActions.includes(action) ? config.fastModel : config.sphereModel;
 
     const result = await callStructured({
       label: `action.${action}`,

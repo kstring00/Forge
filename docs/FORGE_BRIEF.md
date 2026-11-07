@@ -179,7 +179,7 @@ Contextual AI inside each idea and project. No global chat tab.
 
 **Capabilities (each is a distinct action, not a free-form chat prompt):**
 - Expand — clarify a rough thought.
-- Challenge — list weaknesses, risks, unsupported assumptions.
+- Run a Round — the Sphere panel gives verdicts, argues, and the user rules on each point (§6C). This replaces a generic "Challenge" action.
 - Compare — two ideas, same lens only.
 - Design an experiment — cheapest test of the riskiest assumption, returned as an Experiment card.
 - Plan — break into milestones and a first deliverable.
@@ -263,6 +263,67 @@ Pitches cluster by: fastest cash · recurring revenue · product/asset · creati
 - No pitch may claim market evidence it hasn't saved as a source. "There is demand" must point at something in a Library or be labeled an assumption.
 - Pitches never run on a schedule and never badge the app icon. They exist when the user goes looking.
 - A rejected pitch's reason ("I don't want to run a service business") becomes a standing constraint shown in Settings and respected in future pitches.
+
+---
+
+## 6C. Spheres — the panel (replaces the single "Challenge" action)
+
+The AI partner is not one voice. It is a panel of **Spheres**: distinct perspectives, each bound to named frameworks, each *required* to argue from its own angle so they cannot all agree. Think Shark Tank, except the sharks must cite sources and are allowed to say "I can't tell yet."
+
+### The panel
+
+| Sphere | Judges | Frameworks | Will not do |
+|---|---|---|---|
+| **Investor** | Economics, pricing, distribution, recurring revenue, enterprise value | $100M Offers, $100M Leads, Built to Sell, Profit First | Praise a product with no channel |
+| **Customer** | Problem reality and demand — only from what real people said or did in the Library | The Mom Test | Speak for customers who aren't in the Library; must say "nobody has talked to me yet" |
+| **Builder** | Feasibility, smallest usable version, skills required, maintenance burden | The Lean Startup, The E-Myth | Approve a plan that depends on the user doing custom labor forever |
+| **Strategist** | Differentiation, positioning, why anyone would switch | Blue Ocean (Four Actions), Good Strategy/Bad Strategy | Accept "I'd do it better" as differentiation |
+| **Skeptic** | Unsupported assumptions, vanity metrics, fake urgency, overbuilding | Anti-delusion rules; Lean Startup riskiest-assumption | Agree that an idea is good because the user had it |
+| **Steward** | Values alignment, sustainability, whether this is the right use of the user's life right now | Atomic Habits; user-written charter | Let the other five turn progress into identity |
+
+The Steward's charter is written by the user in Settings (a few sentences on what matters to them and what they refuse to trade away). The app ships with a placeholder, never a default worldview.
+
+### A Round
+
+1. **Pitch.** The user pitches an idea (text or voice), or a §6B Pitch is put in front of the user.
+2. **Verdicts.** Each Sphere returns a structured verdict: `onTrack | offTrack | cantTell`, the criterion key it is judging, a two-sentence reason, and the Source IDs it relies on. A verdict with no sources must be `cantTell` and must name what evidence would change it. On-screen, verdicts are six cards; `cantTell` cards show a "go find out" button that creates an Experiment card.
+3. **Crossfire.** Each Sphere may reply once to one other Sphere. Limited to one exchange per pair; this is not a chat.
+4. **Rulings.** The user goes through each point and marks *Agree* / *Disagree* / *Find out*. Agree → logged as a Decision or, if the Sphere cited a source, promoted to Evidence on that criterion. Disagree → logged as a user Assumption (the user's belief against the panel's). Find out → Experiment card.
+5. **Summary.** One screen: where the panel agreed, where it split, the user's rulings, and what changed in the evaluation (criteria scores the user chose to update, never auto-updated).
+
+Rounds are saved on the idea with full transcript and rulings. A Round can be re-run after new sources are added, and the app diffs the verdicts ("Customer moved from can't tell to on track after you added three interviews").
+
+### Spheres elsewhere
+
+- **Pitches (§6B)** are voiced by Spheres: the Customer pitches problems people complained about, the Investor pitches recurring-revenue plays, the Builder pitches things buildable in a weekend, the Steward pitches growth and creative work. The user can ask one Sphere for pitches or the whole panel.
+- **Pivots (§6B)** can be requested from a specific Sphere ("Strategist, pivot this").
+- **Explore** prompts can be asked by a Sphere, so the exploration stage already has the panel's angles in it.
+- **Workshop**: the Builder owns "next step" suggestions; the Skeptic reviews milestones for scope creep; the Steward can be asked "should I keep going?" when a project stalls.
+
+### Rules (put in every Sphere's system prompt)
+
+- Argue from your framework and only from Library sources. Name the source. If there is none, say `cantTell` and say what would change your mind.
+- Disagree with other Spheres when your framework disagrees. Do not converge for politeness.
+- Never tell the user the idea is good because they had it. Never use the words "great idea."
+- Distinguish fact, estimate, assumption, and opinion in every reason.
+- Short. Two sentences per verdict, one per crossfire reply.
+- You are a perspective, not a character. No catchphrases, no personality beyond the framework.
+
+### Data model additions
+
+```
+Round        id, idea, pitchText, createdAt, verdicts[], crossfire[], rulings[], summary
+Verdict      id, round, sphere, verdict (onTrack|offTrack|cantTell), criterionKey,
+             reason, sources[], evidenceNeeded?
+Crossfire    id, round, fromSphere, toSphere, text
+Ruling       id, verdict, choice (agree|disagree|findOut), note?, resultingDecision?,
+             resultingEvidence?, resultingAssumption?, resultingExperiment?
+StewardCharter  text, updatedAt   (stored in Settings)
+```
+
+### Phase placement
+
+Spheres land in **Phase 3** alongside the Evaluation Lab (verdicts need criteria keys to judge against) with the Investor, Customer, Builder, Strategist, and Skeptic. The Steward and its charter come in **Phase 5** with the Personal Growth lens. Sphere-voiced Pitches and Pivots are part of Phases 5 and 5b. Before Phase 4's Library exists, every Sphere will mostly say `cantTell` — that is correct behavior, not a bug, and it is the reason to build the Library next.
 
 ---
 

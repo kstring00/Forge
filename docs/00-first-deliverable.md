@@ -104,6 +104,11 @@ Forge/
 │   │   ├── Pitch.swift
 │   │   ├── Advantage.swift
 │   │   ├── Constraint.swift
+│   │   ├── Round.swift                 # §6C: one panel session on an idea
+│   │   ├── Verdict.swift               # §6C: sphere, onTrack|offTrack|cantTell, criterionKey, sources
+│   │   ├── Crossfire.swift             # §6C: one reply per sphere pair
+│   │   ├── Ruling.swift                # §6C: agree|disagree|findOut + what it produced
+│   │   ├── StewardCharter.swift        # §6C: user-written, placeholder until Phase 5
 │   │   └── ForgeSchema.swift           # VersionedSchema + migration plan stub
 │   │
 │   ├── Content/                        # static lens content; no UI code here
@@ -112,6 +117,7 @@ Forge/
 │   │   ├── LensA_Business.swift        # A1–A6 (A2 authored now, rest in Phase 3)
 │   │   ├── LensB_Growth.swift          # B1–B5 stubs, authored in Phase 5
 │   │   ├── LensC_Creative.swift        # C1–C5 stubs, authored in Phase 5
+│   │   ├── Spheres.swift               # §6C panel: what each Sphere judges, cites, refuses
 │   │   ├── OpportunityFilterQuestions.swift
 │   │   └── ReflectivePrompts.swift     # Home prompt pool
 │   │
@@ -149,7 +155,8 @@ Forge/
 │   │   ├── Home/HomeView.swift         # empty state only in Phase 0
 │   │   ├── Vault/VaultView.swift
 │   │   ├── Workshop/WorkshopView.swift
-│   │   └── Capture/CaptureSheet.swift  # shell; wired in Phase 1
+│   │   ├── Capture/CaptureSheet.swift  # shell; wired in Phase 1
+│   │   └── Spheres/                    # Phase 3: Round, verdict cards, crossfire, rulings, summary
 │   │
 │   ├── Resources/
 │   │   └── Localizable.xcstrings
@@ -165,6 +172,25 @@ Forge/
 └── proxy/                              # Phase 2; folder reserved
     └── README.md
 ```
+
+### Data model additions from §6C (Spheres)
+
+Created empty in Phase 0 so the schema is complete from the first build. UI arrives in Phase 3.
+
+```
+Round           id, idea, pitchText, createdAt, verdicts[], crossfire[], rulings[], summary
+Verdict         id, round, sphere, kind (onTrack|offTrack|cantTell), criterionKey,
+                reason, sources[] → Source, evidenceNeeded?
+Crossfire       id, round, fromSphere, toSphere, text
+Ruling          id, verdict, choice (agree|disagree|findOut), note?,
+                resultingDecision? → Decision, resultingEvidence? → Evidence,
+                resultingAssumption? → Source(class: assumption), resultingExperiment? → Experiment
+StewardCharter  id, text, updatedAt            (single row, edited in Settings)
+```
+
+`Sphere` is an enum in ForgeCore (`investor, customer, builder, strategist, skeptic, steward`). The panel's static content, what each Sphere judges, which frameworks bind it, and what it refuses to do, lives in `Content/Spheres.swift` next to the lenses, not in the database. "Challenge" is removed from the AI action list and replaced by `runRound`.
+
+**Phase placement, confirmed:** Spheres ship in Phase 3 with the Evaluation Lab (Investor, Customer, Builder, Strategist, Skeptic). The Steward and its charter ship in Phase 5 with the Personal Growth lens. Sphere-voiced Pitches and Pivots are Phases 5 and 5b. Before the Phase 4 Library exists, verdicts will mostly be `cantTell`, which is the correct behaviour.
 
 Decisions baked into this tree that the brief left open, and that I am making unless you object:
 

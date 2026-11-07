@@ -59,15 +59,15 @@ with Rounds and rulings, and the AI side of the Reality Check button.
 
 ## 3b — Proxy, Reality Check, Sphere pre-fill, the Brief (brief v4)
 
-Split across PRs.
+Split across PRs #6, #7, #8 and #9, all merged.
 
-**3b.1 (this PR): the proxy and the live client.**
+**3b.1 (#6): the proxy and the live client.**
 - `proxy/`: Vercel project. `GET /api/health`, `POST /api/action` (all twelve typed actions, structured outputs, server-side honesty rules), `POST /api/research` (one web search + fetch turn per call, resumable). Deploy guide in `proxy/README.md`.
 - `ProxyAIClient` in the app, chosen automatically when `Local.xcconfig` carries `PROXY_URL` and `PROXY_TOKEN`. Expand and Summarize go live end to end.
 - `prefill` action and `PrefillResult` contract declared in Swift, mirrored from `proxy/lib/schemas.ts`.
 - `proxy/lib/content.json` generated from ForgeCore (`swift run forge-lens-export`).
 
-**3b.2 (this PR): the Reality Check flow and the Brief screen.** Built:
+**3b.2 (#7): the Reality Check flow and the Brief screen.** Built:
 - `CaptureStateSection`: before a check, the idea shows the sky, the original text and one ember Reality Check button with the cost estimate from the proxy's health endpoint; everything else (Explore, Make it real, tags, notes) sits under a collapsed "More". The first run shows the consent sheet.
 - `RealityCheckRunner`: research turns through `/api/research` until done (at most four), pages saved as chunked `ai-found` web Sources plus a "Research notes" source, then `prefill`, then `PrefillApplier`. Orbs light one at a time while the panel works. Offline, failure and over-ceiling are calm states; nothing is written on failure.
 - `PrefillApplier`: a RealityCheck with competitors, demand signals and the drafted asset as a Source; proposed Explore answers as unconfirmed AI text (never over the user's own); a new evaluation version with every score flagged `aiProposed`, rungs capped at 2, evidence pointing at unreviewed sources so Confidence stays honest; riskiest assumption, next move, Experiment card; the projection range as an estimate string, never as figures; the panel as a Round.
@@ -78,7 +78,7 @@ Split across PRs.
 
 Known limits: "I know something you don't" is text only (voice reuses Phase 1's capture in Phase 4); its re-score keeps the desk rung cap even for user-verified facts, so a rung above 2 is set by hand in the Lab for now; the research loop runs while the screen is open and resumes from the Library if the app is backgrounded mid-run only in the sense that saved pages persist.
 
-**3b.3 (this PR): Home as the panel's desk (brief v4.1 §7) and the Vault cards.**
+**3b.3 (#8): Home as the panel's desk (brief v4.1 §7) and the Vault cards.**
 - `RealityCheckCenter` on the app environment: runs survive navigation; Home narrates; the Home tab badges unseen Briefs; opening the idea clears it.
 - Home: `EmptyPanel` (orbs at 64pt, loose row, one serif line, tap an orb for its one-line job, capture field focused); `PanelHeader` (orbs at 48pt; working lines per Sphere; verdict word and title when holding a verdict); `HomeCard.choose` picks the one card (after capture, Brief waiting, next step owed, newest unchecked); `QuickCaptureField` with the mic; recent ideas as compact cards.
 - After capture: Home turns toward the new idea with "Want us to look into this?", the ember button, the estimate, Later. Capturing from the Vault switches to Home.
@@ -87,15 +87,33 @@ Known limits: "I know something you don't" is text only (voice reuses Phase 1's 
 - Tests: `HomeLogicTests` (status, card priority, narration, centre), ForgeCore Sphere lines.
 - Known limits: the tab badge is the system red badge, not an ember dot; voice from the Home mic opens the capture sheet rather than recording inline.
 
-**Original 3b.2 plan, for reference.**
-- Capture state: sky, original text, one Reality Check button, nothing else (§0A).
-- Cost estimate and the one-time consent note, then research calls looping on `paused`, saving fetched pages as `ai-found` Sources with chunks; then `prefill`; orbs light in sequence.
-- Applying the prefill: explorations as confirmed AI notes, a new evaluation version with striped scores and rungs, projection range as an estimate, riskiest assumption, next move, drafted assets as a Source.
-- The Brief screen: verdict row, six orbs (Steward dim), what we found with source chips, striped rings, the one human task with drafted assets, Looks right / Not quite / I know something you don't.
-- Review by exception: Not quite opens the 3a Lab; I know something you don't records a user-verified Source and re-scores only the affected criteria.
-- Monthly ceiling and actual cost in Settings. Orb states per §8.
+**3b fixes (#8, #9): found on the first real runs.**
+- The proxy trims `FORGE_PROXY_TOKEN` and `ANTHROPIC_API_KEY` when read; a trailing newline on the stored token made a correct token fail.
+- The first prefill got a 400 from the Claude API with nothing logged. The proxy now logs every non-200 from the API with Anthropic's error body and request ID, and returns the message to the app. Output schemas carry source IDs as plain strings (no `format: uuid`). If the API still rejects a structured-output schema, the proxy logs why and retries once with the schema in the prompt, validating with zod itself; such a response carries `X-Forge-Mode: json-fallback`. `/api/action` may run 300 s and the app waits 290 s. Guard tests keep every action's schema within the documented limits.
+- `PrefillApplier.saveResearch` deduplicates URLs within one batch, not only against the Library.
 
-**3c: Rounds and rulings** on top of the pre-fill.
+## 3b — Verified and unverified
+
+Status as of the end of the 3b session. Everything was checked on the iPhone 18 Pro simulator (iOS 27.2); nothing in 3b has run on a physical iPhone.
+
+**Verified by the developer**
+- The proxy deploys from `main` on Vercel; `/api/health` returns `ok` and `authorized` true with the production token.
+- `Cmd+U` after #8: ForgeCore 40/40. The app target had 3 failures, all in `PrefillApplierTests.testResearchPagesBecomeChunkedSources`, caused by the in-batch dedupe bug; #9 fixed the code.
+- One Reality Check ran end to end on the simulator from Home: research (`/api/research` 200), prefill, and the Brief appeared.
+
+**Not yet verified**
+- `Cmd+U` after #9. The dedupe fix is untested on the Mac; `HomeLogicTests` and the rest of `PrefillApplierTests` have passed only as part of the run that had the 3 failures.
+- Whether the successful prefill used structured outputs or the JSON fallback. The Vercel log for `/api/action` shows `json-fallback` in that case; this was not reported, so the cause of the original 400 is still unconfirmed.
+- The Brief's three buttons: Looks right converting to a Workshop task with the drafted asset (the 3b done-check), Not quite with the struck-through override, I know something you don't with its partial re-score.
+- Actual cost of a Reality Check against the $0.15 to $0.60 estimate, the Settings spend line, and the monthly ceiling refusing a run.
+- The consent sheet on first run, the offline state with the proxy unreachable, and a run surviving navigation away from the idea.
+- Home in all three panel states (idle, working with narration, holding a verdict), the after-capture card, the tab badge, the empty first-launch panel.
+- The Vault card treatment and the capture button hiding on scroll.
+- Orb motion, including Reduce Motion holding them still.
+- Expand and Summarize through the live proxy (3b.1's own check).
+- Export after a Reality Check: the new records (RealityCheck, Round, `aiProposed` scores) round-tripping through import.
+
+**3c: Rounds and rulings** on top of the pre-fill. See `docs/HANDOFF.md`.
 
 ## Original scope note (brief v3.1 §11)
 

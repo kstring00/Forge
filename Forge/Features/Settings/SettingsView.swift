@@ -9,6 +9,7 @@ struct SettingsView: View {
     @Query private var ideas: [Idea]
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+    @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
     @State private var exportURL: URL?
     @State private var isExporting = false
     @State private var isImporting = false
@@ -54,6 +55,28 @@ struct SettingsView: View {
                 Text("Appearance")
             } footer: {
                 Text("Dark is the studio's default. Light inverts the same palette.")
+            }
+
+            Section {
+                if consentStamp > 0 {
+                    LabeledContent("AI sharing", value: "Agreed \(Date(timeIntervalSince1970: consentStamp).formatted(date: .abbreviated, time: .omitted))")
+                    Button("Withdraw consent", role: .destructive) {
+                        AIConsent.withdraw()
+                        consentStamp = 0
+                    }
+                } else {
+                    LabeledContent("AI sharing", value: "Not yet agreed")
+                }
+                DisclosureGroup("What is sent") {
+                    ForEach(AIConsent.whatIsSent, id: \.self) { Text($0).font(.footnote) }
+                    Text("Never sent").forgeLabel().padding(.top, ForgeSpacing.xs)
+                    ForEach(AIConsent.neverSent, id: \.self) { Text($0).font(.footnote) }
+                }
+                LabeledContent("Proxy", value: AIConsent.proxyURL ?? "Not configured")
+            } header: {
+                Text("AI")
+            } footer: {
+                Text("Sent only when you tap an AI action, only for that idea, through your own proxy. You'll be asked before the first call.")
             }
 
             Section("Vault") {

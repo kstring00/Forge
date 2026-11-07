@@ -29,7 +29,10 @@ struct HomeView: View {
                     }
                     if let project = activeProjects.first {
                         section("Active workshop") {
-                            workshopCard(project)
+                            NavigationLink(value: WorkshopRoute.project(project.id)) {
+                                workshopCard(project)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     if recent.count > 1 {
@@ -66,16 +69,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .navigationDestination(for: VaultRoute.self) { route in
-                switch route {
-                case .idea(let id):
-                    if let idea = ideas.first(where: { $0.id == id }) {
-                        IdeaDetailView(idea: idea)
-                    } else {
-                        EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
-                    }
-                }
-            }
+            .forgeDestinations()
         }
     }
 

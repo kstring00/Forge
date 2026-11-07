@@ -57,12 +57,25 @@ with Rounds and rulings, and the AI side of the Reality Check button.
 3. Walk the Lab on the RV-park idea: screen it, score A1 by anchor, set A2's rung and people counter, attach a verified note at rung 4 on A2 and watch the legend and projection bar move, name the riskiest assumption, pick the next move, finalize, start a new version from v1's scores.
 4. Compare the screen against `docs/design/` for spacing and type; tell me what is off.
 
-## 3b — Scope (next PR)
+## 3b — Proxy, Reality Check, Sphere pre-fill, the Brief (brief v4)
 
-- Vercel proxy: Anthropic Messages API with JSON contract validation, rate limits, bearer auth, web search and fetch for Phase 4.
-- Live `AIClient` reading the proxy URL and token from `Info.plist`.
-- Spheres: Investor, Customer, Builder, Strategist, Skeptic as orbs; Rounds with verdict cards, crossfire, rulings landing in the Journal and as bounded Evidence.
-- Reality Check button wired to the action, with the cost estimate shown first (Phase 4 completes the Library side).
+Split across PRs.
+
+**3b.1 (this PR): the proxy and the live client.**
+- `proxy/`: Vercel project. `GET /api/health`, `POST /api/action` (all twelve typed actions, structured outputs, server-side honesty rules), `POST /api/research` (one web search + fetch turn per call, resumable). Deploy guide in `proxy/README.md`.
+- `ProxyAIClient` in the app, chosen automatically when `Local.xcconfig` carries `PROXY_URL` and `PROXY_TOKEN`. Expand and Summarize go live end to end.
+- `prefill` action and `PrefillResult` contract declared in Swift, mirrored from `proxy/lib/schemas.ts`.
+- `proxy/lib/content.json` generated from ForgeCore (`swift run forge-lens-export`).
+
+**3b.2 (next): the Reality Check flow and the Brief screen.**
+- Capture state: sky, original text, one Reality Check button, nothing else (§0A).
+- Cost estimate and the one-time consent note, then research calls looping on `paused`, saving fetched pages as `ai-found` Sources with chunks; then `prefill`; orbs light in sequence.
+- Applying the prefill: explorations as confirmed AI notes, a new evaluation version with striped scores and rungs, projection range as an estimate, riskiest assumption, next move, drafted assets as a Source.
+- The Brief screen: verdict row, six orbs (Steward dim), what we found with source chips, striped rings, the one human task with drafted assets, Looks right / Not quite / I know something you don't.
+- Review by exception: Not quite opens the 3a Lab; I know something you don't records a user-verified Source and re-scores only the affected criteria.
+- Monthly ceiling and actual cost in Settings. Orb states per §8.
+
+**3c: Rounds and rulings** on top of the pre-fill.
 
 ## Original scope note (brief v3.1 §11)
 

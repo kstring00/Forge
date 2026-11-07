@@ -1,0 +1,1509 @@
+{
+  "deskResearchRungCeiling" : 2,
+  "explorePrompts" : [
+    {
+      "hint" : "Describe it the way the person who has it would, not the way you'd pitch it.",
+      "key" : "problem",
+      "question" : "What problem does this solve?",
+      "sphere" : "customer"
+    },
+    {
+      "hint" : "A name, or a kind of person you could actually find this week.",
+      "key" : "who",
+      "question" : "Who has this problem, specifically?",
+      "sphere" : "customer"
+    },
+    {
+      "hint" : "A spreadsheet, a workaround, paying someone, nothing. Nothing is an answer.",
+      "key" : "today",
+      "question" : "What do they do about it today?",
+      "sphere" : "customer"
+    },
+    {
+      "hint" : "The honest answer. Money, curiosity, a grudge, a skill you want.",
+      "key" : "why",
+      "question" : "Why does this interest you?",
+      "sphere" : "steward"
+    },
+    {
+      "hint" : "Something you could put in front of one person within a week.",
+      "key" : "tiny",
+      "question" : "What does the tiniest version look like?",
+      "sphere" : "builder"
+    },
+    {
+      "hint" : "The one thing that, if true, means you should stop.",
+      "key" : "kills",
+      "question" : "What would kill it?",
+      "sphere" : "skeptic"
+    }
+  ],
+  "lenses" : [
+    {
+      "confidenceNote" : "Confidence here means: how much of this assessment rests on what real people have done, rather than on what I believe.",
+      "criteria" : [
+        {
+          "aiBoundary" : "The AI can find complaint threads and paid workarounds and save them as unreviewed sources. It cannot have the conversations for you, and it will not claim people have this problem on your behalf.",
+          "definition" : "Who has this problem, how often, and how painful or expensive is it? Measured by what people do about it, not what they say about it.\n\nA problem is real when people are already spending something on it: time, money, or an awkward workaround they complain about. A problem you invented will sound real in your head and vanish the moment you ask someone to describe the last time it happened to them. The Mom Test's method is to ask about the specific past, \"when did this last come up, what did you do,\" and to listen for the workaround. If there is no workaround, the pain is probably not big enough to pay for.",
+          "doesNotCount" : [
+            "People agreeing that the problem 'sounds annoying' when I describe it.",
+            "My own frustration, however real. One person is an anecdote.",
+            "Problems people say they have but have never tried to fix."
+          ],
+          "frameworks" : [
+            "The Mom Test"
+          ],
+          "key" : "A1",
+          "ladder" : [
+            {
+              "description" : "I believe people have this problem.",
+              "label" : "Assumption",
+              "level" : 0,
+              "worth" : "A starting point, not evidence."
+            },
+            {
+              "description" : "I have it, or I remember someone mentioning it.",
+              "label" : "My own anecdotes",
+              "level" : 1,
+              "worth" : "One data point, and a biased one."
+            },
+            {
+              "description" : "Someone described the problem before I mentioned my idea.",
+              "label" : "One person, unprompted",
+              "level" : 2,
+              "worth" : "The first sign it exists outside my head."
+            },
+            {
+              "description" : "Three or more people described when it last happened and what it cost them.",
+              "label" : "Several people, with specifics",
+              "level" : 3,
+              "worth" : "A pattern. The problem is real for a group."
+            },
+            {
+              "description" : "People are currently spending money or hours on a clumsy fix.",
+              "label" : "A paid or costly workaround",
+              "level" : 4,
+              "worth" : "Strong. Spending is the clearest sign of pain."
+            },
+            {
+              "description" : "I have watched the workaround in use and written down what it costs, in time or money, per person.",
+              "label" : "Workaround observed and costed",
+              "level" : 5,
+              "worth" : "As solid as problem evidence gets."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Ask when the problem last came up, what they did about it, what it cost, and what else they tried. Never ask whether they would use your idea. Write their words down as a source.",
+              "effort" : "this week",
+              "reachesRung" : 4,
+              "title" : "Have five past-behaviour conversations"
+            },
+            {
+              "body" : "Find the communities, forums and review sites where they gather. Search for the problem in their words, not yours. Save threads that describe a workaround.",
+              "effort" : "an afternoon",
+              "reachesRung" : 3,
+              "title" : "Read where these people complain"
+            },
+            {
+              "body" : "List every product, service or hire that currently touches this problem. If money is changing hands, the pain is real.",
+              "effort" : "an hour",
+              "reachesRung" : 4,
+              "title" : "Look at what they already pay for"
+            }
+          ],
+          "rubric" : {
+            "1" : "I assume people have it. I have not asked anyone to describe the last time it happened.",
+            "3" : "People have described the problem to me unprompted, or they already pay for a workaround.",
+            "5" : "Multiple specific people have shown me their current workaround, what it costs them, and what they have already tried."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Problem reality"
+        },
+        {
+          "aiBoundary" : "The AI can run the desk research steps through the Library and save what it finds as unreviewed sources. Those raise Confidence only after you read them and mark them reviewed. The AI can draft the five interview questions and the twenty outreach messages. It cannot do the conversations, tests or sales for you, and it will never claim rung 3 or above on your behalf, because those rungs are things real people did.",
+          "alias" : "commercial traction",
+          "definition" : "Commercial traction is proof that people will give up something they value, time, attention, or money, to get this problem solved. Compliments are not traction. \"That's a great idea\" is worth zero.\n\nThis criterion asks one question: what have real people actually done about this problem? Not what they said they would do. Not what you believe they would do. What they did, with their calendar, their inbox, or their wallet.\n\nIt is the criterion most often faked by enthusiasm, which is why FORGE treats it differently from the other five. Everyone who describes their idea gets told it is good. That is politeness, not data. The Mom Test's rule is to talk about the other person's life and past behaviour and never pitch. The Lean Startup's rule is that an idea is a hypothesis until a measurable behaviour confirms it. Put together: demand is measured by behaviour, and ranked by how much that behaviour cost the person who did it.\n\nYour score on this criterion is the highest rung that at least three independent people have reached. One person at a high rung is a promising signal and FORGE will note it, but it does not move the score. Three is the minimum before a pattern is more than a story. Independent means: not family, not close friends, not people who would say yes to be helpful, and not three people from the same conversation.",
+          "doesNotCount" : [
+            "Likes, follows, upvotes, or views. Attention that cost nothing is rung 1 at best.",
+            "\"I would totally buy that.\" Future-tense statements are rung 1. Only past-tense actions count.",
+            "Friends, family, and anyone who would be uncomfortable saying no.",
+            "Your own excitement, however strong.",
+            "AI summaries or AI-found sources you have not read yourself. These stay 'found by AI' until you mark them reviewed; then they can support rung 2.",
+            "A competitor's existence on its own. That proves the category is paid for, which supports rung 2, but says nothing about rungs 3 to 5 for your idea."
+          ],
+          "frameworks" : [
+            "The Mom Test",
+            "The Lean Startup"
+          ],
+          "key" : "A2",
+          "ladder" : [
+            {
+              "description" : "This is where every idea starts, and there is no shame in it.",
+              "label" : "I think it's good",
+              "level" : 0,
+              "worth" : "Nothing. It is just not evidence."
+            },
+            {
+              "description" : "Compliments are what people give when they want the conversation to end pleasantly.",
+              "label" : "People said it's a good idea",
+              "level" : 1,
+              "worth" : "Nothing. FORGE will say so plainly. Count them, then set them aside."
+            },
+            {
+              "description" : "Someone volunteered the pain before you mentioned your idea, or you can point to money or hours they already spend on a clumsy fix.",
+              "label" : "People described the problem, or already pay for a workaround",
+              "level" : 2,
+              "worth" : "The first real rung. This proves the problem is real. It does not yet prove they want your solution."
+            },
+            {
+              "description" : "An interview about their past behaviour. A waitlist signup. A demo request. A reply to a cold message that asks a question.",
+              "label" : "People gave time",
+              "level" : 3,
+              "worth" : "Time is the first thing people refuse to spend on things they do not care about."
+            },
+            {
+              "description" : "A preorder. A deposit. A paid pilot, even a tiny one. A signed letter of intent.",
+              "label" : "People gave money",
+              "level" : 4,
+              "worth" : "The clearest signal there is, because money is the hardest thing to get from someone out of politeness."
+            },
+            {
+              "description" : "Renewed. Reordered. Referred someone else. Used the manual version a second time without being reminded.",
+              "label" : "People came back",
+              "level" : 5,
+              "worth" : "The only rung that proves the solution works, not just that the problem exists."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Search for products or services that solve this problem today. Save their pricing pages. If people are paying, the problem is real. Save their one-star reviews too; those are the complaints nobody has fixed, and they feed Differentiation as well.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "Find who already gets paid"
+            },
+            {
+              "body" : "Type the problem, not your solution, into Google and watch autocomplete. Use Google Trends and the free Keyword Planner for the top three phrases. Volume is a rough proxy for how many people are actively looking.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "Check search volume"
+            },
+            {
+              "body" : "Reddit, Facebook groups, niche forums, G2 and Capterra reviews. Search for 'how do you deal with', 'is there a tool for', 'anyone else frustrated by'. Save threads where people describe their workaround in detail. Each distinct person is one toward your three.",
+              "effort" : "an afternoon",
+              "reachesRung" : 2,
+              "title" : "Read the complaint threads"
+            },
+            {
+              "body" : "If companies are hiring someone to handle this problem by hand, companies are already spending on it. Search LinkedIn and Indeed for the task, not the title.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "Look at job postings"
+            },
+            {
+              "body" : "Talk to people who might have the problem about their life, not your idea. Ask: 'When did this last come up?' 'What did you do about it?' 'What did that cost you?' 'What else have you tried?' 'Who else has this?' Never ask 'would you use this?' If they describe the problem and a workaround unprompted, that is rung 2. If they ask to see what you are building, that is rung 3. Write down what they said in their words.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Have five Mom Test conversations"
+            },
+            {
+              "body" : "Short, specific, about their problem, not your product. Record every reply. Replies with a question in them are rung 3. Silence is data too; it tells you the problem is not top of mind for that group.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Send twenty cold messages"
+            },
+            {
+              "body" : "One page, one promise, one email field. Send a small amount of paid traffic from where these people already are. A signup is rung 3. Be honest on the page that it is not built yet.",
+              "effort" : "one to two weeks",
+              "reachesRung" : 3,
+              "title" : "Landing page, waitlist, fifty dollars of ads"
+            },
+            {
+              "body" : "A 'Get started' button that leads to 'Not ready yet. Leave your email and I'll tell you when.' Ethical only if you tell them on that page. Each email is rung 3.",
+              "effort" : "one to two weeks",
+              "reachesRung" : 3,
+              "title" : "Fake-door test, disclosed"
+            },
+            {
+              "body" : "Before building anything, do the job by hand for one person and charge for it. This is the single most informative test on the ladder: it reaches rung 4 and teaches you exactly what the product has to do. If you cannot find one person to pay for a manual version, no amount of software will change that.",
+              "effort" : "two to four weeks",
+              "reachesRung" : 4,
+              "title" : "Sell the manual version to one customer"
+            },
+            {
+              "body" : "Even a small, refundable one. Or a signed letter of intent from a business buyer. Three of these and the score is a 4.",
+              "effort" : "two to four weeks",
+              "reachesRung" : 4,
+              "title" : "Take a deposit or preorder"
+            },
+            {
+              "body" : "Did the manual-version customer ask for it again? Did a preorder customer refer someone? Did anyone use it a second time without a nudge? You cannot manufacture this rung. You can only set it up and watch.",
+              "effort" : "wait and watch",
+              "reachesRung" : 5,
+              "title" : "See if they come back"
+            }
+          ],
+          "rubric" : {
+            "1" : "Enthusiasm. Rung 0 or 1. Nobody has done anything. You might be right. You do not yet know.",
+            "2" : "Problem confirmed. Rung 2 with three or more people. The pain is real and people are already paying for it somehow. Whether they would pay you is still open.",
+            "3" : "Attention given. Rung 3 with three or more people. Strangers have spent time on this. You have something worth testing with money.",
+            "4" : "Money changed hands. Rung 4 with three or more people. You have a business hypothesis with early proof. The risk has moved from 'does anyone want this' to 'can I deliver and repeat it.'",
+            "5" : "Repeat behaviour. Rung 5 with three or more people. Demand is demonstrated. This criterion is no longer your riskiest assumption; look at distribution and economics instead."
+          },
+          "scoreEqualsLadder" : true,
+          "title" : "Demand evidence"
+        },
+        {
+          "aiBoundary" : "The AI can map competitors, pull pricing pages and summarise one-star reviews as unreviewed sources. It cannot tell you which factor buyers care about; only buyers can.",
+          "definition" : "Why would someone pick this over what they use now? \"Now\" includes doing nothing, a spreadsheet, a cheaper competitor, and a person they already pay.\n\nBlue Ocean Strategy's Four Actions give the test. For the factors your industry competes on, which would you eliminate, reduce, raise, or create? If the honest answer is \"I'd do the same things, better,\" you are competing on execution against people with a head start. Differentiation is a different value curve: you drop something everyone assumes is required and add something nobody offers, and the buyers you want have told you that trade matters to them.",
+          "doesNotCount" : [
+            "Features I like that no buyer has asked about.",
+            "'Better design' or 'better UX' as the only difference.",
+            "Being cheaper, unless I can stay cheaper."
+          ],
+          "frameworks" : [
+            "Blue Ocean Strategy"
+          ],
+          "key" : "A3",
+          "ladder" : [
+            {
+              "description" : "I believe mine would be better without having compared.",
+              "label" : "I'd do it better",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written down what people use today, including 'nothing' and 'spreadsheet'.",
+              "label" : "Alternatives listed",
+              "level" : 1,
+              "worth" : "The minimum before any claim."
+            },
+            {
+              "description" : "Pricing, features and positioning for three alternatives, side by side.",
+              "label" : "Three competitors mapped",
+              "level" : 2,
+              "worth" : "I can now see the industry's assumed factors."
+            },
+            {
+              "description" : "Their one-star reviews and complaint threads point at something nobody addresses.",
+              "label" : "An unfixed complaint found",
+              "level" : 3,
+              "worth" : "A candidate for raise or create."
+            },
+            {
+              "description" : "Three or more target buyers told me, unprompted, that this factor is why they would switch.",
+              "label" : "Buyers said the factor matters",
+              "level" : 4,
+              "worth" : "The curve is different in their eyes, not just mine."
+            },
+            {
+              "description" : "Someone picked my version over an alternative and named that factor as why.",
+              "label" : "Chosen for that reason",
+              "level" : 5,
+              "worth" : "Differentiation that converts."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Include 'do nothing', 'a spreadsheet', 'hire someone' and the market leader. This is the competition.",
+              "effort" : "an hour",
+              "reachesRung" : 1,
+              "title" : "List every alternative, honestly"
+            },
+            {
+              "body" : "For each: price, main features, who it is for, and its three loudest one-star reviews. Save each page as a source.",
+              "effort" : "an afternoon",
+              "reachesRung" : 3,
+              "title" : "Map three competitors"
+            },
+            {
+              "body" : "Eliminate, Reduce, Raise, Create. Which industry assumptions can go? What do customers complain about that nobody fixes? What does everyone offer that customers do not care about?",
+              "effort" : "an hour",
+              "reachesRung" : 3,
+              "title" : "Fill the ERRC grid"
+            },
+            {
+              "body" : "In your Mom Test conversations, ask what they would need to see to leave their current tool. Record the factor in their words.",
+              "effort" : "this week",
+              "reachesRung" : 4,
+              "title" : "Ask buyers which factor would make them switch"
+            }
+          ],
+          "rubric" : {
+            "1" : "Same as the alternatives, but I would do it better.",
+            "3" : "One clear factor I would raise or create that the alternatives ignore.",
+            "5" : "A different value curve. I eliminate things competitors assume are required and create something they do not offer, and target buyers have told me that factor matters."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Differentiation"
+        },
+        {
+          "aiBoundary" : "The AI can help you phrase the four answers and draft offer wording. It cannot know what outcome a buyer wants until a buyer has said it.",
+          "definition" : "How good is the deal from the buyer's side? The value equation from $100M Offers: value = (dream outcome × perceived likelihood of achieving it) ÷ (time delay × effort and sacrifice).\n\nFour questions. What outcome does the buyer actually want, in their words? How believable is it that this gets them there? How long until they feel it? How much do they have to do or give up along the way? A strong offer names a specific outcome the buyer already wants, delivers it fast, asks little of them, and comes with a believable reason it works. A weak offer is a vague improvement, someday, with effort.",
+          "doesNotCount" : [
+            "Outcomes I would want for them.",
+            "A long feature list standing in for an outcome.",
+            "'It saves time' without a number."
+          ],
+          "frameworks" : [
+            "$100M Offers"
+          ],
+          "key" : "A4",
+          "ladder" : [
+            {
+              "description" : "I have not written the outcome down.",
+              "label" : "I think it's valuable",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written the dream outcome and the four value-equation answers.",
+              "label" : "Outcome written",
+              "level" : 1,
+              "worth" : "A hypothesis I can test."
+            },
+            {
+              "description" : "I have measured how long and how many steps the current alternatives take.",
+              "label" : "Alternatives timed",
+              "level" : 2,
+              "worth" : "I know what 'fast' and 'effortless' have to beat."
+            },
+            {
+              "description" : "Three or more prospects described the outcome they would pay for, in their own words, and it matches mine.",
+              "label" : "Outcome in their words",
+              "level" : 3,
+              "worth" : "The offer is aimed at something real."
+            },
+            {
+              "description" : "A prospect heard the offer and asked for price, timing or how to start.",
+              "label" : "Asked for the next step",
+              "level" : 4,
+              "worth" : "The offer pulls."
+            },
+            {
+              "description" : "Someone paid for exactly this outcome, as stated.",
+              "label" : "Paid for that outcome",
+              "level" : 5,
+              "worth" : "The offer works."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Dream outcome, perceived likelihood, time delay, effort. One sentence each. Then say the offer out loud in one breath.",
+              "effort" : "an hour",
+              "reachesRung" : 1,
+              "title" : "Write the four answers"
+            },
+            {
+              "body" : "How long does the current way take, start to finish? How many steps? What do they have to learn or give up?",
+              "effort" : "an afternoon",
+              "reachesRung" : 2,
+              "title" : "Time the alternatives"
+            },
+            {
+              "body" : "Not 'would you pay for X' but 'what would have to be true for this to be worth paying for?' Record their words.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Ask prospects what outcome they'd pay for"
+            },
+            {
+              "body" : "At the end of a conversation, describe the offer plainly and stop talking. A question about price or start date is rung 4. A compliment is rung 1 on Demand evidence.",
+              "effort" : "this week",
+              "reachesRung" : 4,
+              "title" : "State the offer and watch the reaction"
+            }
+          ],
+          "rubric" : {
+            "1" : "Vague outcome, slow, effortful.",
+            "3" : "Clear outcome, moderate wait, some effort.",
+            "5" : "A specific outcome the buyer already wants, fast, nearly effortless, with a believable reason it works."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Offer strength"
+        },
+        {
+          "aiBoundary" : "The AI can find where buyers gather and draft outreach messages. It cannot send them, and it will not invent conversion rates or prices.",
+          "definition" : "How do customers discover this, and does the money work? A product nobody finds is not a business, and a product that costs more to sell than it earns is a hobby with invoices.\n\nTwo halves. Distribution: name the channel, not \"word of mouth\" or \"social media\" but a specific place you can reach these buyers today, and what it costs to get one of them to act. Economics: price above cost, the cost of acquiring a customer against what they pay in the first year, and whether the revenue can repeat through subscription, retainer or reorder. Profit First's question applies from sale one: is there profit in this sale, or only in a future that needs scale?",
+          "doesNotCount" : [
+            "'Social media' or 'SEO' without a specific place and a number.",
+            "Pricing I would be comfortable with, rather than a price someone paid.",
+            "Projections that only work at scale."
+          ],
+          "frameworks" : [
+            "$100M Leads",
+            "The Lean Startup",
+            "Profit First"
+          ],
+          "key" : "A5",
+          "ladder" : [
+            {
+              "description" : "No channel named.",
+              "label" : "They'll find it",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have listed where these buyers already gather and what they already pay for.",
+              "label" : "Buyers located",
+              "level" : 1,
+              "worth" : "A place to start."
+            },
+            {
+              "description" : "A list, a community, existing clients, or an outreach method I can use this week, plus a price above cost on paper.",
+              "label" : "One channel I can reach today",
+              "level" : 2,
+              "worth" : "A plausible first sale."
+            },
+            {
+              "description" : "Twenty outreaches sent and replies recorded, or a small ad spend with a measured click or signup rate.",
+              "label" : "Outreach measured",
+              "level" : 3,
+              "worth" : "The channel has a number attached."
+            },
+            {
+              "description" : "A real payment at the stated price, with the acquisition cost known.",
+              "label" : "Paid at the price",
+              "level" : 4,
+              "worth" : "The economics exist for one customer."
+            },
+            {
+              "description" : "A second payment from the same customer, or a referral that paid.",
+              "label" : "Revenue repeated",
+              "level" : 5,
+              "worth" : "The money can repeat."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Communities, newsletters, events, the tools they use, the people they already pay. Pick the one you can reach this week.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "List where these buyers already are"
+            },
+            {
+              "body" : "Same message, twenty people, one channel. Record sent, replied, interested. That ratio is your first conversion rate.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Run twenty cold outreaches"
+            },
+            {
+              "body" : "How many outreaches or ad dollars per customer, against what one customer pays in a year? If it is upside down, change the channel or the price before building.",
+              "effort" : "an hour",
+              "reachesRung" : 3,
+              "title" : "Estimate CAC against first-year revenue"
+            },
+            {
+              "body" : "Subscription, retainer, reorder, or one-off? If one-off, what is the second thing you sell them?",
+              "effort" : "an hour",
+              "reachesRung" : 4,
+              "title" : "Check whether revenue can repeat"
+            }
+          ],
+          "rubric" : {
+            "1" : "'They'll find it.'",
+            "3" : "One channel I can access today (existing clients, a community, outreach) and plausible pricing above cost.",
+            "5" : "A named channel with a tested conversion rate, pricing validated by a real payment, and a path to recurring revenue."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Distribution & economics"
+        },
+        {
+          "aiBoundary" : "The AI can help break the smallest version into tasks and flag skill gaps. It cannot estimate your hours, and it does not know your advantages unless you list them in Settings.",
+          "definition" : "Can I realistically build, launch and maintain the first useful version with my skills, time and money, and does it use an advantage I already have?\n\nGood Strategy, Bad Strategy asks for a diagnosis, a guiding policy and coherent action. The guiding policy that matters most for a solo builder is to lean on an existing advantage: a skill, an audience, a relationship, an asset. The E-Myth adds the second test: if the business only works while you do custom labour, you have built yourself a job. Feasibility is the honest answer to \"what is the smallest usable version, how many hours, what must I learn, and what breaks if I stop?\"",
+          "doesNotCount" : [
+            "'I'll figure it out' as a plan for a skill gap.",
+            "Hour estimates made without listing the tasks.",
+            "An advantage I would like to have rather than one I have."
+          ],
+          "frameworks" : [
+            "Good Strategy \/ Bad Strategy",
+            "The E-Myth Revisited"
+          ],
+          "key" : "A6",
+          "ladder" : [
+            {
+              "description" : "No plan written.",
+              "label" : "I think I can build it",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "One paragraph describing the smallest usable version.",
+              "label" : "Smallest version written",
+              "level" : 1,
+              "worth" : "Something to estimate."
+            },
+            {
+              "description" : "An honest hour count and a list of what I would have to learn.",
+              "label" : "Hours and gaps estimated",
+              "level" : 2,
+              "worth" : "I know the cost."
+            },
+            {
+              "description" : "A throwaway version of the riskiest technical or operational piece works.",
+              "label" : "Hardest part spiked",
+              "level" : 3,
+              "worth" : "The unknown is now known."
+            },
+            {
+              "description" : "The one-paragraph version exists and someone has used it.",
+              "label" : "Smallest version built",
+              "level" : 4,
+              "worth" : "Feasible, demonstrated."
+            },
+            {
+              "description" : "It delivered value for a week without custom labour from me.",
+              "label" : "Ran without me",
+              "level" : 5,
+              "worth" : "A business, not a job."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "What is the least this has to do for one person to get the outcome? Not the vision. The first version.",
+              "effort" : "an hour",
+              "reachesRung" : 1,
+              "title" : "Write the smallest usable version in one paragraph"
+            },
+            {
+              "body" : "Break the paragraph into tasks. Mark the ones you cannot do today. Add the hours. Double them.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "List what must be learned and estimate hours honestly"
+            },
+            {
+              "body" : "Build a throwaway version of the riskiest piece in a day. If it cannot be done in a day, that is the finding.",
+              "effort" : "a day",
+              "reachesRung" : 3,
+              "title" : "Spike the hardest part"
+            },
+            {
+              "body" : "If the answer is 'everything', the first version depends on your labour. Decide now whether that is acceptable for the first customers, and what replaces it.",
+              "effort" : "an hour",
+              "reachesRung" : 2,
+              "title" : "Ask what breaks if you stop"
+            }
+          ],
+          "rubric" : {
+            "1" : "Needs skills or capital I do not have and cannot get soon.",
+            "3" : "Buildable in weeks with current skills and tools.",
+            "5" : "Uses an existing advantage (skill, audience, relationships), buildable in days, and does not depend on me doing custom labour forever."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Feasibility & founder fit"
+        }
+      ],
+      "frameworks" : [
+        "The Mom Test",
+        "The Lean Startup",
+        "$100M Offers",
+        "$100M Leads",
+        "Blue Ocean Strategy",
+        "Good Strategy \/ Bad Strategy",
+        "12 Months to $1 Million"
+      ],
+      "name" : "Business",
+      "tagline" : "Would strangers give up time or money for this, and could I reach them?",
+      "type" : "business"
+    },
+    {
+      "confidenceNote" : "Confidence here means: have I actually done the small version, and for how long?",
+      "criteria" : [
+        {
+          "aiBoundary" : "The AI can help you name the smallest version and spot where it conflicts with your week. It cannot do the two weeks for you, and it will not tell you a habit fits your values; only you can.",
+          "definition" : "Does this match who I am becoming, not just what sounds impressive? Atomic Habits puts identity before outcomes: every action is a vote for the kind of person you are. A goal that sounds admirable but belongs to someone else's life gets abandoned the first hard week. The test is whether you can say, in a sentence, which of your values this serves and which you would be trading away.",
+          "doesNotCount" : [
+            "Goals I admire in other people.",
+            "Things I think I should want."
+          ],
+          "frameworks" : [
+            "Atomic Habits",
+            "Values alignment"
+          ],
+          "key" : "B1",
+          "ladder" : [
+            {
+              "description" : "I have not written down why.",
+              "label" : "It sounds like me",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written why this matters and what the smallest version is.",
+              "label" : "Reason written",
+              "level" : 1,
+              "worth" : "A commitment I can check."
+            },
+            {
+              "description" : "I did the smallest version one time.",
+              "label" : "Done once",
+              "level" : 2,
+              "worth" : "A start, nothing more."
+            },
+            {
+              "description" : "I ran the smallest version for two weeks without missing more than twice.",
+              "label" : "Two weeks at the smallest size",
+              "level" : 3,
+              "worth" : "The habit is possible."
+            },
+            {
+              "description" : "Kept up for a month through normal work, family and rest.",
+              "label" : "A month alongside everything else",
+              "level" : 4,
+              "worth" : "Sustainable in real life."
+            },
+            {
+              "description" : "Three months in, or someone close to me has noticed a change without being told.",
+              "label" : "Noticed by someone else",
+              "level" : 5,
+              "worth" : "It has become part of who I am."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "\"I am the kind of person who ___.\" If the blank feels borrowed, say so.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Write the identity sentence"
+            },
+            {
+              "body" : "What gets less time if this gets more? Write it down and decide if that is acceptable.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Name the trade"
+            },
+            {
+              "body" : "Not the full plan. The two-minute version. Record each day you did it.",
+              "effort" : "two weeks",
+              "reachesRung" : 3,
+              "title" : "Do the smallest version for two weeks"
+            }
+          ],
+          "rubric" : {
+            "1" : "It sounds impressive, and I could not say which value it serves.",
+            "3" : "I can name the value it serves and the person it makes me, and nothing I care about is traded away.",
+            "5" : "People who know me would say this is obviously me, and I have already been doing a version of it unasked."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Identity & values alignment"
+        },
+        {
+          "aiBoundary" : "The AI can help you name the smallest version and spot where it conflicts with your week. It cannot do the two weeks for you, and it will not tell you a habit fits your values; only you can.",
+          "definition" : "Will the skill or habit built here keep paying off in other areas? Deep Work's argument is that rare, valuable skills come from focused practice and transfer across domains. Some growth is a dead end: impressive but isolated. The question is what else gets easier if you get good at this.",
+          "doesNotCount" : [
+            "Skills that are fun to collect but I never use.",
+            "Credentials without practice."
+          ],
+          "frameworks" : [
+            "Deep Work",
+            "Atomic Habits"
+          ],
+          "key" : "B2",
+          "ladder" : [
+            {
+              "description" : "I have not written down why.",
+              "label" : "It sounds like me",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written why this matters and what the smallest version is.",
+              "label" : "Reason written",
+              "level" : 1,
+              "worth" : "A commitment I can check."
+            },
+            {
+              "description" : "I did the smallest version one time.",
+              "label" : "Done once",
+              "level" : 2,
+              "worth" : "A start, nothing more."
+            },
+            {
+              "description" : "I ran the smallest version for two weeks without missing more than twice.",
+              "label" : "Two weeks at the smallest size",
+              "level" : 3,
+              "worth" : "The habit is possible."
+            },
+            {
+              "description" : "Kept up for a month through normal work, family and rest.",
+              "label" : "A month alongside everything else",
+              "level" : 4,
+              "worth" : "Sustainable in real life."
+            },
+            {
+              "description" : "Three months in, or someone close to me has noticed a change without being told.",
+              "label" : "Noticed by someone else",
+              "level" : 5,
+              "worth" : "It has become part of who I am."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Two concrete places this skill shows up elsewhere in your life. If you cannot find two, it may still be worth it, but score it honestly.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "List what else it unlocks"
+            },
+            {
+              "body" : "One ninety-minute block a week for the skill, for two weeks. See whether it survives.",
+              "effort" : "two weeks",
+              "reachesRung" : 3,
+              "title" : "Protect one deep-work block"
+            }
+          ],
+          "rubric" : {
+            "1" : "Useful only for this one thing.",
+            "3" : "I can name two other areas of my life or work that get easier if I build this.",
+            "5" : "It is a foundation skill: it makes most of what I want to do next cheaper, and I have already seen it transfer once."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Skill compounding"
+        },
+        {
+          "aiBoundary" : "The AI can help you name the smallest version and spot where it conflicts with your week. It cannot do the two weeks for you, and it will not tell you a habit fits your values; only you can.",
+          "definition" : "Can I realistically keep this up alongside work, faith, family and rest? What is the smallest version I would never skip? Atomic Habits' rule is to make it easy: a habit that needs a perfect week will not survive an ordinary one. Run it for two weeks at the smallest size before committing to anything larger.",
+          "doesNotCount" : [
+            "Plans that start 'once things calm down'.",
+            "A streak, which is pressure, not evidence."
+          ],
+          "frameworks" : [
+            "Atomic Habits"
+          ],
+          "key" : "B3",
+          "ladder" : [
+            {
+              "description" : "I have not written down why.",
+              "label" : "It sounds like me",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written why this matters and what the smallest version is.",
+              "label" : "Reason written",
+              "level" : 1,
+              "worth" : "A commitment I can check."
+            },
+            {
+              "description" : "I did the smallest version one time.",
+              "label" : "Done once",
+              "level" : 2,
+              "worth" : "A start, nothing more."
+            },
+            {
+              "description" : "I ran the smallest version for two weeks without missing more than twice.",
+              "label" : "Two weeks at the smallest size",
+              "level" : 3,
+              "worth" : "The habit is possible."
+            },
+            {
+              "description" : "Kept up for a month through normal work, family and rest.",
+              "label" : "A month alongside everything else",
+              "level" : 4,
+              "worth" : "Sustainable in real life."
+            },
+            {
+              "description" : "Three months in, or someone close to me has noticed a change without being told.",
+              "label" : "Noticed by someone else",
+              "level" : 5,
+              "worth" : "It has become part of who I am."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "What is the version so small you would never skip it? Two minutes. One sentence. One rep.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Shrink it until it is embarrassing"
+            },
+            {
+              "body" : "Record done or not done. Missing twice is fine. Missing three days in a row means the size is wrong.",
+              "effort" : "two weeks",
+              "reachesRung" : 3,
+              "title" : "Run two weeks at that size"
+            },
+            {
+              "body" : "After coffee, before the commute, with the evening dishes. Write the cue down.",
+              "effort" : "ten minutes",
+              "reachesRung" : 2,
+              "title" : "Attach it to something that already happens"
+            }
+          ],
+          "rubric" : {
+            "1" : "Needs a free evening and a good mood.",
+            "3" : "I have a smallest version that takes under ten minutes and fits an ordinary bad day.",
+            "5" : "I have run the smallest version for a month, through travel or illness, without resenting it."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Sustainability"
+        },
+        {
+          "aiBoundary" : "The AI can help you name the smallest version and spot where it conflicts with your week. It cannot do the two weeks for you, and it will not tell you a habit fits your values; only you can.",
+          "definition" : "Does it improve my life or the lives of people around me? Growth that costs the people close to you is a trade, not a gain. The honest test is to ask them, and to notice what the small version changes in a normal week.",
+          "doesNotCount" : [
+            "Benefits to others I have imagined but not asked about."
+          ],
+          "frameworks" : [
+            "Values alignment"
+          ],
+          "key" : "B4",
+          "ladder" : [
+            {
+              "description" : "I have not written down why.",
+              "label" : "It sounds like me",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written why this matters and what the smallest version is.",
+              "label" : "Reason written",
+              "level" : 1,
+              "worth" : "A commitment I can check."
+            },
+            {
+              "description" : "I did the smallest version one time.",
+              "label" : "Done once",
+              "level" : 2,
+              "worth" : "A start, nothing more."
+            },
+            {
+              "description" : "I ran the smallest version for two weeks without missing more than twice.",
+              "label" : "Two weeks at the smallest size",
+              "level" : 3,
+              "worth" : "The habit is possible."
+            },
+            {
+              "description" : "Kept up for a month through normal work, family and rest.",
+              "label" : "A month alongside everything else",
+              "level" : 4,
+              "worth" : "Sustainable in real life."
+            },
+            {
+              "description" : "Three months in, or someone close to me has noticed a change without being told.",
+              "label" : "Noticed by someone else",
+              "level" : 5,
+              "worth" : "It has become part of who I am."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Tell someone close to you what you are trying and ask what they think it would cost them. Listen.",
+              "effort" : "a conversation",
+              "reachesRung" : 2,
+              "title" : "Ask one person"
+            },
+            {
+              "body" : "Did anything in a normal week get better for anyone? Write one line.",
+              "effort" : "two weeks",
+              "reachesRung" : 3,
+              "title" : "Notice after two weeks"
+            }
+          ],
+          "rubric" : {
+            "1" : "It is for me, and it takes time from people who would notice.",
+            "3" : "It costs nothing anyone would notice, and I can name one way it helps someone else.",
+            "5" : "Someone close to me has said they see the difference."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Life & relationship impact"
+        },
+        {
+          "aiBoundary" : "The AI can help you name the smallest version and spot where it conflicts with your week. It cannot do the two weeks for you, and it will not tell you a habit fits your values; only you can.",
+          "definition" : "Would I do this if nobody ever knew? Growth driven by an audience ends when the audience looks away. The test is whether you have done any of it in private, unprompted, and whether you looked forward to it.",
+          "doesNotCount" : [
+            "Wanting the result without wanting the practice.",
+            "Enthusiasm on day one."
+          ],
+          "frameworks" : [
+            "Atomic Habits"
+          ],
+          "key" : "B5",
+          "ladder" : [
+            {
+              "description" : "I have not written down why.",
+              "label" : "It sounds like me",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "I have written why this matters and what the smallest version is.",
+              "label" : "Reason written",
+              "level" : 1,
+              "worth" : "A commitment I can check."
+            },
+            {
+              "description" : "I did the smallest version one time.",
+              "label" : "Done once",
+              "level" : 2,
+              "worth" : "A start, nothing more."
+            },
+            {
+              "description" : "I ran the smallest version for two weeks without missing more than twice.",
+              "label" : "Two weeks at the smallest size",
+              "level" : 3,
+              "worth" : "The habit is possible."
+            },
+            {
+              "description" : "Kept up for a month through normal work, family and rest.",
+              "label" : "A month alongside everything else",
+              "level" : 4,
+              "worth" : "Sustainable in real life."
+            },
+            {
+              "description" : "Three months in, or someone close to me has noticed a change without being told.",
+              "label" : "Noticed by someone else",
+              "level" : 5,
+              "worth" : "It has become part of who I am."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "No posting, no telling anyone. Record each day. Note whether you still wanted to on day ten.",
+              "effort" : "two weeks",
+              "reachesRung" : 3,
+              "title" : "Do it in private for two weeks"
+            },
+            {
+              "body" : "If the outcome never came, which part would you still do?",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Write what you would keep if it never paid off"
+            }
+          ],
+          "rubric" : {
+            "1" : "I mostly want to have done it, or to be seen doing it.",
+            "3" : "I have done some of it privately and enjoyed parts of it.",
+            "5" : "I already do a version of this when nobody is watching, and I would keep going with no result to show."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Intrinsic motivation"
+        }
+      ],
+      "frameworks" : [
+        "Atomic Habits",
+        "Values alignment",
+        "Deep Work"
+      ],
+      "name" : "Personal Growth",
+      "tagline" : "Is this who I am becoming, and can I keep it up at the smallest size?",
+      "type" : "growth"
+    },
+    {
+      "confidenceNote" : "Confidence here means one thing: have I made the smallest prototype yet, and did I come back to it?",
+      "criteria" : [
+        {
+          "aiBoundary" : "The AI can suggest references, smallest-prototype shapes and what to try first. It cannot make the prototype, and it will not tell you whether you are excited.",
+          "definition" : "Do I actually want to make this, or do I want to have made it? Excitement that survives a rough first session is the real kind. Excitement that only exists while describing the idea is the other kind.",
+          "doesNotCount" : [
+            "How it would look finished.",
+            "Other people's enthusiasm for it."
+          ],
+          "frameworks" : [
+            "Build, measure, learn"
+          ],
+          "key" : "C1",
+          "ladder" : [
+            {
+              "description" : "It exists in my head.",
+              "label" : "Idea only",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "Notes, a sketch, a reference list.",
+              "label" : "Sketched",
+              "level" : 1,
+              "worth" : "Something to react to."
+            },
+            {
+              "description" : "I spent one sitting making a piece of it, however bad.",
+              "label" : "One rough session",
+              "level" : 2,
+              "worth" : "I know what it feels like to make."
+            },
+            {
+              "description" : "A complete, tiny version: one page, one minute, one object.",
+              "label" : "Smallest prototype exists",
+              "level" : 3,
+              "worth" : "It is real."
+            },
+            {
+              "description" : "I showed it to someone, or made a second version.",
+              "label" : "Shown or iterated",
+              "level" : 4,
+              "worth" : "It survived contact."
+            },
+            {
+              "description" : "I returned to it without scheduling it.",
+              "label" : "Came back unplanned",
+              "level" : 5,
+              "worth" : "It has pull."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Thirty minutes, no plan to show anyone. Notice whether you wanted a second one.",
+              "effort" : "half an hour",
+              "reachesRung" : 2,
+              "title" : "One rough session"
+            },
+            {
+              "body" : "Do not touch it. Notice whether it comes back on its own.",
+              "effort" : "three days",
+              "reachesRung" : 5,
+              "title" : "Leave it for three days"
+            }
+          ],
+          "rubric" : {
+            "1" : "I like the idea of it.",
+            "3" : "I have started, and I thought about it when I was not working on it.",
+            "5" : "I keep returning to it without deciding to."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Genuine excitement"
+        },
+        {
+          "aiBoundary" : "The AI can suggest references, smallest-prototype shapes and what to try first. It cannot make the prototype, and it will not tell you whether you are excited.",
+          "definition" : "Is this taking me somewhere I have not been, or repeating something I already know how to do? Originality here is personal: new to me counts. The question is whether the project explores, not whether it is unprecedented.",
+          "doesNotCount" : [
+            "Novelty for its own sake.",
+            "Being first, which nobody can check."
+          ],
+          "frameworks" : [
+            "Build, measure, learn"
+          ],
+          "key" : "C2",
+          "ladder" : [
+            {
+              "description" : "It exists in my head.",
+              "label" : "Idea only",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "Notes, a sketch, a reference list.",
+              "label" : "Sketched",
+              "level" : 1,
+              "worth" : "Something to react to."
+            },
+            {
+              "description" : "I spent one sitting making a piece of it, however bad.",
+              "label" : "One rough session",
+              "level" : 2,
+              "worth" : "I know what it feels like to make."
+            },
+            {
+              "description" : "A complete, tiny version: one page, one minute, one object.",
+              "label" : "Smallest prototype exists",
+              "level" : 3,
+              "worth" : "It is real."
+            },
+            {
+              "description" : "I showed it to someone, or made a second version.",
+              "label" : "Shown or iterated",
+              "level" : 4,
+              "worth" : "It survived contact."
+            },
+            {
+              "description" : "I returned to it without scheduling it.",
+              "label" : "Came back unplanned",
+              "level" : 5,
+              "worth" : "It has pull."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Write the one thing you cannot predict about the result.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Name the unknown"
+            },
+            {
+              "body" : "A limit you have never worked under. See what it forces.",
+              "effort" : "one session",
+              "reachesRung" : 2,
+              "title" : "Add one constraint"
+            },
+            {
+              "body" : "Complete, not polished. The unknown you named should now have an answer, even a bad one.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Finish a tiny version under that constraint"
+            }
+          ],
+          "rubric" : {
+            "1" : "I have done this before in a slightly different coat.",
+            "3" : "One element is new to me: a medium, a constraint, a subject.",
+            "5" : "I do not know how it will turn out, and that is the point."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Originality \/ exploration"
+        },
+        {
+          "aiBoundary" : "The AI can suggest references, smallest-prototype shapes and what to try first. It cannot make the prototype, and it will not tell you whether you are excited.",
+          "definition" : "What will I be able to do afterwards that I cannot do now? A creative experiment pays in skill even when the result goes in a drawer. Name the skill before you start so you can tell whether you got it.",
+          "doesNotCount" : [
+            "Vague 'growth'.",
+            "Learning about the tool rather than the craft."
+          ],
+          "frameworks" : [
+            "Build, measure, learn",
+            "Deep Work"
+          ],
+          "key" : "C3",
+          "ladder" : [
+            {
+              "description" : "It exists in my head.",
+              "label" : "Idea only",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "Notes, a sketch, a reference list.",
+              "label" : "Sketched",
+              "level" : 1,
+              "worth" : "Something to react to."
+            },
+            {
+              "description" : "I spent one sitting making a piece of it, however bad.",
+              "label" : "One rough session",
+              "level" : 2,
+              "worth" : "I know what it feels like to make."
+            },
+            {
+              "description" : "A complete, tiny version: one page, one minute, one object.",
+              "label" : "Smallest prototype exists",
+              "level" : 3,
+              "worth" : "It is real."
+            },
+            {
+              "description" : "I showed it to someone, or made a second version.",
+              "label" : "Shown or iterated",
+              "level" : 4,
+              "worth" : "It survived contact."
+            },
+            {
+              "description" : "I returned to it without scheduling it.",
+              "label" : "Came back unplanned",
+              "level" : 5,
+              "worth" : "It has pull."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "\"When this is done I will be able to ___.\"",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Write the after-sentence"
+            },
+            {
+              "body" : "Not the whole project. The one part that needs the new thing.",
+              "effort" : "one session",
+              "reachesRung" : 3,
+              "title" : "Make the smallest thing that uses the skill"
+            }
+          ],
+          "rubric" : {
+            "1" : "I would finish knowing what I already know.",
+            "3" : "I can name one skill or technique I would come out with.",
+            "5" : "The project is built around a skill I want, and the result is almost beside the point."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Learning potential"
+        },
+        {
+          "aiBoundary" : "The AI can suggest references, smallest-prototype shapes and what to try first. It cannot make the prototype, and it will not tell you whether you are excited.",
+          "definition" : "Can I make a complete, tiny version this week with what I have? One page, one minute of sound, one object, one scene. If the smallest version needs gear, money or a month, the idea is not ready to be tested, only admired.",
+          "doesNotCount" : [
+            "Plans that start with buying something.",
+            "A prototype that is a plan for a prototype."
+          ],
+          "frameworks" : [
+            "Build, measure, learn"
+          ],
+          "key" : "C4",
+          "ladder" : [
+            {
+              "description" : "It exists in my head.",
+              "label" : "Idea only",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "Notes, a sketch, a reference list.",
+              "label" : "Sketched",
+              "level" : 1,
+              "worth" : "Something to react to."
+            },
+            {
+              "description" : "I spent one sitting making a piece of it, however bad.",
+              "label" : "One rough session",
+              "level" : 2,
+              "worth" : "I know what it feels like to make."
+            },
+            {
+              "description" : "A complete, tiny version: one page, one minute, one object.",
+              "label" : "Smallest prototype exists",
+              "level" : 3,
+              "worth" : "It is real."
+            },
+            {
+              "description" : "I showed it to someone, or made a second version.",
+              "label" : "Shown or iterated",
+              "level" : 4,
+              "worth" : "It survived contact."
+            },
+            {
+              "description" : "I returned to it without scheduling it.",
+              "label" : "Came back unplanned",
+              "level" : 5,
+              "worth" : "It has pull."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "What is the smallest thing that is finished? Write it in one line.",
+              "effort" : "ten minutes",
+              "reachesRung" : 1,
+              "title" : "Define 'complete and tiny'"
+            },
+            {
+              "body" : "Badly is fine. Finished is the point.",
+              "effort" : "this week",
+              "reachesRung" : 3,
+              "title" : "Make it this week"
+            }
+          ],
+          "rubric" : {
+            "1" : "The smallest version I can picture still needs weeks or things I do not own.",
+            "3" : "I could make a rough complete version in a weekend with what I have.",
+            "5" : "I could make it tonight, and I know exactly what it would be."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Feasibility of a small prototype"
+        },
+        {
+          "aiBoundary" : "The AI can suggest references, smallest-prototype shapes and what to try first. It cannot make the prototype, and it will not tell you whether you are excited.",
+          "definition" : "Do I like doing this, not just having done it? Some work is worth the grind; a creative experiment usually is not. If the first session was miserable and you want to continue anyway, say why.",
+          "doesNotCount" : [
+            "Pride in the finished thing.",
+            "Enjoying planning it."
+          ],
+          "frameworks" : [
+            "Build, measure, learn"
+          ],
+          "key" : "C5",
+          "ladder" : [
+            {
+              "description" : "It exists in my head.",
+              "label" : "Idea only",
+              "level" : 0,
+              "worth" : "Not evidence."
+            },
+            {
+              "description" : "Notes, a sketch, a reference list.",
+              "label" : "Sketched",
+              "level" : 1,
+              "worth" : "Something to react to."
+            },
+            {
+              "description" : "I spent one sitting making a piece of it, however bad.",
+              "label" : "One rough session",
+              "level" : 2,
+              "worth" : "I know what it feels like to make."
+            },
+            {
+              "description" : "A complete, tiny version: one page, one minute, one object.",
+              "label" : "Smallest prototype exists",
+              "level" : 3,
+              "worth" : "It is real."
+            },
+            {
+              "description" : "I showed it to someone, or made a second version.",
+              "label" : "Shown or iterated",
+              "level" : 4,
+              "worth" : "It survived contact."
+            },
+            {
+              "description" : "I returned to it without scheduling it.",
+              "label" : "Came back unplanned",
+              "level" : 5,
+              "worth" : "It has pull."
+            }
+          ],
+          "playbook" : [
+            {
+              "body" : "Not about the result. About how the hour felt.",
+              "effort" : "one session",
+              "reachesRung" : 2,
+              "title" : "Do one session and write one line after"
+            },
+            {
+              "body" : "If one stage is the pleasure, shape the project around it.",
+              "effort" : "one session",
+              "reachesRung" : 3,
+              "title" : "Find the part you like and do more of that"
+            }
+          ],
+          "rubric" : {
+            "1" : "I would endure it for the result.",
+            "3" : "Parts of it are a pleasure, and I know which parts.",
+            "5" : "I lose track of time doing it."
+          },
+          "scoreEqualsLadder" : false,
+          "title" : "Enjoyment of the process"
+        }
+      ],
+      "frameworks" : [
+        "Build, measure, learn"
+      ],
+      "name" : "Creative Experiment",
+      "tagline" : "Do I want to make this, and have I made the smallest version yet?",
+      "type" : "creative"
+    }
+  ],
+  "recommendations" : [
+    "exploreFurther",
+    "testRiskiestAssumption",
+    "buildSmallPrototype",
+    "startBuilding",
+    "revisitLater",
+    "archive"
+  ],
+  "sphereRules" : [
+    "Argue from your framework and only from Library sources. Name the source. If there is none, say cantTell and say what would change your mind.",
+    "Disagree with other Spheres when your framework disagrees. Do not converge for politeness.",
+    "Never tell the user the idea is good because they had it. Never use the words \"great idea.\"",
+    "Distinguish fact, estimate, assumption, and opinion in every reason.",
+    "Short. Two sentences per verdict, one per crossfire reply.",
+    "You are a perspective, not a character. No catchphrases, no personality beyond the framework."
+  ],
+  "spheres" : [
+    {
+      "availableFromPhase" : 3,
+      "criteriaKeys" : {
+        "business" : [
+          "A4",
+          "A5"
+        ]
+      },
+      "frameworks" : [
+        "$100M Offers",
+        "$100M Leads",
+        "Built to Sell",
+        "Profit First"
+      ],
+      "judges" : "Economics, pricing, distribution, recurring revenue, enterprise value.",
+      "sphere" : "investor",
+      "willNotDo" : "Praise a product with no channel."
+    },
+    {
+      "availableFromPhase" : 3,
+      "criteriaKeys" : {
+        "business" : [
+          "A1",
+          "A2"
+        ]
+      },
+      "frameworks" : [
+        "The Mom Test"
+      ],
+      "judges" : "Problem reality and demand, only from what real people said or did in the Library.",
+      "sphere" : "customer",
+      "willNotDo" : "Speak for customers who aren't in the Library. Must say \"nobody has talked to me yet.\""
+    },
+    {
+      "availableFromPhase" : 3,
+      "criteriaKeys" : {
+        "business" : [
+          "A6"
+        ],
+        "creative" : [
+          "C4"
+        ]
+      },
+      "frameworks" : [
+        "The Lean Startup",
+        "The E-Myth Revisited"
+      ],
+      "judges" : "Feasibility, smallest usable version, skills required, maintenance burden.",
+      "sphere" : "builder",
+      "willNotDo" : "Approve a plan that depends on the user doing custom labour forever."
+    },
+    {
+      "availableFromPhase" : 3,
+      "criteriaKeys" : {
+        "business" : [
+          "A3"
+        ],
+        "creative" : [
+          "C2"
+        ]
+      },
+      "frameworks" : [
+        "Blue Ocean Strategy",
+        "Good Strategy \/ Bad Strategy"
+      ],
+      "judges" : "Differentiation, positioning, why anyone would switch.",
+      "sphere" : "strategist",
+      "willNotDo" : "Accept \"I'd do it better\" as differentiation."
+    },
+    {
+      "availableFromPhase" : 3,
+      "criteriaKeys" : {
+        "business" : [
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "A5",
+          "A6"
+        ],
+        "creative" : [
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5"
+        ],
+        "growth" : [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5"
+        ]
+      },
+      "frameworks" : [
+        "Anti-delusion rules",
+        "The Lean Startup"
+      ],
+      "judges" : "Unsupported assumptions, vanity metrics, fake urgency, overbuilding.",
+      "sphere" : "skeptic",
+      "willNotDo" : "Agree that an idea is good because the user had it."
+    },
+    {
+      "availableFromPhase" : 5,
+      "criteriaKeys" : {
+        "creative" : [
+          "C1",
+          "C5"
+        ],
+        "growth" : [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5"
+        ]
+      },
+      "frameworks" : [
+        "Atomic Habits",
+        "Values alignment"
+      ],
+      "judges" : "Values alignment, sustainability, whether this is the right use of the user's life right now.",
+      "sphere" : "steward",
+      "willNotDo" : "Let the other five turn progress into identity."
+    }
+  ],
+  "version" : 1
+}

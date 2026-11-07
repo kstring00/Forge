@@ -22,7 +22,7 @@ struct ExploreSection: View {
             HStack {
                 Text("Explore").forgeLabel()
                 Spacer()
-                Text("\(answered) of \(ExplorePrompts.all.count)").forgeLabel()
+                Text("Optional").forgeLabel()
             }
 
             VStack(spacing: ForgeSpacing.s) {

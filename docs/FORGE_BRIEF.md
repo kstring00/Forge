@@ -15,10 +15,47 @@ The user has no shortage of ideas. The problem is that ideas pile up in notes an
 
 ---
 
+## 0A. The operating rule (v4): the user talks, the Spheres work
+
+**Everything below is subordinate to this section.** Earlier drafts made the user fill in Explore prompts, score six criteria by hand, and attach evidence row by row before anything useful happened. That is homework. The frameworks, ladders, and rubrics stay exactly as rigorous; what changes is *who does the first pass*. The Spheres do. The user reviews, corrects, and decides.
+
+### The path, end to end
+
+1. **Capture.** One sentence or a voice memo. Nothing else is asked. The idea lands in the Vault with a sky header and a single button: **Reality Check**.
+2. **Reality Check (one tap).** The app shows an estimated cost and a one-line "this sends your idea text to the AI through your proxy" note the first time, then runs. In the background, through the proxy: desk research (§6D) — competitors, pricing, complaints, demand signals, job postings — saved as `ai-found` Sources. Then the five Spheres each read the Library and **pre-fill the whole Lab**: a proposed answer to every Explore prompt, a proposed score and evidence rung for every criterion with the Source it leans on, a proposed Projection range, a proposed riskiest assumption, and a proposed next move. Progress is visible as the orbs light up one at a time. Typical wall time: one to three minutes. The user can leave and come back.
+3. **The Brief (one screen).** When the check finishes, the idea opens on a single screen, led by the orbs:
+   - **The verdict row** — Build it / Compete / Use theirs / Can't tell from the desk, with one sentence.
+   - **The panel** — six orbs in a row (the sixth, Steward, dim until Phase 5). Tap an orb to read only that voice. Where two Spheres disagree, a thin line connects them; tap it for the crossfire.
+   - **What we found** — three to five lines, each a claim with its Source chip (stripes = AI-found).
+   - **Rings** — Potential and Confidence as proposed, drawn in the AI-found stripe until the user touches them.
+   - **The one thing nobody can tell from a desk** — the riskiest assumption, and the single human action that tests it, already drafted (five Mom-Test questions, or a 20-message outreach script, or a landing page's copy).
+   - **Three buttons:** *Looks right* · *Not quite* · *I know something you don't*.
+4. **Review by exception.** *Looks right* accepts the panel's pass as-is; everything stays visibly AI-found and Confidence stays low, honestly. *Not quite* opens the criteria list; the user taps the row that is wrong and picks a different rubric anchor — one tap per correction, the AI's version shown struck through beside it. *I know something you don't* opens voice or text; what the user says is saved as a `user-verified` Source, and the affected Spheres re-score that criterion only. The full Lab — definitions, rubrics, ladder, playbook, history — is all still there, one tap deeper, for whoever wants it. It is never required.
+5. **The task.** The next move becomes the Workshop's one next step with the drafted assets attached. The user goes and does it in the world.
+6. **The return.** "What happened?" — one line, or a voice memo. The user's answer is a `user-verified` Source. The ladder moves, Confidence moves, the Journal records expected vs. actual, and the Spheres re-run on the changed criteria only. If the next move is now "build," the Workshop takes over.
+
+### Rules this adds
+
+- **Explore is no longer a stage the user fills in.** The six prompts become the structure of the Spheres' pre-fill and remain available as optional edit fields. "0 of 6" never appears anywhere.
+- **No empty form is ever the first thing the user sees.** If the Reality Check hasn't run, the idea shows the sky, the original text, and the Reality Check button. Nothing else.
+- **Pre-filled is not verified.** Everything the Spheres write is `ai-found` and drawn in stripes. Confidence cannot exceed what desk research supports (rung 2) until the user brings something back from the world. The honesty rules in §6A are unchanged; this section changes effort, not evidence.
+- **Three taps to a task.** Reality Check → Looks right → Start. If the user does nothing else, that still yields a real next action in the world with drafted assets.
+- **Correction is one tap.** Any proposed score, rung, or answer can be overridden by choosing a different anchor; the user never types to disagree.
+- **Re-runs are partial.** New information re-scores only the criteria it touches; the user is never asked to re-review the whole idea.
+- **Cost is visible.** Each Reality Check shows an estimate before running and the actual after. Settings has a monthly ceiling.
+
+### What this changes in the build
+
+- The Reality Check and the Library research actions move from Phase 4 into **Phase 3b**, ahead of the hand-scoring UI's polish. The Lab screens built in 3a stay as the "one tap deeper" layer.
+- The Brief screen (§0A step 3) replaces the idea detail's default state once a check has run. The 3a idea detail becomes the expanded view behind "Not quite."
+- Sphere pre-fill is a new AI action, `prefill`, that returns one typed JSON object covering explorations, criteria, projection, riskiest assumption, and next move, each field carrying `sourceIDs`.
+
+---
+
 ## 1. Non-negotiable principles
 
 1. **Capture in seconds.** Text, voice, speech-to-text, paste. No required fields beyond the raw thought.
-2. **Explore before judging.** The app never scores an idea the moment it is captured.
+2. **Explore before judging — but the Spheres do the exploring.** The app never scores an idea the moment it is captured, and it never hands the user an empty form. Research first, then a proposal, then the user's review (§0A).
 3. **Different ideas, different lenses.** A business idea, a personal-growth goal, and a creative experiment are evaluated with different frameworks and are never ranked against each other on one scale.
 4. **Teach, don't just score.** Every criterion carries a plain-English definition, a "what counts as evidence" ladder, and a "how to go find it" playbook. The user should finish an evaluation understanding the framework, not just holding a number.
 5. **Honest about evidence.** Two separate indicators on every evaluation: **Potential** (the user's structured self-assessment) and **Confidence** (how much of that assessment is backed by real evidence vs. enthusiasm). Enthusiasm is never silently counted as evidence.
@@ -415,7 +452,7 @@ No stats, no streaks, no charts on Home.
 - **The idea's sky:** every idea detail opens with a grainy gradient header (lavender → ember, SVG turbulence overlay at ~35% multiply) whose blend shifts with the idea's stage: cool and quiet at Capture, warming toward ember as it moves to Build. It is the only large color field in the app.
 - **Type:** Fraunces (or system New York) for idea titles, the user's own words, and every number that matters; IBM Plex Mono small caps with wide tracking for structure labels; Inter/system for body. The user's original text is always italic serif with a 2px ember rule on the left; AI text is small sans in muted with a spark glyph.
 - **Evidence as pattern, not color:** verified = solid fill, AI-found = diagonal stripes, assumption = dot grid. These three fills appear on the Confidence breakdown, on every criterion row chip, and on the Projection/Impact bar, so evidence shape is readable without reading.
-- **Spheres are orbs:** each Sphere is a blurred radial-gradient sphere with its own palette (Customer blue, Investor ember, Strategist violet, Builder green, Skeptic stone, Steward gold). No faces, no icons, no catchphrases; the orb is the whole identity.
+- **Spheres are orbs, and the orbs are the hero.** Each Sphere is a soft sphere built from two or three overlapping radial gradients with a slight blur and an inner highlight, in its own palette (Customer blue, Investor ember, Strategist violet, Builder green, Skeptic stone, Steward gold), modeled on blurred-gradient record-sleeve art: luminous, not glossy. Rendered in SwiftUI with `Canvas` or layered `RadialGradient` + `.blur`, never a bitmap. States: **idle** (56 pt, slow 8-second drift of the gradient center, respects Reduce Motion by holding still), **working** (during a Reality Check the orb brightens and its drift speeds up; orbs light in sequence as each Sphere finishes), **speaking** (tapped: it grows to 96 pt, the others dim to 40%, and its verdict appears beneath in serif), **disagreeing** (a 1 pt hairline connects two orbs whose verdicts conflict). On the Brief screen the six orbs sit in a single row above everything else; on the Round screen each verdict card leads with its orb at 40 pt. No faces, no icons, no catchphrases, no names larger than mono caps; the orb is the whole identity.
 - Reference canvas: see the "FORGE Idea Detail" design artifact for the idea detail and Round screens.
 - **Motion:** subtle — cards settle, stages slide. Nothing bounces for attention.
 - **Hierarchy:** the original idea text is always visually distinct from AI-generated text (e.g., AI text in a secondary color with a small spark glyph).
@@ -509,11 +546,17 @@ JSON + Markdown export of the whole Vault from Settings, before any AI feature e
 **Phase 2 — Core loop: Explore → next action → outcome**
 Guided Explore prompts per idea (no AI yet, or AI Expand/Summarize only, confirm-before-save). Minimal Workshop: convert idea → project, desired outcome, one next step, mark done, record "what happened." Decision Journal entries on commit and outcome. AI-sharing disclosure screen before the first AI call. Done when: an idea can go from capture to a completed real-world action with a recorded outcome, entirely without the Lab.
 
-**Phase 3 — Evaluation Lab + Spheres (Business lens)**
+**Phase 3a — Evaluation Lab (Business lens), hand-scoring layer** *(built)*
 Opportunity Filter (Business lens only), Lens A with all six criteria including definitions, rubrics, evidence ladder UI, playbooks, manual evidence attachment (links, notes, voice), Potential + Confidence rings, shortfalls, riskiest assumption, recommendation, Experiment card, versioning. Proxy deployed to Vercel. Spheres: Investor, Customer, Builder, Strategist, Skeptic with Rounds and rulings. Done when: an idea can be evaluated, a Round run, and the user's rulings land in the Journal.
 
-**Phase 4 — Reality Check + Research Library**
-Sources (web snapshot, PDF, paste, voice→transcript, image OCR), source classes, Reality Check action with the four verdicts, grounded Q&A with citations, evidence tagging bounded by rung, Confidence breakdown. Done when: a Reality Check on a real idea returns a cited verdict, saves its competitors as sources, and the user can promote one to bounded evidence.
+**Phase 3b — Proxy, Reality Check, Sphere pre-fill, the Brief**
+Vercel proxy with the live client (Sonnet for Spheres and synthesis, Haiku for summaries and transcript cleanup, prompt caching on for every multi-Sphere call). Reality Check (§6D) with web search and fetch, saving `ai-found` Sources. The `prefill` action: five Spheres fill explorations, criteria, projection, riskiest assumption, and next move from the Library, every field carrying source IDs. The Brief screen (§0A step 3) with orbs in working and speaking states, the verdict row, what-we-found, striped rings, the one human task with drafted assets, and the three buttons. *Not quite* opens the 3a Lab; *I know something you don't* records a `user-verified` Source and re-scores affected criteria. Cost estimate before, actual after, monthly ceiling in Settings. Done when: a captured idea goes Reality Check → Brief → Looks right → a Workshop task with drafted interview questions, in three taps, with every proposed value visibly AI-found.
+
+**Phase 3c — Rounds and rulings**
+Full Round flow from §6C on top of the pre-fill: crossfire where Spheres disagree, Agree / Disagree / Find out rulings, Journal entries, re-run diffs. Done when: the user can rule on a disputed criterion and see the ruling land in the Journal.
+
+**Phase 4 — Research Library surface**
+Source list per idea (web snapshot, PDF, paste, voice→transcript, image OCR), source classes, grounded Q&A with citations, evidence tagging bounded by rung, manual source add. Done when: the user can ask a question about an idea and get a cited answer from saved sources, and add their own interview memo as a `user-verified` Source.
 
 **Phase 4b — Library artifacts**
 Idea brief, evidence table, framework study guide, audio briefing (TTS via proxy). Done when: each can be generated and reopened offline.

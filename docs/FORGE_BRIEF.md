@@ -436,13 +436,52 @@ Competitor     id, name, url, pricing, positioning, praises[], complaints[],
 
 ---
 
-## 7. Home
+## 7. Home — the panel's desk (v4.1)
 
-Answers three questions at a glance: *What am I thinking about? What am I working on? What should I do next?*
+Home is not a list of notes. It is where the six Spheres sit, and it must make the app's purpose obvious with no tutorial: *you give the panel an idea; the panel goes and finds out whether it's real; you decide.*
 
-Sections: Quick Capture (prominent) · Continue Exploring (most recent idea) · Active Workshop (current project + next step) · Recently Captured (3–5) · One reflective prompt (optional, dismissible, never nagging).
+### First launch (empty Vault)
 
-No stats, no streaks, no charts on Home.
+The six orbs are already on screen, large (64 pt), drifting slowly in a loose row, before any content exists. Under them, one line in serif:
+
+> Six perspectives. Give them an idea and they'll go find out if it's real.
+
+Under that, the capture field, focused, with the mic. Nothing else. No slides, no "skip," no feature tour. The orbs are the introduction. Tapping an orb while the Vault is empty shows its one-line job ("I only speak for customers who've actually said something") so a curious user can learn the panel by touch.
+
+### Home with content
+
+Top to bottom:
+
+1. **The panel.** The orbs, permanent, at 48 pt, reflecting the state of the most recent idea: *idle* (no idea in progress), *working* (a Reality Check is running — the orbs light in sequence, and a line under them names what each is doing: "The Customer is reading what people complain about." "The Investor is checking what competitors charge."), or *holding a verdict* (the check finished — the verdict word and the idea's title sit under the orbs; tap to open the Brief).
+2. **One card.** Whichever is most urgent: the Brief waiting for review; the next step the user owes in the Workshop; or, if nothing is in flight, the most recent unchecked idea with the ember Reality Check button on the card itself.
+3. **Quick Capture.** The field and mic.
+4. **Recently captured.** Smaller cards. Every card that has not been checked carries a tiny row of six dim dots in the Sphere colors and the mono label *Not yet checked*; a checked card shows its verdict word instead. The path is implied on every card.
+
+No stats, no streaks, no charts.
+
+### After capture
+
+Saving an idea never lands on a static card. The orbs turn toward it: the new idea's title in serif, then
+
+> Want us to look into this?
+
+with the ember **Reality Check** button, the cost estimate beneath, and a quiet *Later* link. Capture → one tap → working. The user never has to find the feature.
+
+### The working state
+
+While a Reality Check runs, the app narrates in the Spheres' voices, one line at a time as each starts, each tied to its orb lighting:
+
+- Customer — "Reading what people complain about."
+- Investor — "Checking what competitors charge and how they get found."
+- Strategist — "Looking for what nobody offers."
+- Builder — "Working out the smallest version."
+- Skeptic — "Looking for the belief that kills it."
+
+This is the only place the Spheres' jobs are ever explained, and it happens every time, in nine words each. The user can leave Home; the orbs keep working in the background and a small ember dot on the Home tab shows when the Brief is ready.
+
+### Copy voice
+
+The app speaks as the panel ("we," "us") only in these three moments: the empty state, the after-capture prompt, and the working narration. Everywhere else it is silent chrome. No exclamation marks, no "great," no encouragement.
 
 ---
 
@@ -472,7 +511,7 @@ No stats, no streaks, no charts on Home.
 - Citations: chunk source text on save; grounded answers reference chunk IDs so taps jump to the passage.
 - No third-party UI frameworks. Minimal dependencies.
 
-**Audience: personal tool first.** One user, the developer. No accounts, no onboarding flow, no monetization. If it proves useful, it may later be shipped as a product — so keep the architecture clean (proxy-based AI, CloudKit-ready schema, no hardcoded personal data), but do not build for that case now.
+**Audience: personal tool first.** One user, the developer. No accounts, no monetization, no multi-screen onboarding tour — but the app must still explain itself on first launch, through the panel (§7), because a tool whose purpose is invisible is not finished even for one user. If it proves useful, it may later be shipped as a product — so keep the architecture clean (proxy-based AI, CloudKit-ready schema, no hardcoded personal data), but do not build for that case now.
 
 **Non-goals for v1:** Android, web, teams/sharing, accounts, push notifications, in-app purchases, analytics SDKs, CloudKit sync, App Store submission.
 

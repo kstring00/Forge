@@ -11,6 +11,9 @@ final class SpheresIntegrityTests: XCTestCase {
             XCTAssertFalse(p.judges.isEmpty, "\(p.sphere) judges")
             XCTAssertFalse(p.frameworks.isEmpty, "\(p.sphere) frameworks")
             XCTAssertFalse(p.willNotDo.isEmpty, "\(p.sphere) willNotDo")
+            XCTAssertFalse(p.oneLine.isEmpty, "\(p.sphere) oneLine")
+            XCTAssertLessThanOrEqual(p.workingLine.split(separator: " ").count, 9, "\(p.sphere) working line is nine words at most")
+            XCTAssertFalse(p.oneLine.contains("!") || p.workingLine.contains("!"), "no exclamation marks")
             XCTAssertFalse(p.criteriaKeys.isEmpty, "\(p.sphere) criteria")
             for (lens, keys) in p.criteriaKeys {
                 for k in keys {

@@ -78,6 +78,15 @@ Split across PRs.
 
 Known limits: "I know something you don't" is text only (voice reuses Phase 1's capture in Phase 4); its re-score keeps the desk rung cap even for user-verified facts, so a rung above 2 is set by hand in the Lab for now; the research loop runs while the screen is open and resumes from the Library if the app is backgrounded mid-run only in the sense that saved pages persist.
 
+**3b.3 (this PR): Home as the panel's desk (brief v4.1 §7) and the Vault cards.**
+- `RealityCheckCenter` on the app environment: runs survive navigation; Home narrates; the Home tab badges unseen Briefs; opening the idea clears it.
+- Home: `EmptyPanel` (orbs at 64pt, loose row, one serif line, tap an orb for its one-line job, capture field focused); `PanelHeader` (orbs at 48pt; working lines per Sphere; verdict word and title when holding a verdict); `HomeCard.choose` picks the one card (after capture, Brief waiting, next step owed, newest unchecked); `QuickCaptureField` with the mic; recent ideas as compact cards.
+- After capture: Home turns toward the new idea with "Want us to look into this?", the ember button, the estimate, Later. Capturing from the Vault switches to Home.
+- `RealityCheckButton` shared by Home cards and idea detail: consent on first use, monthly ceiling, hands the run to the center.
+- Vault cards: sky band, serif title, lens in mono caps, six dim dots and "Not yet checked" or verdict word with a Confidence ring, "Checking" while live; the capture button hides on downward scroll.
+- Tests: `HomeLogicTests` (status, card priority, narration, centre), ForgeCore Sphere lines.
+- Known limits: the tab badge is the system red badge, not an ember dot; voice from the Home mic opens the capture sheet rather than recording inline.
+
 **Original 3b.2 plan, for reference.**
 - Capture state: sky, original text, one Reality Check button, nothing else (§0A).
 - Cost estimate and the one-time consent note, then research calls looping on `paused`, saving fetched pages as `ai-found` Sources with chunks; then `prefill`; orbs light in sequence.

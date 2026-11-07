@@ -169,6 +169,18 @@ Where a chosen idea becomes a project. Not Jira, Linear, or Notion — a persona
 - Pausing or archiving a project is a normal state with no negative framing.
 - A project keeps its link to the originating idea and evaluation so the user can see what they believed at the start.
 
+### Decision Journal
+
+Whenever the user commits to an idea (converts it to a project), sets it aside, or rules on a Reality Check or Round, the app records a **Decision**: what they decided, what they believed at the time, why, and what result they expected by when. When the project reaches a milestone, pauses, launches, or is archived, the app asks one question — "What actually happened?" — and stores the outcome next to the prediction.
+
+Over time the Journal becomes the most useful screen in the app: a record of the user's own calibration. Which beliefs held up, which didn't, which kinds of ideas they overrated. It is shown only when the user opens it; it never scores the user or sends a notification.
+
+```
+Decision   id, idea?, project?, kind (commit|setAside|ruling|pivot|outcome),
+           decidedAt, decision, beliefs, reasoning, expectedResult, expectedBy?,
+           actualResult?, recordedAt?
+```
+
 ---
 
 ## 6. The AI Idea Partner
@@ -214,7 +226,10 @@ This is what separates FORGE from a scoring app. Every idea has its own **Librar
 - **Pull the facts** — for any criterion, retrieve what public information exists and label it `ai-found`.
 - **Draft the experiment assets** — landing-page copy, five Mom-Test interview questions, or a 20-message outreach script for the current Experiment card.
 
-**Hard rule:** `ai-found` sources raise Confidence only after the user marks them reviewed. Compliments, AI summaries, and assumptions never raise Confidence. The Confidence ring shows a breakdown: % verified / % ai-found / % assumption.
+**Hard rules:**
+- *Verifying a source is not the same as having evidence.* Marking an `ai-found` source as reviewed confirms it is real and says what it says; it does not by itself raise Confidence. Confidence rises only when the user attaches a source to a specific criterion as Evidence and assigns it a ladder rung — and the rung is bounded by what the source can prove. A competitor's pricing page proves the market exists (rung 2 at most); it never proves demand for *this* idea.
+- Agreeing with a Sphere, an AI summary, or a Pitch never creates Evidence. Only the user attaching a source to a claim does.
+- Compliments and assumptions never raise Confidence. The Confidence ring shows a breakdown: % user-verified / % ai-found / % assumption.
 
 **Library outputs (NotebookLM-style artifacts, generated on demand, each saved as a source):**
 - **Idea brief** — one page: problem, who, alternatives, differentiation, evidence so far, open questions, with citations.
@@ -323,7 +338,55 @@ StewardCharter  text, updatedAt   (stored in Settings)
 
 ### Phase placement
 
-Spheres land in **Phase 3** alongside the Evaluation Lab (verdicts need criteria keys to judge against) with the Investor, Customer, Builder, Strategist, and Skeptic. The Steward and its charter come in **Phase 5** with the Personal Growth lens. Sphere-voiced Pitches and Pivots are part of Phases 5 and 5b. Before Phase 4's Library exists, every Sphere will mostly say `cantTell` — that is correct behavior, not a bug, and it is the reason to build the Library next.
+See §11. Spheres land with the Evaluation Lab (verdicts need criteria keys). The Steward and its charter come with the Personal Growth lens. Before the Library exists, every Sphere will mostly say `cantTell` — that is correct behavior, not a bug.
+
+---
+
+## 6D. Reality Check (the AI goes and looks)
+
+The user's core ask: "Is this worth pursuing, based on what already exists — and if there are competitors, do I compete, or should I just use their product?"
+
+A Reality Check is a single action on any Business-lens idea. The AI runs desk research through the proxy (web search + fetch), saves everything it finds as `ai-found` Sources in the idea's Library, and returns a structured report ending in one of four verdicts.
+
+### What it gathers
+
+1. **Who already does this** — 3–8 current alternatives, including "do nothing," DIY, and adjacent products. For each: name, URL, pricing (actual numbers where public), positioning in one line, what reviews praise, what reviews complain about (one-star reviews and support forums are the goldmine), how long they've existed, any signs of traction (review counts, funding, hiring, pricing increases).
+2. **Demand signals** — complaint threads, community posts, job postings for roles that handle the problem, search-interest proxies, "I wish there was…" posts. Each tagged with the evidence-ladder rung it supports (almost always rung 2: the problem is real and people pay for workarounds).
+3. **The gap map** — a Blue Ocean grid: what every alternative offers, what every alternative ignores, what customers complain about that nobody fixes, what everyone charges for that customers don't value.
+4. **Fit to the user** — read against the user's Advantages list (§6B) and Constraints: does this use something the user already has?
+
+### The four verdicts
+
+| Verdict | When | What the report leads with |
+|---|---|---|
+| **Build it** | A real gap exists and the user has an advantage reaching the people in it | The gap, the advantage, the smallest version, the first field test |
+| **Compete** | Crowded, but reviews show a wedge competitors leave open | The wedge (ERRC grid), who to target first, why they'd switch, the first field test |
+| **Use theirs** | Someone already solves it well, and the user's underlying need is the problem, not the business | The product to go use, what it costs, what it won't do, and a prompt: "Does using this close the need? If yes, archive the idea with a note." |
+| **Can't tell from the desk** | Market exists but demand for *this* angle is unproven | The riskiest assumption and the cheapest field test (Experiment card), with the interview questions or outreach script pre-drafted |
+
+The verdict is advisory. The user records their own decision in the Decision Journal (§5), and that decision — not the verdict — is what the app later checks against reality.
+
+### Honest limits (shown in the report)
+
+Desk research can reach rung 2 on the evidence ladder: it proves the problem and the market exist. It cannot prove anyone will give *this user* time or money for *this* angle. Rungs 3–5 require a real person outside the app. The Reality Check prepares that test; the user runs it; the Workshop records the result. The report says this in plain words every time.
+
+### Rules
+
+- Every claim cites a saved Source. No source, no claim — the report says "could not find" rather than guessing.
+- Pricing and traction figures are quoted with the date fetched.
+- "Use theirs" is a legitimate, non-negative outcome. The app never nudges toward building.
+- A Reality Check can be re-run later; the app diffs the competitor set and verdict.
+- One Reality Check is the most expensive action in the app (many fetches plus synthesis). Show an estimated cost before running; cache results.
+
+### Data model additions
+
+```
+RealityCheck   id, idea, createdAt, verdict (buildIt|compete|useTheirs|cantTell),
+               competitors[], demandSignals[], gapMap, fitNotes, limitsNote,
+               experiment?, sources[], costEstimate
+Competitor     id, name, url, pricing, positioning, praises[], complaints[],
+               tractionSignals[], fetchedAt, source
+```
 
 ---
 
@@ -427,29 +490,32 @@ Project setup, SwiftData models, tab structure (Home · Vault · Workshop), desi
 **Phase 1 — Capture & Vault**
 Floating capture (text + voice + paste), Idea cards, search, filter, sort, archive, idea detail view with immutable original text. Done when: ten ideas can be captured by voice and text and found again.
 
-**Phase 2 — Explore**
-Guided prompts per idea, AI Expand / Challenge / Summarize with confirm-before-save, exploration history. Done when: an idea can be explored and the notes persist and are visibly separated from AI text.
+**Phase 1b — Export & backup**
+JSON + Markdown export of the whole Vault from Settings, before any AI feature exists. Ideas are the user's intellectual property; losing them destroys trust. Done when: an export can be re-imported into a fresh install.
 
-**Phase 3 — Evaluation Lab (Business lens first)**
-Opportunity Filter, Lens A with all six criteria including definitions, rubrics, evidence ladder UI, playbooks, evidence attachment, Potential + Confidence rings, shortfalls, riskiest assumption, recommendation, Experiment card, versioning. Done when: an idea can be fully evaluated, re-evaluated, and both versions viewed.
+**Phase 2 — Core loop: Explore → next action → outcome**
+Guided Explore prompts per idea (no AI yet, or AI Expand/Summarize only, confirm-before-save). Minimal Workshop: convert idea → project, desired outcome, one next step, mark done, record "what happened." Decision Journal entries on commit and outcome. AI-sharing disclosure screen before the first AI call. Done when: an idea can go from capture to a completed real-world action with a recorded outcome, entirely without the Lab.
 
-**Phase 4 — Research Library**
-Sources (web snapshot, PDF, paste, voice→transcript, image OCR), source classes, grounded Q&A with citations, "Map the market" and "Find demand signals" research actions through the proxy, evidence tagging to ladder rungs, Confidence breakdown. Done when: the user can ask a question about an idea and get a cited answer from saved sources, and an AI-found competitor page can be reviewed and promoted to evidence.
+**Phase 3 — Evaluation Lab + Spheres (Business lens)**
+Opportunity Filter (Business lens only), Lens A with all six criteria including definitions, rubrics, evidence ladder UI, playbooks, manual evidence attachment (links, notes, voice), Potential + Confidence rings, shortfalls, riskiest assumption, recommendation, Experiment card, versioning. Proxy deployed to Vercel. Spheres: Investor, Customer, Builder, Strategist, Skeptic with Rounds and rulings. Done when: an idea can be evaluated, a Round run, and the user's rulings land in the Journal.
+
+**Phase 4 — Reality Check + Research Library**
+Sources (web snapshot, PDF, paste, voice→transcript, image OCR), source classes, Reality Check action with the four verdicts, grounded Q&A with citations, evidence tagging bounded by rung, Confidence breakdown. Done when: a Reality Check on a real idea returns a cited verdict, saves its competitors as sources, and the user can promote one to bounded evidence.
 
 **Phase 4b — Library artifacts**
 Idea brief, evidence table, framework study guide, audio briefing (TTS via proxy). Done when: each can be generated and reopened offline.
 
-**Phase 5 — Lenses B and C + Compare + Pivots**
-Personal Growth and Creative lenses, same-lens comparison view, Pivot action producing linked sibling ideas. Done when: a low-scoring idea can be pivoted into three variants and each evaluated independently.
+**Phase 5 — Lenses B and C + Steward + Compare + Pivots**
+Personal Growth and Creative lenses, Steward Sphere and charter, same-lens comparison, Pivot action producing linked sibling ideas. Done when: a low-scoring idea can be pivoted into three variants and each evaluated independently.
 
 **Phase 5b — Pitches**
 Advantages and Constraints in Settings, Pitches surface, clustering, save/reject/pivot actions, rejection reasons feeding constraints. Done when: the app can pitch five ideas grounded in existing Library sources and a rejection changes the next batch.
 
-**Phase 6 — Workshop**
-Convert idea → project, milestones/tasks, decisions log, next step, AI Plan / Next step, pause/complete/archive, launch definition and retrospective. Done when: a project can be run from first milestone to "launched."
+**Phase 6 — Full Workshop**
+Milestones/tasks, decisions log, AI Plan / Next step, pause/complete/archive, launch definition and retrospective, Journal calibration view. Done when: a project can be run from first milestone to "launched" and the Journal shows predictions against outcomes.
 
 **Phase 7 — Home & polish**
-Home sections, reflective prompt, motion, accessibility pass, performance on older devices, TestFlight build.
+Home sections, reflective prompt, progressive disclosure pass (a first-time user never needs to learn "Lens," "Sphere," or "Ladder" before capturing), motion, accessibility, performance on older devices, TestFlight build. Trademark/App Store name check before any public name is committed.
 
 ---
 
@@ -461,6 +527,9 @@ Home sections, reflective prompt, motion, accessibility pass, performance on old
 - Evaluations are append-only. Tests enforce this.
 - Unit tests for scoring (Potential, Confidence, normalization) and for lens content integrity (every criterion has definition, 1/3/5 rubric, ladder, playbook).
 - No streaks, badges, or notification nags anywhere in the codebase.
+- Export works from Phase 1b onward and is tested on every phase.
+- The app tells the user, once, before the first AI call, that idea text and sources are sent to an AI provider through the user's own proxy, and asks for consent. Settings shows what is sent.
+- Progressive disclosure: capture and the core loop never require the user to know the Lab's vocabulary.
 
 ---
 

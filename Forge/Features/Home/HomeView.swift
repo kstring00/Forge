@@ -3,7 +3,7 @@ import SwiftData
 import ForgeCore
 
 /// What am I thinking about? What am I working on? What should I do next?
-/// Phase 0: empty states and the capture prompt. No stats, no charts, ever.
+/// No stats, no charts, ever.
 struct HomeView: View {
     let onCapture: () -> Void
 
@@ -21,7 +21,10 @@ struct HomeView: View {
                     quickCapture
                     if let latest = recent.first {
                         section("Continue exploring") {
-                            IdeaCard(idea: latest)
+                            NavigationLink(value: VaultRoute.idea(latest.id)) {
+                                IdeaCard(idea: latest)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     if let project = activeProjects.first {
@@ -32,7 +35,10 @@ struct HomeView: View {
                     if recent.count > 1 {
                         section("Recently captured") {
                             ForEach(recent.dropFirst()) { idea in
-                                IdeaCard(idea: idea)
+                                NavigationLink(value: VaultRoute.idea(idea.id)) {
+                                    IdeaCard(idea: idea)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -40,16 +46,27 @@ struct HomeView: View {
                         EmptyState(symbol: "circle.lefthalf.filled",
                                    title: "A quiet studio",
                                    message: "Capture a thought and FORGE will keep it, untouched, until you are ready to look at it properly.")
+                            .padding(.top, ForgeSpacing.xl)
                     }
                     if dismissedPromptDay != todayOrdinal {
                         reflectivePrompt
                     }
                 }
                 .padding(ForgeSpacing.m)
-                .padding(.bottom, ForgeSpacing.xxl * 2)
+                .padding(.bottom, ForgeSpacing.xxl)
             }
             .background(ForgeColor.canvas)
             .navigationTitle("Home")
+            .navigationDestination(for: VaultRoute.self) { route in
+                switch route {
+                case .idea(let id):
+                    if let idea = ideas.first(where: { $0.id == id }) {
+                        IdeaDetailView(idea: idea)
+                    } else {
+                        EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
+                    }
+                }
+            }
         }
     }
 

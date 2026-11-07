@@ -18,7 +18,8 @@ struct RootTabView: View {
                     .tag(ForgeTab.workshop)
             }
 
-            if tab != .workshop {
+            // Home has its own Quick Capture card; the Vault gets the floating button.
+            if tab == .vault {
                 EmberButton.floating(title: "Capture", symbol: "plus") {
                     showingCapture = true
                 }

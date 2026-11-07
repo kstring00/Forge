@@ -156,3 +156,39 @@ public enum RulingChoice: String, Codable, CaseIterable, Sendable {
         }
     }
 }
+
+// MARK: - §5 Decision Journal and §6D Reality Check
+
+public enum DecisionKind: String, Codable, CaseIterable, Sendable {
+    case commit, setAside, ruling, pivot, outcome
+
+    public var displayName: String {
+        switch self {
+        case .commit: "Committed"
+        case .setAside: "Set aside"
+        case .ruling: "Ruling"
+        case .pivot: "Pivot"
+        case .outcome: "Outcome"
+        }
+    }
+}
+
+/// The advisory verdict of a Reality Check. "Use theirs" is a legitimate,
+/// non-negative outcome; the app never nudges toward building.
+public enum RealityVerdict: String, Codable, CaseIterable, Sendable {
+    case buildIt, compete, useTheirs, cantTell
+
+    public var displayName: String {
+        switch self {
+        case .buildIt: "Build it"
+        case .compete: "Compete"
+        case .useTheirs: "Use theirs"
+        case .cantTell: "Can't tell from the desk"
+        }
+    }
+}
+
+public extension Scoring {
+    /// Desk research proves the market exists, nothing more. Rung 2 at most.
+    static let deskResearchRungCeiling = 2
+}

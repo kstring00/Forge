@@ -11,7 +11,7 @@ Spheres, and turn the worthwhile ones into projects.
 - `docs/FORGE_BRIEF.md` is the source of truth for product and architecture.
 - `docs/00-first-deliverable.md` is the §13 pre-code deliverable: decisions, file tree, A2 content.
 - `docs/decisions/` records each decision the developer made.
-- `docs/phase-0.md` lists what Phase 0 built, skipped, and needs checked on device.
+- `docs/phase-0.md` and `docs/phase-1.md` list what each phase built, skipped, and needs checked on device.
 
 ## Layout
 

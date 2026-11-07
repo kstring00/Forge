@@ -32,6 +32,8 @@ public final class Idea {
     @Relationship(deleteRule: .cascade, inverse: \Source.idea) public var sources: [Source] = []
     @Relationship(deleteRule: .cascade, inverse: \LibraryArtifact.idea) public var artifacts: [LibraryArtifact] = []
     @Relationship(deleteRule: .cascade, inverse: \Round.idea) public var rounds: [Round] = []
+    @Relationship(deleteRule: .cascade, inverse: \RealityCheck.idea) public var realityChecks: [RealityCheck] = []
+    @Relationship(deleteRule: .cascade, inverse: \Decision.idea) public var decisions: [Decision] = []
     @Relationship(deleteRule: .cascade, inverse: \Project.idea) public var project: Project?
 
     public init(originalText: String, title: String? = nil, origin: IdeaOrigin = .captured, audioFileName: String? = nil) {
@@ -68,6 +70,10 @@ public final class Idea {
 
     public var latestEvaluation: Evaluation? {
         evaluations.max { $0.version < $1.version }
+    }
+
+    public var latestRealityCheck: RealityCheck? {
+        realityChecks.max { $0.createdAt < $1.createdAt }
     }
 
     public func touch() { updatedAt = Date() }

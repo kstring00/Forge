@@ -82,6 +82,8 @@ struct EvaluationExport: Codable {
     var impactWho: String?
     var impactWhatChanges: String?
     var impactSignal: String?
+    var riskiestAssumptionConsequence: String?
+    var nextStepText: String?
     var criteria: [CriterionScoreExport]
     var experiment: ExperimentExport?
 }

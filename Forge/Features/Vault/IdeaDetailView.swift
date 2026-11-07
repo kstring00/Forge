@@ -19,41 +19,47 @@ struct IdeaDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                GrainGradient(colors: ForgeColor.sky(for: idea.stage))
-                    .frame(height: 160)
-                    .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
+            VStack(alignment: .leading, spacing: 0) {
+                IdeaHeader(idea: idea)
+                    .ignoresSafeArea(edges: .top)
 
-                TextField("Title", text: $idea.title, axis: .vertical)
-                    .font(ForgeType.ideaTitleHero)
-                    .foregroundStyle(ForgeColor.ink)
-                    .textFieldStyle(.plain)
-                    .accessibilityLabel("Idea title")
+                VStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                    TextField("Title", text: $idea.title, axis: .vertical)
+                        .font(ForgeType.ideaTitleHero)
+                        .foregroundStyle(ForgeColor.ink)
+                        .textFieldStyle(.plain)
+                        .accessibilityLabel("Idea title")
 
-                metadata
+                    original
 
-                original
+                    if let summary = idea.aiSummary, idea.aiSummaryConfirmed {
+                        AIText(text: summary)
+                    }
 
-                if let summary = idea.aiSummary, idea.aiSummaryConfirmed {
-                    AIText(text: summary)
+                    metadata
+
+                    LabSection(idea: idea)
+
+                    ExploreSection(idea: idea)
+
+                    makeItReal
+
+                    tags
+
+                    notes
+
+                    footer
                 }
-
-                ExploreSection(idea: idea)
-
-                makeItReal
-
-                tags
-
-                notes
-
-                footer
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, ForgeSpacing.xxl)
             }
-            .padding(ForgeSpacing.m)
-            .padding(.bottom, ForgeSpacing.xxl)
         }
+        .ignoresSafeArea(edges: .top)
         .background(ForgeColor.canvas)
         .scrollDismissesKeyboard(.interactively)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {

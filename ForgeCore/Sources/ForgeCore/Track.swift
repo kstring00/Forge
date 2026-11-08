@@ -22,12 +22,21 @@ public enum Track: String, CaseIterable, Sendable, Identifiable {
         }
     }
 
-    /// One line under the section title on Home.
+    /// One line under the section title (decision 0025).
     public var tagline: String {
         switch self {
-        case .idea: "Caught, not looked at yet."
-        case .formation: "The panel weighs in. You rule."
-        case .reality: "Out in the world, being tested."
+        case .idea: "Caught. The panel hasn't looked yet."
+        case .formation: "The panel has spoken. You're deciding."
+        case .reality: "You're out testing it."
+        }
+    }
+
+    /// Shown in an empty section: how an idea gets here.
+    public var howIdeasArrive: String {
+        switch self {
+        case .idea: "Catch one with the ember button, or say it out loud."
+        case .formation: "Send an idea to the panel. It comes back here with a verdict."
+        case .reality: "Say Looks right on a Brief, or Make it real on any idea. Its first step lands here."
         }
     }
 

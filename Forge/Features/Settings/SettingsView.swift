@@ -8,6 +8,7 @@ import ForgeCore
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query private var ideas: [Idea]
+    @Query private var projects: [Project]
     @Query(sort: \RealityCheck.createdAt, order: .reverse) private var checks: [RealityCheck]
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
@@ -97,9 +98,9 @@ struct SettingsView: View {
                     ForEach(QuotesSetting.allCases) { Text($0.displayName).tag($0.rawValue) }
                 }
             } header: {
-                Text("Idea tab")
+                Text("Ideas tab")
             } footer: {
-                Text("One line a day at the top of the Idea tab. Every quote is attributed to a source you can check.")
+                Text("One line a day at the top of the Ideas tab. Every quote is attributed to a source you can check.")
             }
 
             Section {
@@ -140,9 +141,23 @@ struct SettingsView: View {
                 Text("Checks count the ones that finished, at the cost the proxy reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
             }
 
-            Section("Ideas") {
+            Section {
                 LabeledContent("Ideas", value: "\(liveCount)")
+                ForEach(Track.allCases) { track in
+                    LabeledContent("  \(track.displayName)", value: "\(TrackCounts.count(track, in: ideas))")
+                }
                 LabeledContent("Archived", value: "\(archivedCount)")
+                LabeledContent("Projects", value: "\(projects.count) · \(projects.filter { $0.status == .active }.count) active")
+                if let report = ProjectCleanup.lastReport() {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Project cleanup · \(report.ranAt.formatted(date: .abbreviated, time: .shortened))").forgeLabelSmall()
+                        Text(report.line).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    }
+                }
+            } header: {
+                Text("Ideas")
+            } footer: {
+                Text("Counts are by track, the same as the Ideas tab and Home's pipeline. The cleanup ran once at launch: one project per idea.")
             }
 
             Section("About") {

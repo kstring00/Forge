@@ -34,6 +34,9 @@ struct IdeaDetailView: View {
                         .textFieldStyle(.plain)
                         .accessibilityLabel("Idea title")
 
+                    // Decision 0025: where it is on the way to reality, and the one thing that moves it.
+                    JourneyBar(idea: idea)
+
                     // Decision 0023: a checked idea leads with the panel's take; the Brief is its own screen.
                     if idea.latestRealityCheck != nil {
                         PanelsTakeCard(idea: idea)

@@ -42,12 +42,21 @@ struct NextStepCard: View {
                     Text(topRight).forgeLabel().foregroundStyle(overdue ? ForgeColor.emberText : ForgeColor.inkSecondary)
                 }
                 if style == .home, let idea {
-                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                    // Decision 0025: the card opens what the panel said. The Brief when there is one, else the step.
+                    Group {
+                        if idea.latestRealityCheck != nil {
+                            NavigationLink(value: LabRoute.brief(ideaID: idea.id)) { homeHeading(idea, step) }
+                        } else {
+                            NavigationLink(value: WorkshopRoute.project(project.id)) { homeHeading(idea, step) }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(step)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(ForgeColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(step)
-                    .font(.system(size: style == .home ? 16 : 17, weight: .medium))
-                    .foregroundStyle(ForgeColor.ink)
-                    .fixedSize(horizontal: false, vertical: true)
                 if let caveat = project.nextStepCaveat, style == .page {
                     Text(caveat)
                         .font(.system(size: 13))
@@ -82,6 +91,24 @@ struct NextStepCard: View {
                 if let asset { DraftedAssetSheet(source: asset) }
             }
         }
+    }
+
+    /// Home: the idea, the step, and the way to the panel's take and its What-ifs.
+    private func homeHeading(_ idea: Idea, _ step: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+            Text(step)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(ForgeColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 4) {
+                Text(idea.latestRealityCheck.map { "See the panel's take · \($0.verdict.displayName)" } ?? "Open the step")
+                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                Image(systemName: "chevron.right").font(.caption2.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     private var topRight: String {

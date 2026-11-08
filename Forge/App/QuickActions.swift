@@ -1,17 +1,23 @@
 import UIKit
 import Observation
 
-/// Home Screen quick actions (long-press the app icon). "New idea" opens the
-/// capture sheet. The scene delegate hands the item here; the root view takes it.
+/// Ways in from outside the app: the Home Screen quick action "New idea"
+/// (long-press the icon) and the "New hunch" App Intent (Siri, Shortcuts, the
+/// Action button). Each lands here; the root view takes it and opens capture.
 @Observable
 @MainActor
 final class QuickActions {
     enum Action: String {
+        /// Long-press the icon: the capture sheet, keyboard up.
         case newIdea = "app.forge.newIdea"
+        /// Siri, Shortcuts, the Action button: the capture sheet, already listening.
+        case newHunch = "app.forge.newHunch"
     }
 
     static let shared = QuickActions()
     private(set) var pending: Action?
+
+    func request(_ action: Action) { pending = action }
 
     func receive(_ item: UIApplicationShortcutItem) -> Bool {
         guard let action = Action(rawValue: item.type) else { return false }

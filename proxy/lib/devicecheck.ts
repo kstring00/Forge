@@ -24,6 +24,46 @@ async function jwt(): Promise<string> {
     .sign(key);
 }
 
+function host(): string {
+  return config.appAttestEnvironment === "development" ? "api.development.devicecheck.apple.com" : "api.devicecheck.apple.com";
+}
+
+/// Apple keeps two bits per device per developer, across reinstalls. Bit 0 is
+/// "this device has had its free first check" (decision 0027). Null when Apple
+/// has never been told anything about this device.
+export async function queryBits(token: string): Promise<{ bit0: boolean; bit1: boolean } | null> {
+  if (!deviceCheckConfigured()) throw new DeviceCheckError("not_configured", "DeviceCheck is not configured on this proxy.");
+  const res = await fetch(`https://${host()}/v1/query_two_bits`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await jwt()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ device_token: token, transaction_id: crypto.randomUUID(), timestamp: Date.now() }),
+  });
+  const text = await res.text().catch(() => "");
+  if (res.status === 200) {
+    if (!text.trim() || /Failed to find bit state/i.test(text)) return null;
+    try {
+      const j = JSON.parse(text) as { bit0?: boolean; bit1?: boolean };
+      return { bit0: Boolean(j.bit0), bit1: Boolean(j.bit1) };
+    } catch { return null; }
+  }
+  console.error(JSON.stringify({ at: "devicecheck.query", status: res.status, body: text.slice(0, 200) }));
+  throw new DeviceCheckError("query_failed", `Apple did not answer the bit query (${res.status}).`);
+}
+
+export async function updateBits(token: string, bits: { bit0: boolean; bit1: boolean }): Promise<void> {
+  if (!deviceCheckConfigured()) throw new DeviceCheckError("not_configured", "DeviceCheck is not configured on this proxy.");
+  const res = await fetch(`https://${host()}/v1/update_two_bits`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await jwt()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ device_token: token, transaction_id: crypto.randomUUID(), timestamp: Date.now(), bit0: bits.bit0, bit1: bits.bit1 }),
+  });
+  if (res.status !== 200) {
+    const text = await res.text().catch(() => "");
+    console.error(JSON.stringify({ at: "devicecheck.update", status: res.status, body: text.slice(0, 200) }));
+    throw new DeviceCheckError("update_failed", `Apple did not record the bits (${res.status}).`);
+  }
+}
+
 /// True when Apple accepts the token. Results are cached for a day per token
 /// hash, so a device is checked with Apple once a day, not on every call.
 export async function validateDeviceToken(token: string, tokenHash: string): Promise<boolean> {
@@ -31,8 +71,7 @@ export async function validateDeviceToken(token: string, tokenHash: string): Pro
   const s = store();
   const cached = await s.get<boolean>(`devicecheck:ok:${tokenHash}`);
   if (cached) return true;
-  const host = config.appAttestEnvironment === "development" ? "api.development.devicecheck.apple.com" : "api.devicecheck.apple.com";
-  const res = await fetch(`https://${host}/v1/validate_device_token`, {
+  const res = await fetch(`https://${host()}/v1/validate_device_token`, {
     method: "POST",
     headers: { Authorization: `Bearer ${await jwt()}`, "Content-Type": "application/json" },
     body: JSON.stringify({ device_token: token, transaction_id: crypto.randomUUID(), timestamp: Date.now() }),

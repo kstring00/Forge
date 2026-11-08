@@ -59,6 +59,14 @@ final class AppAttest {
         return .deviceCheck(token: token.base64EncodedString(), installId: installId)
     }
 
+    /// A DeviceCheck token, when the device has one, sent alongside an
+    /// assertion on a Reality Check's opening turn so the proxy can remember
+    /// the free first check per device, across reinstalls (decision 0027).
+    func deviceToken() async -> String? {
+        guard DCDevice.current.isSupported else { return nil }
+        return try? await DCDevice.current.generateToken().base64EncodedString()
+    }
+
     /// The proxy no longer knows this key (its store was reset): attest again on the next call.
     func forget() {
         attestedKeyId = nil

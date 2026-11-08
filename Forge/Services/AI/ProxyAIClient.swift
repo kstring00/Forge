@@ -60,26 +60,32 @@ struct ProxyAIClient: AIClient {
 
     // MARK: Transport
 
-    func post<B: Encodable>(path: String, body: B, timeout: TimeInterval) async throws -> Data {
+    /// `withDeviceToken` adds the DeviceCheck token next to the assertion, for
+    /// a Reality Check's opening turn (decision 0027).
+    func post<B: Encodable>(path: String, body: B, timeout: TimeInterval, withDeviceToken: Bool = false) async throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let bytes = try encoder.encode(body)
         do {
-            return try await send(path: path, bytes: bytes, timeout: timeout)
+            return try await send(path: path, bytes: bytes, timeout: timeout, withDeviceToken: withDeviceToken)
         } catch AIError.staleAttestation {
             // The proxy's store forgot this key: attest again, once.
             await Self.attest.forget()
-            return try await send(path: path, bytes: bytes, timeout: timeout)
+            return try await send(path: path, bytes: bytes, timeout: timeout, withDeviceToken: withDeviceToken)
         }
     }
 
-    private func send(path: String, bytes: Data, timeout: TimeInterval) async throws -> Data {
+    private func send(path: String, bytes: Data, timeout: TimeInterval, withDeviceToken: Bool = false) async throws -> Data {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
         request.timeoutInterval = timeout
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = bytes
         try await addProof(to: &request, body: bytes)
+        if withDeviceToken, !usesDeveloperToken, request.value(forHTTPHeaderField: "X-Forge-Device-Token") == nil,
+           let token = await Self.attest.deviceToken() {
+            request.setValue(token, forHTTPHeaderField: "X-Forge-Device-Token")
+        }
 
         let (data, response): (Data, URLResponse)
         do {

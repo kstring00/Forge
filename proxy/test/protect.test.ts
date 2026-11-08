@@ -82,9 +82,24 @@ test("developer tokens open the dev door; nothing else opens any door", async ()
   await assert.rejects(requireDevice({ headers: {} } as never, Buffer.from("{}")), /No device proof/);
 });
 
+test("the first check on a device is free and counts against nothing; then the allowance applies", async () => {
+  useMemoryStore();
+  const device = { id: "key-1", door: "appattest" as const };
+  assert.deepEqual(await startCheck(device), { free: true });
+  assert.deepEqual(await startCheck(device), { free: false }, "the free check is spent for good");
+  assert.deepEqual(await startCheck(device), { free: false });
+  await assert.rejects(startCheck(device), (e: unknown) => e instanceof HttpError && e.status === 429 && e.code === "device_limit" && /resting until tomorrow/.test(e.message));
+  const usage = await usageFor(new Date().toISOString().slice(0, 10));
+  assert.equal(usage.devices[0].freeChecks, 1);
+  assert.equal(usage.devices[0].checks, 2, "the free one is not among the counted checks");
+  // Developer tokens are neither free nor limited.
+  for (let i = 0; i < 5; i++) assert.deepEqual(await startCheck({ id: "dev:1", door: "dev" }), { free: false });
+});
+
 test("per-device checks and the daily spend ceiling fail politely", async () => {
   useMemoryStore();
   const device = { id: "key-1", door: "appattest" as const };
+  await startCheck(device);   // free
   await startCheck(device);
   await startCheck(device);
   await assert.rejects(startCheck(device), (e: unknown) => e instanceof HttpError && e.status === 429 && e.code === "device_limit" && /resting until tomorrow/.test(e.message));

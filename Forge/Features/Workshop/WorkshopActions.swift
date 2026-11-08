@@ -40,22 +40,25 @@ enum WorkshopActions {
     }
 
     static func setNextStep(_ project: Project, _ text: String, caveat: String? = nil, target: Int = 1,
-                            dueAt: Date? = nil, moves: String? = nil) {
+                            dueAt: Date? = nil, moves: String? = nil, criterionKey: String? = nil) {
         project.nextStep = clean(text)
         project.nextStepCaveat = caveat.flatMap(clean)
         project.nextStepTarget = max(1, target)
         project.nextStepCount = 0
         project.nextStepDueAt = dueAt
         project.nextStepMoves = moves.flatMap(clean)
+        project.nextStepCriterionKey = criterionKey
         project.idea?.touch()
     }
 
     /// One conversation (or message, or signup) done against the current step.
-    /// Records what was learned as an outcome entry and advances the count.
-    /// The step itself stays until the user marks it done; reaching the target
-    /// is a nudge, not an automatic close.
+    /// Records what was learned as an outcome entry, advances the count, and
+    /// saves the report as a user-verified Source attached to the step's
+    /// criterion at the rung it earns (§0A step 6). The step itself stays until
+    /// the user marks it done; reaching the target is a nudge, not a close.
     @discardableResult
-    static func logConversation(_ project: Project, whatHappened: String, in context: ModelContext, now: Date = .now) -> Decision? {
+    static func logConversation(_ project: Project, whatHappened: String, rung: Int? = nil, audioFileName: String? = nil,
+                                in context: ModelContext, now: Date = .now) -> Decision? {
         guard let step = project.nextStep else { return nil }
         let text = whatHappened.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
@@ -66,6 +69,10 @@ enum WorkshopActions {
         d.idea = project.idea
         d.project = project
         context.insert(d)
+        if let idea = project.idea {
+            let earned = max(RungInference.rungForConversation(text), rung ?? 0)
+            FieldEvidence.record(.init(text: text, rung: earned, audioFileName: audioFileName), kind: "Conversation", on: idea, project: project, now: now)
+        }
         project.idea?.touch()
         return d
     }
@@ -77,13 +84,18 @@ enum WorkshopActions {
     /// Marks the current next step done, records what happened as an outcome
     /// entry, and sets the following step (or leaves it empty).
     @discardableResult
-    static func completeNextStep(_ project: Project, whatHappened: String, nextStep: String?, in context: ModelContext) -> Decision? {
+    static func completeNextStep(_ project: Project, whatHappened: String, nextStep: String?, rung: Int = 0, audioFileName: String? = nil,
+                                 in context: ModelContext) -> Decision? {
         guard let step = project.nextStep else { return nil }
+        let text = whatHappened.trimmingCharacters(in: .whitespacesAndNewlines)
         let outcome = Decision(kind: .outcome, decision: "Did: \(step)")
-        outcome.recordOutcome(whatHappened.trimmingCharacters(in: .whitespacesAndNewlines))
+        outcome.recordOutcome(text)
         outcome.idea = project.idea
         outcome.project = project
         context.insert(outcome)
+        if let idea = project.idea, !text.isEmpty {
+            FieldEvidence.record(.init(text: text, rung: rung, audioFileName: audioFileName), kind: "What happened", on: idea, project: project)
+        }
         project.nextStep = nextStep.flatMap(clean)
         project.nextStepCaveat = nil
         project.nextStepTarget = 1

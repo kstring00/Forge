@@ -61,11 +61,14 @@ struct JournalView: View {
             }
         }
         .sheet(item: $recording) { d in
-            OutcomeSheet(title: "Outcome", subject: d.decision) { happened, _ in
-                d.recordOutcome(happened)
-                if let idea = d.idea ?? d.project?.idea, !RulingActions.unsettled(on: idea).isEmpty {
-                    settlingText = happened
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settlingIdea = idea }
+            OutcomeSheet(title: "Outcome", subject: d.decision) { report, _ in
+                d.recordOutcome(report.text)
+                if let idea = d.idea ?? d.project?.idea {
+                    FieldEvidence.record(report, kind: "What happened", on: idea, project: d.project)
+                    if !RulingActions.unsettled(on: idea).isEmpty {
+                        settlingText = report.text
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settlingIdea = idea }
+                    }
                 }
             }
         }

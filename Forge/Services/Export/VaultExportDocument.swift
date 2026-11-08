@@ -251,6 +251,7 @@ struct ProjectExport: Codable {
     var nextStepCount: Int?
     var nextStepDueAt: Date?
     var nextStepMoves: String?
+    var nextStepCriterionKey: String?
 }
 
 struct MilestoneExport: Codable {

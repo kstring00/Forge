@@ -21,6 +21,8 @@ public final class Project {
     public var nextStepDueAt: Date?
     /// What reaching the target moves, in a few words ("moves Demand to rung 3").
     public var nextStepMoves: String?
+    /// The criterion the step is testing; what the user brings back attaches here.
+    public var nextStepCriterionKey: String?
     public var launchDefinition: String = ""
     public var retrospective: String?
     public var createdAt: Date = Date()

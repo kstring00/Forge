@@ -23,4 +23,22 @@ enum Appearance: String, CaseIterable, Identifiable {
         case .system: nil
         }
     }
+
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .dark: .dark
+        case .light: .light
+        case .system: .unspecified
+        }
+    }
+
+    /// Dark is the default (§8). `preferredColorScheme` covers SwiftUI; this
+    /// covers every window, so presented sheets and UIKit chrome match.
+    @MainActor
+    static func applyToWindows(_ appearance: Appearance) {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows { window.overrideUserInterfaceStyle = appearance.interfaceStyle }
+        }
+    }
 }

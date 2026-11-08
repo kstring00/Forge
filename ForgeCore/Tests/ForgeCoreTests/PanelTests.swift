@@ -45,6 +45,9 @@ final class PanelTests: XCTestCase {
         XCTAssertFalse(t.isComplete)
         XCTAssertEqual(t.splits.count, 2)
         XCTAssertEqual(t.panelLine, "The panel split 2 ways.")
+        XCTAssertEqual(t.exceptions, 2)
+        XCTAssertEqual(t.rulingsLine, "1 disagreement · 1 to find out")
+        XCTAssertEqual(RoundTally([(.investor, .onTrack, nil), (.builder, .onTrack, .agree)]).rulingsLine, "Agreed with every voice")
         XCTAssertEqual(RoundTally([(.customer, .cantTell, .agree)]).panelLine, "Nobody could tell from the desk.")
         XCTAssertTrue(RoundTally([(.customer, .cantTell, .agree)]).isComplete)
     }

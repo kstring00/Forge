@@ -34,8 +34,12 @@ struct CaptureStateSection: View {
                 Text("\(sphere.displayName) · \(line)").font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
             }
             Text(progressText).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-            Text("Usually one to three minutes. You can leave this screen; the panel keeps working and Home shows when the Brief is ready.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            HStack(alignment: .top) {
+                Text("Usually one to three minutes. You can leave this screen; the panel keeps working and the idea sits in Formation when it's back.")
+                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Spacer()
+                StopCheckButton(ideaID: idea.id)
+            }
         }
         .padding(ForgeSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)

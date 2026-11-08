@@ -12,6 +12,13 @@ public final class Ruling {
     public var choiceRaw: String = RulingChoice.findOut.rawValue
     public var note: String?
     public var createdAt: Date = Date()
+    /// True for an Agree written when the user moved on without tapping: it
+    /// counts as agreement but makes no Journal entry.
+    public var implicit: Bool = false
+    /// How it turned out, once the user recorded what happened (§5).
+    public var outcomeRaw: String?
+    public var outcomeNote: String?
+    public var outcomeRecordedAt: Date?
     public var verdict: Verdict?
     @Relationship(deleteRule: .nullify, inverse: \Decision.ruling) public var resultingDecision: Decision?
     public var resultingEvidence: Evidence?
@@ -24,4 +31,9 @@ public final class Ruling {
     }
 
     public var choice: RulingChoice { RulingChoice(rawValue: choiceRaw) ?? .findOut }
+
+    public var outcome: RulingOutcome? {
+        get { outcomeRaw.flatMap(RulingOutcome.init(rawValue:)) }
+        set { outcomeRaw = newValue?.rawValue }
+    }
 }

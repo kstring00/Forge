@@ -19,3 +19,12 @@ ship. Swapping to the named faces is a one-line change per token in `ForgeType.s
   artboard unpacked (fonts stripped): the orb CSS and the four states, which
   `Forge/Design/Components/OrbView.swift` follows (decision 0014). Home A, Hear the
   panel and Home B are design input not yet built.
+
+- `FORGE_Idea_Detail_canvas.pdf` — the full canvas as of brief v4.2 (eight boards: Idea
+  detail, Round · verdicts, Home A · the stage, Hear the panel, Home B · today, Home
+  overview, Credits screen, Credit moments). The app follows Home overview, Home A's
+  arc and Hear the panel (decision 0015); the credits boards are Phase 8.
+
+- `home-leveled-up.pdf` — the "Home · leveled up" artboard the current Home follows
+  (decision 0016).
+- `idea-sparks.pdf` — the "Idea sparks" artboard `IdeaSpark` follows (decision 0018).

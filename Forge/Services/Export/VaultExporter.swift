@@ -67,6 +67,7 @@ enum VaultExporter {
             nextStepText: e.nextStepText,
             aiFilledAt: e.aiFilledAt,
             projectionSuggestion: e.projectionSuggestion,
+            projectionEstimateLow: e.projectionEstimateLow, projectionEstimateHigh: e.projectionEstimateHigh, projectionEstimateBasis: e.projectionEstimateBasis,
             criteria: e.criteria.sorted { $0.key < $1.key }.map { c in
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,
@@ -106,7 +107,8 @@ enum VaultExporter {
                                      resultingDecisionID: ru.resultingDecision?.id,
                                      resultingEvidenceID: ru.resultingEvidence?.id,
                                      resultingAssumptionID: ru.resultingAssumption?.id,
-                                     resultingExperiment: ru.resultingExperiment.map(export))
+                                     resultingExperiment: ru.resultingExperiment.map(export),
+                                     implicit: ru.implicit, outcome: ru.outcomeRaw, outcomeNote: ru.outcomeNote, outcomeRecordedAt: ru.outcomeRecordedAt)
                     })
             },
             crossfire: r.crossfire.map { CrossfireExport(id: $0.id, fromSphere: $0.fromSphereRaw, toSphere: $0.toSphereRaw, text: $0.text) }
@@ -140,7 +142,9 @@ enum VaultExporter {
                                 tasks: m.tasks.sorted { $0.createdAt < $1.createdAt }.map {
                                     TaskExport(id: $0.id, title: $0.title, done: $0.done, createdAt: $0.createdAt, completedAt: $0.completedAt)
                                 })
-            }
+            },
+            nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves
         )
     }
 

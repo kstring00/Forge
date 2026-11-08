@@ -21,6 +21,7 @@ extension View {
                 case .criterion(let evaluationID, let key): CriterionDestination(evaluationID: evaluationID, key: key)
                 case .history(let ideaID): HistoryDestination(ideaID: ideaID)
                 case .round(let roundID): RoundDestination(roundID: roundID)
+                case .criteria(let ideaID): CriteriaDestination(ideaID: ideaID)
                 }
             }
     }
@@ -105,9 +106,40 @@ struct RoundDestination: View {
 
     var body: some View {
         if let round = rounds.first {
-            RoundView(round: round)
+            HearThePanelView(round: round)
         } else {
             EmptyState(symbol: "questionmark", title: "Round not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct CriteriaDestination: View {
+    @Query private var ideas: [Idea]
+
+    init(ideaID: UUID) {
+        _ideas = Query(filter: #Predicate<Idea> { $0.id == ideaID })
+    }
+
+    var body: some View {
+        if let idea = ideas.first, let evaluation = idea.latestEvaluation {
+            ScrollView {
+                VStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                    RingsRow(evaluation: evaluation)
+                    PatternLegend(breakdown: evaluation.confidenceBreakdown)
+                    CriteriaList(evaluation: evaluation)
+                    Text("Each row opens the criterion: its rubric, the ladder, and the evidence behind the score. Scores change here, never from a ruling.")
+                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                }
+                .padding(ForgeSpacing.m)
+                .padding(.bottom, ForgeSpacing.xxl)
+            }
+            .background(ForgeColor.canvas)
+            .navigationTitle("Criteria")
+            .navigationBarTitleDisplayMode(.inline)
+        } else {
+            EmptyState(symbol: "questionmark", title: "No evaluation yet", message: "The panel has not scored this idea.")
                 .background(ForgeColor.canvas)
         }
     }

@@ -42,7 +42,7 @@ final class RealityCheckCenter {
     /// Records how a finished run ended. Exposed for tests.
     func record(_ phase: RealityCheckRunner.Phase, for ideaID: UUID) {
         switch phase {
-        case .failed(let m), .offline(let m): failures[ideaID] = m
+        case .failed(let m), .offline(let m), .stopped(let m): failures[ideaID] = m
         case .done: failures[ideaID] = nil; unseenBriefs.insert(ideaID)
         default: break
         }
@@ -84,9 +84,14 @@ final class RealityCheckCenter {
         failures[ideaID] = nil
         saveFailures()
         Task { @MainActor [weak self] in
-            await r.run(on: idea, in: context, advantages: advantages, constraints: constraints)
+            await r.start(on: idea, in: context, advantages: advantages, constraints: constraints)
             self?.record(r.phase, for: ideaID)
         }
+    }
+
+    /// The Stop button. Cancels the remaining proxy calls; the runner keeps nothing half-finished.
+    func stop(_ ideaID: UUID) {
+        runners[ideaID]?.stop()
     }
 
     func markSeen(_ ideaID: UUID) {

@@ -86,6 +86,9 @@ struct EvaluationExport: Codable {
     var nextStepText: String?
     var aiFilledAt: Date?
     var projectionSuggestion: String?
+    var projectionEstimateLow: Double?
+    var projectionEstimateHigh: Double?
+    var projectionEstimateBasis: String?
     var criteria: [CriterionScoreExport]
     var experiment: ExperimentExport?
 }
@@ -179,6 +182,11 @@ struct RulingExport: Codable {
     var resultingEvidenceID: UUID?
     var resultingAssumptionID: UUID?
     var resultingExperiment: ExperimentExport?
+    // v4.2: implicit agrees and outcomes. Optional so old exports import.
+    var implicit: Bool?
+    var outcome: String?
+    var outcomeNote: String?
+    var outcomeRecordedAt: Date?
 }
 
 struct CrossfireExport: Codable {
@@ -234,6 +242,12 @@ struct ProjectExport: Codable {
     var pausedAt: Date?
     var completedAt: Date?
     var milestones: [MilestoneExport]
+    // v4.2: the next step's caveat, count and due date. Optional so old exports import.
+    var nextStepCaveat: String?
+    var nextStepTarget: Int?
+    var nextStepCount: Int?
+    var nextStepDueAt: Date?
+    var nextStepMoves: String?
 }
 
 struct MilestoneExport: Codable {

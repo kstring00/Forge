@@ -81,6 +81,18 @@ public struct RoundTally: Equatable, Sendable {
     public var ruled: Int { agreed + disagreed + findOut }
     public var total: Int { ruled + unruled }
     public var isComplete: Bool { total > 0 && unruled == 0 }
+    /// Agree is the default: unruled verdicts count as agreed once the user
+    /// moves on, so only disagreements and find-outs need saying.
+    public var exceptions: Int { disagreed + findOut }
+
+    /// "2 disagreements · 1 to find out", or "Agreed with every voice".
+    public var rulingsLine: String {
+        if total == 0 { return "No verdicts yet." }
+        var parts: [String] = []
+        if disagreed > 0 { parts.append(disagreed == 1 ? "1 disagreement" : "\(disagreed) disagreements") }
+        if findOut > 0 { parts.append("\(findOut) to find out") }
+        return parts.isEmpty ? "Agreed with every voice" : parts.joined(separator: " · ")
+    }
 
     /// One plain line for the summary: where the panel stood.
     public var panelLine: String {

@@ -4,6 +4,8 @@ import SwiftUI
 struct OutcomeSheet: View {
     let title: String
     let subject: String
+    var prompt = "What actually happened?"
+    var footnote = "Stored next to what you expected. Nothing is scored."
     var showsNextStep = false
     var onSave: (String, String?) -> Void
 
@@ -20,7 +22,7 @@ struct OutcomeSheet: View {
                 Text(subject)
                     .font(ForgeType.ideaTitle)
                     .foregroundStyle(ForgeColor.ink)
-                Text("What actually happened?").forgeLabel()
+                Text(prompt).forgeLabel()
                 TextEditor(text: $whatHappened)
                     .font(ForgeType.body)
                     .scrollContentBackground(.hidden)
@@ -29,7 +31,7 @@ struct OutcomeSheet: View {
                     .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                     .focused($focused)
-                    .accessibilityLabel("What actually happened")
+                    .accessibilityLabel(prompt)
                 if showsNextStep {
                     Text("And the one next thing").forgeLabel()
                     TextField("Leave empty to decide later", text: $nextStep, axis: .vertical)
@@ -40,7 +42,7 @@ struct OutcomeSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                         .accessibilityLabel("Next step")
                 }
-                Text("Stored next to what you expected. Nothing is scored.")
+                Text(footnote)
                     .font(.caption)
                     .foregroundStyle(ForgeColor.inkSecondary)
                 Spacer()

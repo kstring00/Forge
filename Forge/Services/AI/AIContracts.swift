@@ -179,6 +179,11 @@ public struct PrefillResult: Codable, Sendable {
     public var explorations: [ExplorationDraft]
     public var criteria: [CriterionDraft]
     public var projection: ProjectionRange?
+    /// The Investor's estimated return: a monthly USD range and what it rests on.
+    /// Optional so an older proxy's answer still decodes.
+    public var projectionLow: Double?
+    public var projectionHigh: Double?
+    public var projectionBasis: String?
     public var riskiestAssumption: RiskiestAssumptionDraft
     public var nextMove: NextMoveDraft
     public var draftedAssets: DraftedAssets

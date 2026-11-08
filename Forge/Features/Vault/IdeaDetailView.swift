@@ -146,13 +146,13 @@ struct IdeaDetailView: View {
             .accessibilityLabel("Lens")
 
             Menu {
-                ForEach(Stage.allCases.filter { $0 != .archived }, id: \.self) { stage in
-                    Button(stage.displayName) { idea.stage = stage }
+                ForEach(Track.allCases) { track in
+                    Button(track.displayName) { if idea.track != track { idea.stage = track.entryStage } }
                 }
             } label: {
-                pill(idea.stage.displayName, tint: ForgeColor.inkSecondary)
+                pill(idea.track?.displayName ?? "Archived", tint: ForgeColor.inkSecondary)
             }
-            .accessibilityLabel("Stage")
+            .accessibilityLabel("Track")
 
             Spacer()
         }

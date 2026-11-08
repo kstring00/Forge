@@ -10,7 +10,7 @@ export const houseRules = `You are the AI partner inside FORGE, a personal idea-
 - Never claim to have researched something you were not given. If evidence is missing, say what is missing and where to look.
 - Preserve the user's original intent. You never edit the user's words; you propose, the user decides.
 - Everything you propose is labeled AI-found until the user verifies it. Desk research proves at most that the problem and the market exist (evidence rung ${content.deskResearchRungCeiling}). Rungs 3 to 5 require a real person outside the app giving time, money or coming back.
-- Cite only the Library sources you are given, by their exact id. A claim with no source is an assumption and must say so.
+- Cite only the Library sources you are given, by their exact id, and only in the sourceIDs fields. Never write an id into prose the user will read; name the source by its title there.
 - Be short. Plain English. No headings in free text.`;
 
 export function stableSystem(lensType: string): string {
@@ -44,13 +44,13 @@ export function actionInstruction(action: Action): string {
     case "runRound":
       return "RUN A ROUND. Each requested Sphere returns one verdict: onTrack, offTrack or cantTell, the criterion key it judges, a two-sentence reason, and the source ids it relies on. No source means cantTell with the evidence that would change it. Then crossfire only between Spheres whose verdicts conflict (one onTrack, the other offTrack): at most one reply per such pair, one sentence, answering the other Sphere's reason from your own framework.";
     case "realityCheck":
-      return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: buildIt, compete, useTheirs, cantTell. 'Use theirs' is a legitimate outcome; never nudge toward building. Quote figures with the date fetched when the source has one.";
+      return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: buildIt ('Go build it': there's a gap and the user can reach it), compete ('Worth a fight': crowded, but there is an opening), useTheirs ('Already solved': something does this well; try it first), cantTell ('Go ask people': research ran out; real people decide). 'Already solved' is a legitimate outcome; never nudge toward building. Quote figures with the date fetched when the source has one.";
     case "prefill":
       return `PREFILL. Five Spheres (investor, customer, builder, strategist, skeptic) read the Library and pre-fill the whole Lab for the user to review by exception.
 1. realityCheck: as in REALITY CHECK.
 2. explorations: one proposed answer per Explore prompt key, with source ids. Where the Library says nothing, answer honestly that it is unknown and say what would answer it.
 3. criteria: for every criterion of the lens, a proposed score 1-5 from the rubric anchors and an evidence rung that never exceeds the desk ceiling, a one-line note, and source ids. For A2 the score is the highest rung at least three independent people reached; from a desk that is at most 2.
-4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure.
+4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow and projectionHigh: the Investor's estimated return as a monthly USD range (price × a plausible count in year one, per month), from the same sources; null if no source supports a figure. projectionBasis: what the range rests on, in at most six words ("three competitors' pricing pages"), never a source id.
 5. riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.
 6. nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.
 7. draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.
@@ -72,6 +72,7 @@ export function userTurn(ctx: AIContextT, options: Record<string, unknown> | und
   if (ctx.advantages.length) parts.push("The user's stated advantages:\n" + ctx.advantages.map((a) => `- ${a}`).join("\n"));
   if (ctx.constraints.length) parts.push("Standing constraints:\n" + ctx.constraints.map((c) => `- ${c}`).join("\n"));
   if (ctx.stewardCharter) parts.push(`Steward charter (for the Steward only): ${ctx.stewardCharter}`);
+  if (ctx.aboutUser) parts.push(`About this user, from their own record of rulings and outcomes (kept by FORGE, not a judgment of them): ${ctx.aboutUser}\nUse it to anticipate where they over- or under-weigh evidence. Never quote it back to them.`);
   if (ctx.sources.length) {
     parts.push("LIBRARY SOURCES (cite by id; class and reviewed flag matter):\n" + ctx.sources.map((s) => {
       const text = s.chunks.map((c) => c.text).join("\n").slice(0, 6000);

@@ -20,6 +20,7 @@ struct ProjectDetailView: View {
     }
 
     @State private var outcome: OutcomeRequest?
+    @State private var settling: String?
     @State private var nextStepDraft = ""
 
     private var journal: [Decision] { project.decisions.sorted { $0.date > $1.date } }
@@ -61,20 +62,27 @@ struct ProjectDetailView: View {
             case .step:
                 OutcomeSheet(title: "Step done", subject: project.nextStep ?? "", showsNextStep: true) { happened, next in
                     WorkshopActions.completeNextStep(project, whatHappened: happened, nextStep: next, in: context)
+                    settleAfter(happened)
                 }
             case .pause:
                 OutcomeSheet(title: "Pausing", subject: project.name) { happened, _ in
                     WorkshopActions.pause(project, whatHappened: happened, in: context)
+                    settleAfter(happened)
                 }
             case .launch:
                 OutcomeSheet(title: "Launched", subject: project.desiredOutcome.isEmpty ? project.name : project.desiredOutcome) { happened, _ in
                     WorkshopActions.complete(project, whatHappened: happened, in: context)
+                    settleAfter(happened)
                 }
             case .decision(let d):
                 OutcomeSheet(title: "Outcome", subject: d.decision) { happened, _ in
                     d.recordOutcome(happened)
+                    settleAfter(happened)
                 }
             }
+        }
+        .sheet(item: $settling) { happened in
+            if let idea = project.idea { SettleRulingsSheet(idea: idea, whatHappened: happened) }
         }
     }
 
@@ -120,20 +128,18 @@ struct ProjectDetailView: View {
     private var nextStepCard: some View {
         if project.status == .done {
             EmptyView()
-        } else if let step = project.nextStep {
-            VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-                Text("Next step").forgeLabel()
-                Text(step)
-                    .font(ForgeType.ideaTitle)
-                    .foregroundStyle(ForgeColor.ink)
+        } else if project.nextStep != nil {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                NextStepCard(project: project, context: Track.reality.displayName)
                 if project.status == .active {
-                    EmberButton(title: "Done", symbol: "checkmark") { outcome = .step }
+                    Button { outcome = .step } label: {
+                        Text(WorkshopActions.targetReached(project) ? "Step done · set the next one" : "Mark the step done")
+                            .frame(maxWidth: .infinity)
+                            .modifier(SecondaryButtonChrome())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding(ForgeSpacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6), lineWidth: 1))
         } else {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 Text("Next step").forgeLabel()
@@ -150,6 +156,12 @@ struct ProjectDetailView: View {
                 }
             }
         }
+    }
+
+    /// §5: what happened may settle the panel's points. Only when there are any left to settle.
+    private func settleAfter(_ happened: String) {
+        guard let idea = project.idea, !RulingActions.unsettled(on: idea).isEmpty else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settling = happened }
     }
 
     private func setNextStep() {
@@ -221,6 +233,9 @@ struct JournalRow: View {
                 Text("Expected: \(decision.expectedResult)\(decision.expectedBy.map { " · by \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "")")
                     .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             }
+            if let ruling = decision.ruling, let line = RulingActions.outcomeLine(ruling) {
+                Text(line).font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.ink)
+            }
             if let actual = decision.actualResult {
                 Text("Actually: \(actual)")
                     .font(.footnote)
@@ -236,4 +251,8 @@ struct JournalRow: View {
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
     }
+}
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
 }

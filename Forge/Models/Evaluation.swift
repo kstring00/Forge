@@ -40,6 +40,11 @@ public final class Evaluation {
     /// as an estimate until the user accepts or edits it.
     public var aiFilledAt: Date?
     public var projectionSuggestion: String?
+    /// The Investor's estimated return from the prefill: a monthly range and its
+    /// basis. Drawn striped (AI-found) until the user enters their own figures.
+    public var projectionEstimateLow: Double?
+    public var projectionEstimateHigh: Double?
+    public var projectionEstimateBasis: String?
 
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []

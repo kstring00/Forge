@@ -173,17 +173,28 @@ public enum DecisionKind: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// The advisory verdict of a Reality Check. "Use theirs" is a legitimate,
+/// The advisory verdict of a Reality Check. "Already solved" is a legitimate,
 /// non-negative outcome; the app never nudges toward building.
 public enum RealityVerdict: String, Codable, CaseIterable, Sendable {
     case buildIt, compete, useTheirs, cantTell
 
+    /// Shown everywhere; the stored raw values never change.
     public var displayName: String {
         switch self {
-        case .buildIt: "Build it"
-        case .compete: "Compete"
-        case .useTheirs: "Use theirs"
-        case .cantTell: "Can't tell from the desk"
+        case .buildIt: "Go build it"
+        case .compete: "Worth a fight"
+        case .useTheirs: "Already solved"
+        case .cantTell: "Go ask people"
+        }
+    }
+
+    /// One line under the verdict on the arc and the Brief.
+    public var explanation: String {
+        switch self {
+        case .buildIt: "There's a gap, and you can reach it."
+        case .compete: "It's crowded, but here's your opening."
+        case .useTheirs: "Something out there does this well. Try it first."
+        case .cantTell: "Research ran out. Real people decide this one."
         }
     }
 }

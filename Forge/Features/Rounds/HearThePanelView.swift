@@ -2,18 +2,19 @@ import SwiftUI
 import SwiftData
 import ForgeCore
 
-/// §6C steps 2 to 5 on one screen, from `docs/design/source/round.template.html`:
-/// the tally, one card per verdict led by its orb at 40 pt, Agree / Disagree /
-/// Find out on each, crossfire where the panel split, and the summary once
-/// every verdict is ruled. Rulings land in the Journal as they happen.
-struct RoundView: View {
+/// "Hear the panel" (brief v4.2 §6C): one card per Sphere, conflicting pairs
+/// sat next to each other under an ember Split bracket that opens the
+/// crossfire, Agree / Disagree / Find out on every card, the Steward as a
+/// dashed placeholder until Phase 5, and the summary once every verdict is
+/// ruled. Rulings land in the Journal as they happen. "Argue it out" arrives
+/// with credits.
+struct HearThePanelView: View {
     @Bindable var round: Round
     @Environment(\.modelContext) private var context
     @State private var crossfirePair: SpherePair?
     @State private var noting: Verdict?
 
     private var idea: Idea? { round.idea }
-    private var ordered: [Verdict] { Panel.order.compactMap { s in round.verdicts.first { $0.sphere == s } } }
     private var tally: RoundTally { RoundTally(round.verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) }) }
     private var number: Int {
         guard let idea else { return 1 }
@@ -21,28 +22,44 @@ struct RoundView: View {
         return (sorted.firstIndex { $0.id == round.id } ?? 0) + 1
     }
 
+    /// The cards in panel order, except that each split pair sits together:
+    /// the second of a pair moves up to follow the first.
+    private var ordered: [Verdict] {
+        var spheres = Panel.order.filter { s in round.verdicts.contains { $0.sphere == s } }
+        for pair in tally.splits {
+            guard let ia = spheres.firstIndex(of: pair.a), let ib = spheres.firstIndex(of: pair.b), ib != ia + 1 else { continue }
+            spheres.remove(at: ib)
+            let insertAt = spheres.firstIndex(of: pair.a)! + 1
+            spheres.insert(pair.b, at: insertAt)
+        }
+        return spheres.compactMap { s in round.verdicts.first { $0.sphere == s } }
+    }
+
+    /// Which split pair, if any, a card index opens: the first card of an adjacent pair.
+    private func bracket(at i: Int) -> SpherePair? {
+        guard i + 1 < ordered.count else { return nil }
+        return tally.splits.first { $0.contains(ordered[i].sphere) && $0.contains(ordered[i + 1].sphere) }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Round \(number) · \(round.verdicts.count) \(round.verdicts.count == 1 ? "verdict" : "verdicts")").forgeLabel()
-                Text("The panel on \(idea?.title ?? "this idea")")
-                    .font(ForgeType.ideaTitleHero)
-                    .foregroundStyle(ForgeColor.ink)
-                Text("Each Sphere argues from its framework and only from your Library. No sources, no verdict. Your rulings land in the Journal; scores stay yours to change in the Lab.")
-                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
-
-                tallyRow
-
+                header
                 VStack(spacing: 10) {
-                    ForEach(ordered) { v in
-                        VerdictCard(verdict: v, splits: tally.splits, onRule: { rule(v, $0) }, onCrossfire: { crossfirePair = $0 }, onNote: { noting = v })
+                    ForEach(Array(ordered.enumerated()), id: \.element.id) { i, v in
+                        let pair = bracket(at: i)
+                        let above = i > 0 ? bracket(at: i - 1) : nil
+                        VerdictCard(verdict: v, onRule: { rule(v, $0) }, onNote: { noting = v })
+                            .overlay(alignment: .trailing) {
+                                if let pair { SplitBracket(pair: pair) { crossfirePair = pair } }
+                            }
+                            .padding(.trailing, pair != nil || above != nil ? 14 : 0)
                     }
+                    stewardPlaceholder
                 }
-
-                if !tally.splits.isEmpty { crossfireButton }
-                if tally.isComplete { summary }
-                else {
-                    Text("\(tally.unruled) of \(tally.total) still to rule on. The summary appears when every verdict has a ruling.")
+                summary
+                if tally.unruled > 0 {
+                    Text("Agree is the default: the \(tally.unruled) \(tally.unruled == 1 ? "voice" : "voices") you leave untouched count as agreed when you move on. Only Disagree and Find out need a tap.")
                         .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
@@ -51,59 +68,48 @@ struct RoundView: View {
             .padding(.bottom, ForgeSpacing.xxl)
         }
         .background(ForgeColor.canvas)
-        .navigationTitle("Round \(number)")
+        .navigationTitle("Hear the panel")
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear { RulingActions.settleUnruled(round, in: context) }
         .sheet(item: $crossfirePair) { pair in
-            if let idea {
-                CrossfireSheet(round: round, pair: pair, idea: idea)
-            }
+            if let idea { CrossfireSheet(round: round, pair: pair, idea: idea) }
         }
         .sheet(item: $noting) { v in
-            if let ruling = v.ruling {
-                RulingNoteSheet(ruling: ruling, verdict: v)
-            }
+            if let ruling = v.ruling { RulingNoteSheet(ruling: ruling, verdict: v) }
         }
     }
 
     // MARK: Pieces
 
-    private var tallyRow: some View {
-        HStack(spacing: 8) {
-            tallyCell(tally.onTrack, "On track", VerdictPalette.onTrack)
-            tallyCell(tally.offTrack, "Off track", VerdictPalette.offTrack)
-            tallyCell(tally.cantTell, "Can't tell", ForgeColor.inkSecondary)
-        }
-    }
-
-    private func tallyCell(_ n: Int, _ label: String, _ tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("\(n)").font(ForgeType.numeralMedium).foregroundStyle(n == 0 ? ForgeColor.inkSecondary : tint)
-            Text(label).forgeLabelSmall()
-        }
-        .padding(.horizontal, 12).padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
-        .accessibilityElement(children: .combine)
-    }
-
-    private var crossfireButton: some View {
-        Button { crossfirePair = tally.splits.first } label: {
-            HStack(spacing: 10) {
-                ForEach(tally.splits.prefix(3)) { p in
-                    HStack(spacing: -4) {
-                        OrbView(sphere: p.a, size: 16)
-                        OrbView(sphere: p.b, size: 16)
-                    }
-                }
-                Text(tally.splits.count == 1 ? "Crossfire · one split" : "Crossfire · \(tally.splits.count) splits")
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Round \(number) · \(round.verdicts.count) \(round.verdicts.count == 1 ? "voice" : "voices")").forgeLabel()
+            Text("Hear the panel on").forgeLabel().foregroundStyle(ForgeColor.emberText).padding(.top, 8)
+            Text(idea?.title ?? "this idea")
+                .font(ForgeType.ideaTitleHero)
+                .foregroundStyle(ForgeColor.ink)
+            if let v = idea?.latestRealityCheck?.verdict {
+                Text(v.displayName).font(ForgeType.statement).foregroundStyle(ForgeColor.emberText)
             }
-            .modifier(SecondaryButtonChrome())
+            Text("Each voice argues from its own framework and only from what was found. Agree is the default; tap Disagree or Find out where you differ. Your rulings go in the Journal. No score changes here.")
+                .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 4)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Crossfire, where the panel split")
+    }
+
+    /// The Steward arrives with the Personal Growth lens (Phase 5).
+    private var stewardPlaceholder: some View {
+        HStack(alignment: .top, spacing: 12) {
+            OrbView(sphere: .steward, state: .dormant, size: 40)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Steward").font(.system(size: 14, weight: .semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Whether this is worth your life right now. Arrives with the Personal Growth lens, arguing from a charter you write.")
+                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous)
+            .strokeBorder(ForgeColor.line, style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
     }
 
     private var summary: some View {
@@ -114,12 +120,12 @@ struct RoundView: View {
                 Text("\(p.a.displayName) and \(p.b.displayName) split on \(splitKeys(p)).")
                     .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             }
-            Text(rulingsLine).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+            Text(tally.rulingsLine).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             Text("No score changed. The Lab is where you change a score; here you only said what you believe.")
                 .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             if let idea {
                 NavigationLink(value: WorkshopRoute.journal) {
-                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) rulings in the Journal").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) in the Journal").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
                 }
             }
         }
@@ -134,14 +140,6 @@ struct RoundView: View {
         return Array(Set(keys)).sorted().joined(separator: " and ")
     }
 
-    private var rulingsLine: String {
-        var parts: [String] = []
-        if tally.agreed > 0 { parts.append("agreed \(tally.agreed)") }
-        if tally.disagreed > 0 { parts.append("disagreed \(tally.disagreed)") }
-        if tally.findOut > 0 { parts.append("\(tally.findOut) to find out") }
-        return "You " + parts.joined(separator: ", ") + "."
-    }
-
     private func rule(_ v: Verdict, _ choice: RulingChoice) {
         guard let idea else { return }
         withAnimation(ForgeMotion.settle) {
@@ -151,49 +149,74 @@ struct RoundView: View {
     }
 }
 
-/// One Sphere's verdict with the three rulings. Mirrors the canvas card.
+/// The ember bracket on the right of two adjacent cards that split. It hangs
+/// from the first card's lower half to the second's upper half.
+struct SplitBracket: View {
+    let pair: SpherePair
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 4) {
+                Text("Split")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase).kerning(1)
+                    .foregroundStyle(ForgeColor.emberText)
+                    .rotationEffect(.degrees(90))
+                    .fixedSize()
+                    .frame(width: 12)
+                BracketShape()
+                    .stroke(ForgeColor.emberText, lineWidth: 1)
+                    .frame(width: 8)
+            }
+            .frame(height: 120)
+            .offset(x: 14, y: 70)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(pair.a.displayName) and \(pair.b.displayName) split. Open the crossfire.")
+    }
+}
+
+/// A right-hand square bracket with rounded corners.
+private struct BracketShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let r: CGFloat = 6
+        p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX - r, y: rect.minY))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + r), control: CGPoint(x: rect.maxX, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX - r, y: rect.maxY), control: CGPoint(x: rect.maxX, y: rect.maxY))
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        return p
+    }
+}
+
+/// One voice: the orb in its verdict state, name, verdict, reason, the source
+/// line, and the three rulings as pills.
 struct VerdictCard: View {
     let verdict: Verdict
-    var splits: [SpherePair] = []
     var onRule: (RulingChoice) -> Void
-    var onCrossfire: ((SpherePair) -> Void)? = nil
     var onNote: (() -> Void)? = nil
-
-    private var mySplits: [SpherePair] { splits.filter { $0.contains(verdict.sphere) } }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             OrbView(sphere: verdict.sphere, state: .verdict(verdict.kind), size: 40)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(verdict.sphere.displayName).font(.system(size: 14, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+                    Text(verdict.sphere.displayName).font(.system(size: 15, weight: .semibold)).foregroundStyle(ForgeColor.ink)
                     Spacer()
                     Text(verdict.kind.displayName).forgeLabel().foregroundStyle(VerdictPalette.color(verdict.kind))
                 }
                 Text(verdict.reason)
-                    .font(.system(size: 13)).lineSpacing(2)
+                    .font(.system(size: 14)).lineSpacing(2)
                     .foregroundStyle(Color(hex: 0xD9D2C7))
                     .fixedSize(horizontal: false, vertical: true)
-                if verdict.kind == .cantTell, let need = verdict.evidenceNeeded {
-                    Text("Would change it: \(need)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                }
-                HStack(spacing: 8) {
-                    sourceLine
-                    Spacer(minLength: 4)
-                    rulingButtons
-                }
-                .padding(.top, 2)
+                sourceLine
+                RulingButtons(current: verdict.ruling?.choice, onRule: onRule)
+                    .padding(.top, 4)
                 if let ruling = verdict.ruling { rulingLine(ruling) }
-                ForEach(mySplits) { p in
-                    Button { onCrossfire?(p) } label: {
-                        HStack(spacing: 6) {
-                            Rectangle().fill(ForgeColor.line).frame(width: 14, height: 1)
-                            OrbView(sphere: p.other(than: verdict.sphere), size: 12)
-                            Text("Splits with the \(p.other(than: verdict.sphere).displayName) · crossfire").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
             }
         }
         .padding(.top, 14).padding(.horizontal, 14).padding(.bottom, 12)
@@ -203,55 +226,23 @@ struct VerdictCard: View {
     }
 
     private var sourceLine: some View {
-        HStack(spacing: 4) {
-            if let s = verdict.sources.first {
-                EvidenceChip(pattern: EvidencePattern(s.sourceClass), size: 10)
-                Text(verdict.sources.count > 1 ? "\(s.title) +\(verdict.sources.count - 1)" : s.title)
+        Group {
+            if verdict.kind == .cantTell, let need = verdict.evidenceNeeded {
+                Text("Needs: \(need)")
+            } else if let s = verdict.sources.first {
+                Text("Source: " + (verdict.sources.count > 1 ? "\(s.title) +\(verdict.sources.count - 1)" : s.title))
             } else {
-                EvidenceChip(pattern: .dots, size: 10)
                 Text("No source")
             }
         }
         .font(.system(size: 10, weight: .medium, design: .monospaced))
+        .textCase(.uppercase).kerning(0.6)
         .foregroundStyle(ForgeColor.inkSecondary)
         .lineLimit(1)
     }
 
-    private var rulingButtons: some View {
-        HStack(spacing: 4) {
-            roundButton("checkmark", "Agree", .agree)
-            roundButton("xmark", "Disagree", .disagree)
-            Button { onRule(.findOut) } label: {
-                Text("Find out")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(verdict.ruling?.choice == .findOut ? .white : ForgeColor.canvas)
-                    .padding(.horizontal, 10).frame(height: 30)
-                    .background(verdict.ruling?.choice == .findOut ? ForgeColor.ember : ForgeColor.ink, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Find out")
-            .accessibilityAddTraits(verdict.ruling?.choice == .findOut ? .isSelected : [])
-        }
-    }
-
-    private func roundButton(_ symbol: String, _ label: String, _ choice: RulingChoice) -> some View {
-        let on = verdict.ruling?.choice == choice
-        return Button { onRule(choice) } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(on ? .white : ForgeColor.ink)
-                .frame(width: 30, height: 30)
-                .background(on ? ForgeColor.ember : ForgeColor.canvas, in: Circle())
-                .overlay(Circle().strokeBorder(on ? Color.clear : ForgeColor.line))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
-        .accessibilityAddTraits(on ? .isSelected : [])
-    }
-
     private func rulingLine(_ ruling: Ruling) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Text(ruling.choice.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
             Text(rulingSentence(ruling)).font(.caption).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             if ruling.choice != .findOut, let onNote {
@@ -259,7 +250,6 @@ struct VerdictCard: View {
                     .font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
             }
         }
-        .padding(.top, 4)
     }
 
     private func rulingSentence(_ r: Ruling) -> String {
@@ -284,9 +274,9 @@ enum VerdictPalette {
     }
 }
 
-/// §6C step 3, reached from the hairline between two orbs or a verdict card:
-/// the two verdicts that conflict, the one exchange between them, and a ruling
-/// on each. Never a chat.
+/// §6C step 3, reached from the dashed line between two orbs or the Split
+/// bracket: the two verdicts that conflict, the one exchange between them,
+/// and a ruling on each. Never a chat.
 struct CrossfireSheet: View {
     let round: Round
     let pair: SpherePair
@@ -304,7 +294,7 @@ struct CrossfireSheet: View {
                     HStack(spacing: 0) {
                         Spacer()
                         OrbView(sphere: pair.a, state: verdict(pair.a).map { .verdict($0.kind) } ?? .idle, size: 56)
-                        Rectangle().fill(ForgeColor.line).frame(width: 48, height: 1)
+                        Rectangle().fill(ForgeColor.emberText).frame(width: 48, height: 1)
                         OrbView(sphere: pair.b, state: verdict(pair.b).map { .verdict($0.kind) } ?? .idle, size: 56)
                         Spacer()
                     }
@@ -323,7 +313,7 @@ struct CrossfireSheet: View {
                     VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                         Text("Crossfire").forgeLabel()
                         if exchange.isEmpty {
-                            Text("Neither Sphere replied to the other this round. The verdicts above are the whole disagreement.")
+                            Text("Neither voice replied to the other this round. The verdicts above are the whole disagreement.")
                                 .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         ForEach(exchange) { c in
@@ -335,7 +325,7 @@ struct CrossfireSheet: View {
                                 }
                             }
                         }
-                        Text("One exchange per pair. This is not a chat; you rule.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("One exchange per pair. This is not a chat; you rule. Side with one for free.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
                 .padding(.horizontal, 20)

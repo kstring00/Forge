@@ -12,6 +12,8 @@ struct KnowSomethingSheet: View {
     @Environment(AppEnvironment.self) private var env
     @State private var text = ""
     @State private var running = false
+    @State private var confirming = false
+    @State private var saved: Source?
     @State private var message: String?
     @FocusState private var focused: Bool
 
@@ -45,23 +47,36 @@ struct KnowSomethingSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save and re-score") { Task { await save() } }.disabled(!canSave).fontWeight(.semibold)
+                    Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave).fontWeight(.semibold)
                 }
             }
             .onAppear { focused = true }
         }
         .presentationDetents([.medium, .large])
         .interactiveDismissDisabled(running)
+        .sheet(isPresented: $confirming) {
+            AIConfirmSheet(content: .rescore) { send in
+                if send, let saved { Task { await rescore(saved) } }
+                else { message = "Saved as verified. Nothing was sent. Attach it to a criterion in the Lab, or re-score later." }
+            }
+        }
     }
 
-    private func save() async {
+    /// The user's words are kept at once, as verified; the proxy call waits for Send.
+    private func saveThenConfirm() {
         let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let source = Source(kind: .note, title: String(body.prefix(60)), fullText: body, sourceClass: .userVerified)
         source.reviewed = true
         source.chunks.append(SourceChunk(index: 0, text: body))
         idea.sources.append(source)
         try? context.save()
+        saved = source
+        guard idea.latestEvaluation != nil else { dismiss(); return }
+        confirming = true
+    }
 
+    private func rescore(_ source: Source) async {
+        let body = source.fullText
         guard let previous = idea.latestEvaluation else { dismiss(); return }
         running = true
         defer { running = false }

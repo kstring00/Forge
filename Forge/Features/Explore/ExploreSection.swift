@@ -11,7 +11,6 @@ struct ExploreSection: View {
     @State private var editing: ExplorePrompt?
     @State private var controller: ExploreAIController?
     @State private var pendingAction: AIAction?
-    @State private var showingConsent = false
 
     private var answered: Int { ExploreActions.answeredCount(on: idea) }
     private var aiNotes: [Exploration] { ExploreActions.aiNotes(on: idea) }
@@ -48,15 +47,10 @@ struct ExploreSection: View {
         .sheet(item: $editing) { prompt in
             ExploreAnswerSheet(prompt: prompt, idea: idea)
         }
-        .sheet(isPresented: $showingConsent) {
-            AIConsentSheet { agreed in
-                showingConsent = false
-                if agreed {
-                    AIConsent.grant()
-                    consentStamp = AIConsent.grantedAt?.timeIntervalSince1970 ?? 0
-                    if let action = pendingAction { Task { await start(action) } }
-                }
-                pendingAction = nil
+        .sheet(item: $pendingAction) { action in
+            AIConfirmSheet(content: action == .expand ? .expand : .summarize) { send in
+                consentStamp = AIConsent.grantedAt?.timeIntervalSince1970 ?? 0
+                if send { Task { await run(action) } }
             }
         }
         .sheet(isPresented: proposalPresented) {
@@ -79,7 +73,8 @@ struct ExploreSection: View {
         } label: {
             HStack(alignment: .top, spacing: ForgeSpacing.m) {
                 if let sphere = prompt.sphere {
-                    OrbView(sphere: sphere, size: 16).padding(.top, 3)
+                    Circle().fill(OrbView.palette(for: sphere).base).frame(width: 8, height: 8).padding(.top, 7)
+                        .accessibilityLabel("Asked by the \(sphere.displayName)")
                 } else {
                     Color.clear.frame(width: 16, height: 16)
                 }
@@ -177,12 +172,12 @@ struct ExploreSection: View {
         return c
     }
 
+    /// Every AI action opens the confirm sheet first; nothing is sent until Send.
     private func start(_ action: AIAction) async {
-        guard AIConsent.isGranted else {
-            pendingAction = action
-            showingConsent = true
-            return
-        }
+        pendingAction = action
+    }
+
+    private func run(_ action: AIAction) async {
         let c = ensureController()
         switch action {
         case .expand: await c.expand(idea)
@@ -190,4 +185,8 @@ struct ExploreSection: View {
         default: break
         }
     }
+}
+
+extension AIAction: Identifiable {
+    public var id: String { rawValue }
 }

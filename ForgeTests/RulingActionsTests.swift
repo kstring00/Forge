@@ -126,4 +126,44 @@ final class RulingActionsTests: XCTestCase {
         XCTAssertEqual(RulingActions.ceiling(for: Source(kind: .note, title: "", fullText: "", sourceClass: .assumption)), 0)
         XCTAssertEqual(RulingActions.ceiling(for: Source(kind: .voice, title: "", fullText: "", sourceClass: .userVerified)), 5)
     }
+
+    // MARK: Agree is the default; outcomes close the loop
+
+    func testMovingOnSettlesUntouchedVerdictsAsImplicitAgreesWithNoJournalEntry() throws {
+        let a = Verdict(sphere: .investor, kind: .onTrack, criterionKey: "A5", reason: "r", sources: [page])
+        let b = Verdict(sphere: .strategist, kind: .offTrack, criterionKey: "A3", reason: "r", sources: [page])
+        let round = round([a, b])
+        RulingActions.rule(b, .disagree, on: idea, in: store.context)
+        let journalBefore = idea.decisions.count
+        XCTAssertEqual(RulingActions.settleUnruled(round, in: store.context), 1)
+        XCTAssertEqual(a.ruling?.choice, .agree)
+        XCTAssertEqual(a.ruling?.implicit, true)
+        XCTAssertNil(a.ruling?.resultingDecision)
+        XCTAssertNil(a.ruling?.resultingEvidence, "an implicit agree attaches nothing")
+        XCTAssertEqual(idea.decisions.count, journalBefore)
+        XCTAssertEqual(RulingActions.settleUnruled(round, in: store.context), 0)
+        let tally = RoundTally(round.verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) })
+        XCTAssertTrue(tally.isComplete)
+        XCTAssertEqual(tally.rulingsLine, "1 disagreement")
+    }
+
+    func testOutcomesAreStoredOnceAndReadBackAsOneLine() throws {
+        let v = Verdict(sphere: .strategist, kind: .offTrack, criterionKey: "A3", reason: "r", sources: [page])
+        _ = round([v])
+        let ruling = RulingActions.rule(v, .disagree, on: idea, in: store.context)
+        XCTAssertEqual(RulingActions.unsettled(on: idea).map(\.id), [ruling.id])
+        RulingActions.recordOutcome(.sphereRight, note: "Nobody switched.", on: ruling)
+        XCTAssertEqual(ruling.outcome, .sphereRight)
+        XCTAssertEqual(RulingActions.outcomeLine(ruling), "You disagreed with the Strategist. It was right.")
+        RulingActions.recordOutcome(.userRight, on: ruling)
+        XCTAssertEqual(ruling.outcome, .sphereRight, "the first outcome stands")
+        XCTAssertTrue(RulingActions.unsettled(on: idea).isEmpty)
+
+        let settled = RulingActions.settled(in: [idea])
+        XCTAssertEqual(settled.count, 1)
+        XCTAssertEqual(settled.first?.sphere, .strategist)
+        XCTAssertEqual(settled.first?.choice, .disagree)
+        XCTAssertEqual(settled.first?.outcome, .sphereRight)
+        XCTAssertNil(settled.first?.userScore, "A3 was never scored on this evaluation")
+    }
 }

@@ -13,11 +13,7 @@ struct RoundRealityRow: View {
             HStack(spacing: 10) {
                 Button { tap("Run a Round") } label: {
                     HStack(spacing: 10) {
-                        HStack(spacing: -4) {
-                            OrbView(sphere: .investor, size: 14)
-                            OrbView(sphere: .customer, size: 14)
-                            OrbView(sphere: .strategist, size: 14)
-                        }
+                        Image(systemName: "waveform").font(.system(size: 13, weight: .medium))
                         Text("Run a Round")
                     }
                     .frame(maxWidth: .infinity)

@@ -3,7 +3,8 @@ import SwiftData
 import ForgeCore
 
 /// §0A step 3: the single screen an idea opens on once a Reality Check has
-/// run. Led by the orbs; everything proposed is visibly AI-found.
+/// run. Led by the council arc; everything proposed is visibly AI-found.
+/// Once a step exists, the next-step card sits here too.
 struct BriefSection: View {
     @Bindable var idea: Idea
     var onNotQuite: () -> Void
@@ -12,6 +13,7 @@ struct BriefSection: View {
 
     @State private var speaking: Sphere?
     @State private var crossfirePair: SpherePair?
+    @State private var hearing: Round?
     @State private var showingAssets = false
     @State private var knowing = false
     @State private var confirmingLooksRight = false
@@ -26,19 +28,19 @@ struct BriefSection: View {
     var body: some View {
         if let check, let evaluation {
             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                CouncilArc(verdicts: round?.verdicts ?? [], title: idea.title, verdict: check.verdict, speaking: $speaking,
+                           onHear: round.map { r in { hearing = r } },
+                           onCrossfire: { crossfirePair = $0 },
+                           onRule: { v, choice in withAnimation(ForgeMotion.settle) { RulingActions.rule(v, choice, on: idea, in: context) } })
                 verdictRow(check)
-                OrbRow(verdicts: round?.verdicts ?? [], crossfire: round?.crossfire ?? [], speaking: $speaking,
-                       onCrossfire: { crossfirePair = $0 },
-                       onRule: { v, choice in withAnimation(ForgeMotion.settle) { RulingActions.rule(v, choice, on: idea, in: context) } })
                 if let round { roundLine(round) }
+                if let project = idea.project {
+                    NextStepCard(project: project, context: Track.reality.displayName)
+                }
                 whatWeFound(check)
                 rings(evaluation)
                 theOneThing(evaluation, check)
                 buttons
-                if let cost = check.actualCostUSD {
-                    Text("This check cost \(AISpend.format(cost)). \(AISpend.format(AISpend.spentUSD())) of \(AISpend.format(AISpend.ceilingUSD)) used this month.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                }
             }
             .sheet(item: $crossfirePair) { pair in
                 if let round { CrossfireSheet(round: round, pair: pair, idea: idea) }
@@ -58,6 +60,9 @@ struct BriefSection: View {
             .navigationDestination(isPresented: $navigateToProject) {
                 if let project = idea.project { ProjectDetailView(project: project) }
             }
+            .navigationDestination(item: $hearing) { round in
+                HearThePanelView(round: round)
+            }
         }
     }
 
@@ -70,9 +75,7 @@ struct BriefSection: View {
                 Spacer()
                 Text(check.createdAt.formatted(date: .abbreviated, time: .omitted)).forgeLabel()
             }
-            Text(check.verdict.displayName)
-                .font(ForgeType.ideaTitle)
-                .foregroundStyle(ForgeColor.ink)
+            Text(check.verdict.explanation).font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
             Text(check.summary)
                 .font(ForgeType.body)
                 .foregroundStyle(ForgeColor.ink.opacity(0.85))
@@ -84,7 +87,7 @@ struct BriefSection: View {
         let tally = RoundTally(round.verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) })
         return NavigationLink(value: LabRoute.round(roundID: round.id)) {
             HStack(spacing: ForgeSpacing.s) {
-                Text(tally.ruled == 0 ? "Rule on the panel" : tally.isComplete ? "Round ruled · summary" : "Round · \(tally.ruled) of \(tally.total) ruled")
+                Text(tally.ruled == 0 ? "Hear the panel" : tally.rulingsLine)
                     .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 if !tally.splits.isEmpty && tally.ruled == 0 {
                     Text("· \(tally.splits.count == 1 ? "one split" : "\(tally.splits.count) splits")").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
@@ -94,7 +97,7 @@ struct BriefSection: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Open the Round to rule on each verdict")
+        .accessibilityLabel("Hear the panel and rule on each voice")
     }
 
     private func whatWeFound(_ check: RealityCheck) -> some View {
@@ -166,15 +169,11 @@ struct BriefSection: View {
             if let project = idea.project {
                 NavigationLink(value: WorkshopRoute.project(project.id)) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("In the Workshop").forgeLabel().foregroundStyle(Color(red: 1.0, green: 0.886, blue: 0.839))
-                            Text(project.nextStep ?? project.name).font(.system(size: 15)).foregroundStyle(.white)
-                        }
+                        Text("Open in \(Track.reality.displayName)").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         Spacer()
-                        Image(systemName: "arrow.right").foregroundStyle(.white)
+                        Image(systemName: "arrow.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                     }
-                    .padding(18)
-                    .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .modifier(SecondaryButtonChrome())
                 }
                 .buttonStyle(.plain)
             } else {
@@ -187,7 +186,7 @@ struct BriefSection: View {
                 Button { knowing = true } label: { Text("I know something you don't").frame(maxWidth: .infinity).modifier(SecondaryButtonChrome()) }
                     .buttonStyle(.plain)
             }
-            Text("Looks right accepts the pass as-is. Not quite opens the full Lab, one tap per correction. The third saves what you know as verified and re-scores only what it touches.")
+            Text("Looks right accepts the pass as-is and the next move becomes your step in \(Track.reality.displayName). Not quite opens the full Lab, one tap per correction. The third saves what you know as verified and re-scores only what it touches.")
                 .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
         }
     }
@@ -208,12 +207,19 @@ struct BriefSection: View {
                                 expectedResult: evaluation.effectiveStep)
         decision.idea = idea
         context.insert(decision)
+        // Looks right is moving on: every voice left untouched counts as agreed.
+        if let round { RulingActions.settleUnruled(round, in: context) }
 
         if idea.project == nil {
             let project = WorkshopActions.convert(idea, with: .init(
                 name: idea.title, desiredOutcome: "", nextStep: evaluation.effectiveStep,
                 beliefs: evaluation.riskiestAssumption, reasoning: "From the Reality Check",
                 expectedResult: evaluation.experiment?.decisionRule ?? ""), in: context)
+            WorkshopActions.setNextStep(project, evaluation.effectiveStep,
+                                        caveat: NextStepPlan.caveat(step: evaluation.effectiveStep, experimentTest: evaluation.experiment?.test),
+                                        target: NextStepPlan.target(assetTitle: assetSource?.title, step: evaluation.effectiveStep),
+                                        dueAt: Calendar.current.date(byAdding: .day, value: evaluation.experiment?.timeboxDays ?? 7, to: .now),
+                                        moves: evaluation.experiment?.metric)
             if let assetSource {
                 project.notes.append("\(assetSource.title)\n\n\(assetSource.fullText)")
             }

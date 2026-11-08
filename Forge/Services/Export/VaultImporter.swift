@@ -260,6 +260,9 @@ enum VaultImporter {
         evaluation.nextStepText = e.nextStepText
         evaluation.aiFilledAt = e.aiFilledAt
         evaluation.projectionSuggestion = e.projectionSuggestion
+        evaluation.projectionEstimateLow = e.projectionEstimateLow
+        evaluation.projectionEstimateHigh = e.projectionEstimateHigh
+        evaluation.projectionEstimateBasis = e.projectionEstimateBasis
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id
@@ -312,6 +315,11 @@ enum VaultImporter {
         project.notes = p.notes
         project.resources = p.resources
         project.nextStep = p.nextStep
+        project.nextStepCaveat = p.nextStepCaveat
+        project.nextStepTarget = max(1, p.nextStepTarget ?? 1)
+        project.nextStepCount = p.nextStepCount ?? 0
+        project.nextStepDueAt = p.nextStepDueAt
+        project.nextStepMoves = p.nextStepMoves
         project.launchDefinition = p.launchDefinition
         project.retrospective = p.retrospective
         project.createdAt = p.createdAt
@@ -351,6 +359,10 @@ enum VaultImporter {
                 let ruling = Ruling(choice: RulingChoice(rawValue: ru.choice) ?? .findOut, note: ru.note)
                 ruling.id = ru.id
                 ruling.createdAt = ru.createdAt
+                ruling.implicit = ru.implicit ?? false
+                ruling.outcomeRaw = ru.outcome
+                ruling.outcomeNote = ru.outcomeNote
+                ruling.outcomeRecordedAt = ru.outcomeRecordedAt
                 ruling.resultingDecision = ru.resultingDecisionID.flatMap { decisions[$0] }
                 ruling.resultingEvidence = ru.resultingEvidenceID.flatMap { evidence[$0] }
                 ruling.resultingAssumption = ru.resultingAssumptionID.flatMap { sources[$0] }

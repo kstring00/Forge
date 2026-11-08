@@ -9,8 +9,10 @@ final class AppEnvironment {
     let speech: SpeechCapture
     /// Reality Checks run here so they survive navigation and Home can narrate them.
     let realityChecks: RealityCheckCenter
-    /// §7: the idea just saved; Home turns the orbs toward it until the user runs a check or taps Later.
+    /// §7: the idea just saved; Home turns toward it until the user sends it to the panel or taps Later.
     var justCapturedIdeaID: UUID?
+    /// The selected tab, here so Home's "All" links and capture can switch it.
+    var tab: ForgeTab = .home
 
     init(ai: any AIClient, speech: SpeechCapture) {
         self.ai = ai

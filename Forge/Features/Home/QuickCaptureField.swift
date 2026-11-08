@@ -6,6 +6,8 @@ import SwiftData
 /// turns the orbs toward the new idea.
 struct QuickCaptureField: View {
     var focusOnAppear = false
+    /// Home v2: "What if…" in italic serif with the ember mic button.
+    var placeholder = "What if…"
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var text = ""
@@ -16,7 +18,7 @@ struct QuickCaptureField: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: ForgeSpacing.s) {
-            TextField("What's on your mind?", text: $text, axis: .vertical)
+            TextField("", text: $text, prompt: Text(placeholder).font(ForgeType.originalText).foregroundStyle(ForgeColor.inkSecondary), axis: .vertical)
                 .lineLimit(1...4)
                 .font(ForgeType.body)
                 .focused($focused)
@@ -33,13 +35,15 @@ struct QuickCaptureField: View {
             .accessibilityLabel("Save")
             Button { voice = true } label: {
                 Image(systemName: "mic.fill")
-                    .font(.title3)
-                    .foregroundStyle(ForgeColor.ember)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(ForgeColor.ember, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Speak an idea")
         }
-        .padding(ForgeSpacing.m)
+        .padding(.leading, ForgeSpacing.m).padding(.trailing, 10).padding(.vertical, 10)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
         .onAppear { if focusOnAppear { focused = true } }

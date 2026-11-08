@@ -7,7 +7,7 @@ struct IdeaHeader: View {
     let idea: Idea
 
     private var statusLine: String {
-        var parts = [idea.stage.displayName]
+        var parts = [idea.track?.displayName ?? "Archived"]
         if let lens = idea.lensType { parts.append("\(lens.displayName) lens") }
         return parts.joined(separator: " · ")
     }
@@ -15,6 +15,10 @@ struct IdeaHeader: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             GrainGradient(colors: ForgeColor.sky(for: idea.stage))
+            IdeaSpark(idea: idea, size: 128)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .padding(.top, 64)
+                .padding(.trailing, 20)
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 HStack(spacing: 6) {
                     ForEach(0..<3, id: \.self) { i in

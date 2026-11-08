@@ -29,7 +29,7 @@ struct NextStepCard: View {
     private var asset: Source? {
         idea?.latestRealityCheck?.draftedAssetSourceID.flatMap { id in idea?.sources.first { $0.id == id } }
     }
-    private var target: Int { max(1, project.nextStepTarget) }
+    private var target: Int { project.effectiveTarget }
     private var count: Int { min(project.nextStepCount, target) }
     private var overdue: Bool { project.nextStepDueAt.map { $0 < .now } ?? false }
 
@@ -157,15 +157,23 @@ struct StakesPanel: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("What's riding on it").forgeLabelSmall()
             HStack(alignment: .top, spacing: 14) {
-                smallRing(evaluation.potential, "Potential", ForgeColor.ink)
-                smallRing(evaluation.confidence, "Confidence", ForgeColor.ember)
+                if let idea {
+                    NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
+                        HStack(spacing: 14) {
+                            smallRing(evaluation.potential, "Potential", ForgeColor.ink)
+                            smallRing(evaluation.confidence, "Confidence", ForgeColor.ember)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the criteria with their evidence")
+                }
                 VStack(alignment: .trailing, spacing: 6) {
                     if let idea { EstimatedReturnRow(idea: idea, compact: false, alignment: .trailing) }
                     if evaluation.lensType == .business { bar(verified: evaluation.projection.verifiedFraction) }
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.nextStepTarget, moves: project.nextStepMoves))
+            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves))
                 .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
         }

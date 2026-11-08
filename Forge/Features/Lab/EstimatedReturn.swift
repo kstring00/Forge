@@ -14,6 +14,8 @@ enum EstimatedReturn {
         case estimate(low: Double, high: Double, basis: String?)
         /// Growth or Creative: who it helps and what changes.
         case impact(lead: String, rest: String?)
+        /// Growth or Creative with nothing written yet.
+        case impactMissing
         /// No check yet: send it to the panel.
         case unchecked
         /// Checked, but nothing in the Library supported a figure.
@@ -21,7 +23,7 @@ enum EstimatedReturn {
 
         var label: String {
             switch self {
-            case .impact: "Impact"
+            case .impact, .impactMissing: "Impact"
             default: "Est. return"
             }
         }
@@ -46,7 +48,7 @@ enum EstimatedReturn {
         let changes = e?.impactWhatChanges?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !who.isEmpty { return .impact(lead: who, rest: changes.isEmpty ? nil : changes) }
         if !changes.isEmpty { return .impact(lead: changes, rest: nil) }
-        return .impact(lead: "Say who it helps", rest: "and what changes for them")
+        return .impactMissing
     }
 
     /// "$900–$2.4k"
@@ -72,6 +74,8 @@ struct EstimatedReturnRow: View {
     var compact = true
     /// Leading on the cards, trailing in the next-move panel.
     var alignment: HorizontalAlignment = .leading
+    /// The verdict word, shown before the figure on cards ("Go ask people · …").
+    var prefix: String? = nil
     @State private var showing = false
 
     private var value: EstimatedReturn.Value { EstimatedReturn.value(for: idea) }
@@ -82,6 +86,7 @@ struct EstimatedReturnRow: View {
             VStack(alignment: alignment, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(value.label).forgeLabelSmall()
+                    if let prefix { Text("\(prefix) ·").font(.system(size: 12, weight: .medium)).foregroundStyle(ForgeColor.emberText) }
                     if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
                     if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
                     figure
@@ -119,11 +124,18 @@ struct EstimatedReturnRow: View {
                 Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(1)
                 if let rest { Text(rest).font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
             }
+        case .impactMissing:
+            placeholder("Add who it helps")
         case .unchecked:
-            Text("Send to the panel to estimate.").font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+            placeholder("Send to the panel to estimate.")
         case .none:
-            Text("The desk found no price to go on.").font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+            placeholder("The desk found no price to go on.")
         }
+    }
+
+    /// Placeholders are 13 pt muted sans, never display serif or colour.
+    private func placeholder(_ text: String) -> some View {
+        Text(text).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
     }
 
     private var basis: String? {
@@ -139,6 +151,7 @@ struct EstimatedReturnRow: View {
         case .yours(let m, _): "Estimated return \(Projection.compact(m)) a month, your numbers"
         case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "the desk research")"
         case .impact(let lead, let rest): "Impact: \(lead) \(rest ?? "")"
+        case .impactMissing: "Impact: add who it helps"
         case .unchecked: "No estimate yet. Send to the panel to estimate."
         case .none: "No estimate. The desk found no price to go on."
         }

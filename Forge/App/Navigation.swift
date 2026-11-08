@@ -45,4 +45,6 @@ enum LabRoute: Hashable {
     case criterion(evaluationID: UUID, key: String)
     case history(ideaID: UUID)
     case round(roundID: UUID)
+    /// The criteria with their evidence, from the "What's riding on it" rings.
+    case criteria(ideaID: UUID)
 }

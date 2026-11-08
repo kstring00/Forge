@@ -55,16 +55,18 @@ struct FormationRow: View {
             IdeaSpark(idea: idea, size: 44)
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 HStack(spacing: 8) {
-                    if checking {
-                        Text("Checking").forgeLabelSmall()
-                    } else if let check = idea.latestRealityCheck {
-                        Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
-                    }
-                    Spacer()
+                    Text(Track.formation.displayName).forgeLabelSmall().foregroundStyle(Color(hex: 0x8B63C9))
+                    Spacer(minLength: 8)
                     StageTrail(track: idea.track)
                 }
                 Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
-                Text(statusLine).forgeLabelSmall()
+                HStack(spacing: 6) {
+                    if let check = idea.latestRealityCheck, !checking {
+                        Text(check.verdict.displayName).font(.system(size: 12, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                        Text("·").forgeLabelSmall()
+                    }
+                    Text(statusLine).forgeLabelSmall()
+                }
             }
         }
         .padding(ForgeSpacing.cardPadding)

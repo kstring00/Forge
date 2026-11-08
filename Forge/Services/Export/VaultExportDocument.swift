@@ -182,6 +182,11 @@ struct RulingExport: Codable {
     var resultingEvidenceID: UUID?
     var resultingAssumptionID: UUID?
     var resultingExperiment: ExperimentExport?
+    // v4.2: implicit agrees and outcomes. Optional so old exports import.
+    var implicit: Bool?
+    var outcome: String?
+    var outcomeNote: String?
+    var outcomeRecordedAt: Date?
 }
 
 struct CrossfireExport: Codable {

@@ -57,9 +57,9 @@ struct HearThePanelView: View {
                     }
                     stewardPlaceholder
                 }
-                if tally.isComplete { summary }
-                else {
-                    Text("\(tally.unruled) of \(tally.total) still to rule on. The summary appears when every voice has a ruling.")
+                summary
+                if tally.unruled > 0 {
+                    Text("Agree is the default: the \(tally.unruled) \(tally.unruled == 1 ? "voice" : "voices") you leave untouched count as agreed when you move on. Only Disagree and Find out need a tap.")
                         .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
@@ -70,6 +70,7 @@ struct HearThePanelView: View {
         .background(ForgeColor.canvas)
         .navigationTitle("Hear the panel")
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear { RulingActions.settleUnruled(round, in: context) }
         .sheet(item: $crossfirePair) { pair in
             if let idea { CrossfireSheet(round: round, pair: pair, idea: idea) }
         }
@@ -90,7 +91,7 @@ struct HearThePanelView: View {
             if let v = idea?.latestRealityCheck?.verdict {
                 Text(v.displayName).font(ForgeType.statement).foregroundStyle(ForgeColor.emberText)
             }
-            Text("Each voice argues from its own framework and only from what was found. Rule on each one; your rulings go in the Journal. No score changes here.")
+            Text("Each voice argues from its own framework and only from what was found. Agree is the default; tap Disagree or Find out where you differ. Your rulings go in the Journal. No score changes here.")
                 .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 4)
         }
     }
@@ -119,12 +120,12 @@ struct HearThePanelView: View {
                 Text("\(p.a.displayName) and \(p.b.displayName) split on \(splitKeys(p)).")
                     .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             }
-            Text(rulingsLine).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+            Text(tally.rulingsLine).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             Text("No score changed. The Lab is where you change a score; here you only said what you believe.")
                 .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             if let idea {
                 NavigationLink(value: WorkshopRoute.journal) {
-                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) rulings in the Journal").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) in the Journal").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
                 }
             }
         }
@@ -137,14 +138,6 @@ struct HearThePanelView: View {
     private func splitKeys(_ p: SpherePair) -> String {
         let keys = round.verdicts.filter { p.contains($0.sphere) }.map(\.criterionKey)
         return Array(Set(keys)).sorted().joined(separator: " and ")
-    }
-
-    private var rulingsLine: String {
-        var parts: [String] = []
-        if tally.agreed > 0 { parts.append("agreed \(tally.agreed)") }
-        if tally.disagreed > 0 { parts.append("disagreed \(tally.disagreed)") }
-        if tally.findOut > 0 { parts.append("\(tally.findOut) to find out") }
-        return "You " + parts.joined(separator: ", ") + "."
     }
 
     private func rule(_ v: Verdict, _ choice: RulingChoice) {

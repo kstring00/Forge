@@ -78,6 +78,73 @@ enum RulingActions {
         return ruling
     }
 
+    /// Agree is the default. When the user moves on from a Round, every verdict
+    /// they did not touch gets an implicit Agree: it counts as agreement for the
+    /// summary and the record, attaches nothing, and makes no Journal entry.
+    @discardableResult
+    static func settleUnruled(_ round: Round, in context: ModelContext, now: Date = .now) -> Int {
+        var n = 0
+        for v in round.verdicts where v.ruling == nil {
+            let ruling = Ruling(choice: .agree)
+            ruling.implicit = true
+            ruling.createdAt = now
+            context.insert(ruling)
+            v.ruling = ruling
+            n += 1
+        }
+        if n > 0 { round.idea?.touch(); try? context.save() }
+        return n
+    }
+
+    /// §5: what happened, set against a ruling. Never overwrites an earlier outcome.
+    static func recordOutcome(_ outcome: RulingOutcome, note: String? = nil, on ruling: Ruling, now: Date = .now) {
+        guard ruling.outcome == nil else { return }
+        ruling.outcome = outcome
+        ruling.outcomeNote = note.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        ruling.outcomeRecordedAt = now
+        ruling.verdict?.round?.idea?.touch()
+    }
+
+    /// Rulings on an idea with no outcome yet, disagreements and find-outs first.
+    static func unsettled(on idea: Idea) -> [Ruling] {
+        idea.rounds.flatMap(\.verdicts).compactMap(\.ruling)
+            .filter { $0.outcome == nil }
+            .sorted { rank($0) < rank($1) }
+    }
+
+    private static func rank(_ r: Ruling) -> Int {
+        switch r.choice { case .disagree: 0; case .findOut: 1; case .agree: r.implicit ? 3 : 2 }
+    }
+
+    /// "You disagreed with the Strategist. It was right."
+    static func outcomeLine(_ ruling: Ruling) -> String? {
+        guard let outcome = ruling.outcome, let v = ruling.verdict else { return nil }
+        let sphere = v.sphere.displayName
+        let did: String = switch ruling.choice {
+        case .agree: ruling.implicit ? "You let the \(sphere) stand" : "You agreed with the \(sphere)"
+        case .disagree: "You disagreed with the \(sphere)"
+        case .findOut: "You set out to find out about the \(sphere)'s point"
+        }
+        let result: String = switch outcome {
+        case .sphereRight: "It was right."
+        case .userRight: "You were right."
+        case .unsettled: "Not settled yet."
+        }
+        return "\(did). \(result)"
+    }
+
+    /// Every ruling with an outcome, flattened for the patterns screen.
+    static func settled(in ideas: [Idea]) -> [SettledRuling] {
+        ideas.flatMap { idea -> [SettledRuling] in
+            let scores = idea.latestEvaluation
+            return idea.rounds.flatMap(\.verdicts).compactMap { v -> SettledRuling? in
+                guard let r = v.ruling, let o = r.outcome else { return nil }
+                return SettledRuling(sphere: v.sphere, verdict: v.kind, criterionKey: v.criterionKey, choice: r.choice, outcome: o,
+                                     userScore: scores?.criterionScore(for: v.criterionKey)?.score)
+            }
+        }
+    }
+
     /// The user's own words on a ruling. On a disagreement they become the belief on record.
     static func setNote(_ note: String, on ruling: Ruling) {
         let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -42,6 +42,9 @@ public struct AIContext: Codable, Sendable {
     public var advantages: [String] = []
     public var constraints: [String] = []
     public var stewardCharter: String?
+    /// The user's own track record against the panel, kept by FORGE (§5).
+    /// Under 80 words; the user reads, edits and resets it in Settings.
+    public var aboutUser: String?
     public var spheres: [Sphere] = Sphere.phase3Panel
 
     public init(ideaID: UUID, originalText: String, title: String, lens: LensType? = nil) {

@@ -96,6 +96,11 @@ struct CouncilArc: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
+                Text(verdict.explanation)
+                    .font(.system(size: 12))
+                    .foregroundStyle(ForgeColor.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let onHear, !isWorking {
                 Button(action: onHear) {

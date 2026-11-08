@@ -87,11 +87,12 @@ struct ProjectionCard: View {
     }
 
     private func impactLine(_ label: String, _ value: String?) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        let empty = (value ?? "").isEmpty
+        return VStack(alignment: .leading, spacing: 2) {
             Text(label).forgeLabelSmall()
-            Text((value ?? "").isEmpty ? "—" : value!)
-                .font(ForgeType.body)
-                .foregroundStyle(ForgeColor.ink)
+            Text(empty ? "Add \(label.prefix(1).lowercased() + label.dropFirst())" : value!)
+                .font(empty ? .system(size: 13) : ForgeType.body)
+                .foregroundStyle(empty ? ForgeColor.inkSecondary : ForgeColor.ink)
         }
     }
 

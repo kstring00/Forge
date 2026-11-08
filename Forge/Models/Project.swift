@@ -41,4 +41,13 @@ public final class Project {
     }
 
     public var orderedMilestones: [Milestone] { milestones.sorted { $0.order < $1.order } }
+
+    /// The stored target, or the count the step itself names when the stored
+    /// value is still the default ("Talk to five parents" → 5). Older projects
+    /// were written before the step's number was read.
+    public var effectiveTarget: Int {
+        if nextStepTarget > 1 { return nextStepTarget }
+        if let step = nextStep, let n = NumberWords.firstNumber(in: step), (1...50).contains(n) { return n }
+        return max(1, nextStepTarget)
+    }
 }

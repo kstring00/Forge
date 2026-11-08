@@ -44,6 +44,7 @@ export const AIContext = z.object({
   advantages: z.array(z.string()).default([]),
   constraints: z.array(z.string()).default([]),
   stewardCharter: z.string().nullable().optional(),
+  aboutUser: z.string().nullable().optional(),
   spheres: z.array(sphere).default([...["investor", "customer", "builder", "strategist", "skeptic"]] as z.infer<typeof sphere>[]),
 });
 export type AIContextT = z.infer<typeof AIContext>;

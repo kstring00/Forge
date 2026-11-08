@@ -13,6 +13,7 @@ struct RealityCheckButton: View {
     var compact = false
     /// A small capsule for list rows: "To the panel".
     var pill = false
+    var pillTitle = "To the panel"
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var confirming = false
@@ -28,7 +29,7 @@ struct RealityCheckButton: View {
     private var pillBody: some View {
         VStack(alignment: .trailing, spacing: 4) {
             Button { tap() } label: {
-                Text(failure == nil ? "To the panel" : "Try again")
+                Text(failure == nil ? pillTitle : "Try again")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(ForgeColor.emberText)
                     .padding(.horizontal, 12).frame(height: 32)

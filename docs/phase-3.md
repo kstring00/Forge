@@ -158,6 +158,12 @@ colour.
 **3c.5: Idea sparks** (decision 0018). `IdeaSpark` and `StageTrail` on every card and
 the idea header; orbs only where the panel speaks.
 
+**3c.6: the second look** (decision 0019). Agree by default with implicit rulings;
+closing the loop with outcomes on rulings; Your patterns and the about-you note;
+rings and figures that open the Lab; a one-time cleanup of old prose and step targets;
+the verdicts renamed on screen; the daily quote and its setting. Tests: ForgeCore
+`PatternsTests`, `QuotesTests`; app `RulingActionsTests`.
+
 Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
 on "I know something you don't", and rungs above 2 from what the user reports.
 

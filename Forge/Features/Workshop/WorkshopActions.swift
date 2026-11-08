@@ -60,7 +60,7 @@ enum WorkshopActions {
         let text = whatHappened.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
         project.nextStepCount += 1
-        let n = project.nextStepCount, of = project.nextStepTarget
+        let n = project.nextStepCount, of = project.effectiveTarget
         let d = Decision(kind: .outcome, decision: "Logged \(n) of \(of) · \(step)", decidedAt: now)
         d.recordOutcome(text, at: now)
         d.idea = project.idea
@@ -71,7 +71,7 @@ enum WorkshopActions {
     }
 
     static func targetReached(_ project: Project) -> Bool {
-        project.nextStep != nil && project.nextStepCount >= project.nextStepTarget
+        project.nextStep != nil && project.nextStepCount >= project.effectiveTarget
     }
 
     /// Marks the current next step done, records what happened as an outcome

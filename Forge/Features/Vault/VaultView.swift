@@ -31,6 +31,7 @@ struct VaultView: View {
                 } else {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: ForgeSpacing.m) {
+                            DailyQuote()
                             if filter.hasActiveFilter || allTracks { activeFilters }
                             if shown.isEmpty {
                                 EmptyState(symbol: "magnifyingglass",

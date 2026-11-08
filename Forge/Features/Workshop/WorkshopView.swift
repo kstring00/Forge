@@ -94,7 +94,7 @@ struct RealityRow: View {
     }
 
     private var progressLine: String {
-        var parts = ["\(min(project.nextStepCount, project.nextStepTarget)) of \(max(1, project.nextStepTarget))"]
+        var parts = ["\(min(project.nextStepCount, project.effectiveTarget)) of \(project.effectiveTarget)"]
         if let due = project.nextStepDueAt {
             parts.append((due < .now ? "was due " : "due ") + due.formatted(.dateTime.weekday(.abbreviated)))
         }

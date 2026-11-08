@@ -359,6 +359,10 @@ enum VaultImporter {
                 let ruling = Ruling(choice: RulingChoice(rawValue: ru.choice) ?? .findOut, note: ru.note)
                 ruling.id = ru.id
                 ruling.createdAt = ru.createdAt
+                ruling.implicit = ru.implicit ?? false
+                ruling.outcomeRaw = ru.outcome
+                ruling.outcomeNote = ru.outcomeNote
+                ruling.outcomeRecordedAt = ru.outcomeRecordedAt
                 ruling.resultingDecision = ru.resultingDecisionID.flatMap { decisions[$0] }
                 ruling.resultingEvidence = ru.resultingEvidenceID.flatMap { evidence[$0] }
                 ruling.resultingAssumption = ru.resultingAssumptionID.flatMap { sources[$0] }

@@ -24,13 +24,13 @@ The user has no shortage of ideas. The problem is that ideas pile up in notes an
 1. **Capture.** One sentence or a voice memo. Nothing else is asked. The idea lands in the Vault with a sky header and a single button: **Reality Check**.
 2. **Reality Check (one tap, one confirm).** Tapping the button sends nothing. First a free on-device guard: an idea under about eight words, or one that names neither a problem nor a person, is blocked with one line ("Add a sentence about the problem and who has it, so the panel has something to look into") and no proxy call. Then a confirm sheet, the same for every action that calls the proxy (Reality Check, Expand, Summarize, re-score): what will happen, how long it takes, that the idea text goes to an AI model through the user's proxy, *Send* and *Cancel*. Only Send runs it. While it runs, the working card has *Stop*: remaining proxy calls are cancelled and nothing half-finished is kept. Then it runs. In the background, through the proxy: desk research (§6D) — competitors, pricing, complaints, demand signals, job postings — saved as `ai-found` Sources. Then the five Spheres each read the Library and **pre-fill the whole Lab**: a proposed answer to every Explore prompt, a proposed score and evidence rung for every criterion with the Source it leans on, a proposed Projection range, a proposed riskiest assumption, and a proposed next move. Progress is visible as the orbs light up one at a time. Typical wall time: one to three minutes. The user can leave and come back.
 3. **The Brief (one screen).** When the check finishes, the idea opens on a single screen, led by the orbs:
-   - **The verdict row** — Build it / Compete / Use theirs / Can't tell from the desk, with one sentence.
+   - **The verdict row** — *Go build it* / *Worth a fight* / *Already solved* / *Go ask people*, each with its one-line explanation and one sentence from the panel.
    - **The panel** — six orbs in a row (the sixth, Steward, dim until Phase 5). Tap an orb to read only that voice. Where two Spheres disagree, a thin line connects them; tap it for the crossfire.
    - **What we found** — three to five lines, each a claim with its Source chip (stripes = AI-found).
    - **Rings** — Potential and Confidence as proposed, drawn in the AI-found stripe until the user touches them.
    - **The one thing nobody can tell from a desk** — the riskiest assumption, and the single human action that tests it, already drafted (five Mom-Test questions, or a 20-message outreach script, or a landing page's copy).
    - **Three buttons:** *Looks right* · *Not quite* · *I know something you don't*.
-4. **Review by exception.** *Looks right* accepts the panel's pass as-is; everything stays visibly AI-found and Confidence stays low, honestly. *Not quite* opens the criteria list; the user taps the row that is wrong and picks a different rubric anchor — one tap per correction, the AI's version shown struck through beside it. *I know something you don't* opens voice or text; what the user says is saved as a `user-verified` Source, and the affected Spheres re-score that criterion only. The full Lab — definitions, rubrics, ladder, playbook, history — is all still there, one tap deeper, for whoever wants it. It is never required.
+4. **Review by exception.** *Looks right* accepts the panel's pass as-is; everything stays visibly AI-found and Confidence stays low, honestly. *Not quite* opens the criteria list; the user taps the row that is wrong and picks a different rubric anchor — one tap per correction, the AI's version shown struck through beside it. *I know something you don't* opens voice or text; what the user says is saved as a `user-verified` Source, and the affected Spheres re-score that criterion only. On the panel's verdicts, **Agree is the default**: a voice the user leaves untouched counts as agreed when they move on; only Disagree and Find out need a tap, and the tally reads "2 disagreements · 1 to find out". The full Lab — definitions, rubrics, ladder, playbook, history — is all still there, one tap deeper, for whoever wants it. It is never required.
 5. **The task.** The next move becomes the Workshop's one next step with the drafted assets attached. The user goes and does it in the world.
 6. **The return.** "What happened?" — one line, or a voice memo. The user's answer is a `user-verified` Source. The ladder moves, Confidence moves, the Journal records expected vs. actual, and the Spheres re-run on the changed criteria only. If the next move is now "build," the Workshop takes over.
 
@@ -221,6 +221,10 @@ Where a chosen idea becomes a project. Not Jira, Linear, or Notion — a persona
 
 Whenever the user commits to an idea (converts it to a project), sets it aside, or rules on a Reality Check or Round, the app records a **Decision**: what they decided, what they believed at the time, why, and what result they expected by when. When the project reaches a milestone, pauses, launches, or is archived, the app asks one question — "What actually happened?" — and stores the outcome next to the prediction.
 
+**Closing the loop.** When the user records what happened on an idea, the app lists the rulings it might settle (disagreements and find-outs first) and asks, per ruling: the Sphere was right, you were right, or not settled. The outcome is stored on the Ruling and read back as one line: "You disagreed with the Strategist. It was right."
+
+**Your patterns** (a screen reached from Home and the Journal): the user's record against each Sphere (overruled N times, Sphere right M, user right K), the criteria they habitually over- or under-score (their Potential score against what the outcome showed), and a plain-language summary. From it the app writes a short **about-you note** (under 80 words) and sends it with every Sphere call, so the panel can anticipate where the user over- or under-weighs evidence. The user reads, edits and resets the note in Settings, under the honest label: *FORGE remembers your track record and shares it with the panel. The AI itself doesn't change.* Nothing is shown or written until three outcomes are recorded; the app never guesses.
+
 Over time the Journal becomes the most useful screen in the app: a record of the user's own calibration. Which beliefs held up, which didn't, which kinds of ideas they overrated. It is shown only when the user opens it; it never scores the user or sends a notification.
 
 ```
@@ -235,7 +239,7 @@ Decision   id, idea?, project?, kind (commit|setAside|ruling|pivot|outcome),
 
 Contextual AI inside each idea and project. No global chat tab.
 
-**Context passed to the model:** original idea, exploration notes, selected lens, scores and evidence so far, project milestones and decisions, open questions.
+**Context passed to the model:** original idea, exploration notes, selected lens, scores and evidence so far, project milestones and decisions, open questions, and the user's about-you note (§5) when one exists.
 
 **Capabilities (each is a distinct action, not a free-form chat prompt):**
 - Expand — clarify a rough thought.
@@ -405,12 +409,12 @@ A Reality Check is a single action on any Business-lens idea. The AI runs desk r
 
 ### The four verdicts
 
-| Verdict | When | What the report leads with |
-|---|---|---|
-| **Build it** | A real gap exists and the user has an advantage reaching the people in it | The gap, the advantage, the smallest version, the first field test |
-| **Compete** | Crowded, but reviews show a wedge competitors leave open | The wedge (ERRC grid), who to target first, why they'd switch, the first field test |
-| **Use theirs** | Someone already solves it well, and the user's underlying need is the problem, not the business | The product to go use, what it costs, what it won't do, and a prompt: "Does using this close the need? If yes, archive the idea with a note." |
-| **Can't tell from the desk** | Market exists but demand for *this* angle is unproven | The riskiest assumption and the cheapest field test (Experiment card), with the interview questions or outreach script pre-drafted |
+| Verdict (stored value) | Shown as | One line under it | When | What the report leads with |
+|---|---|---|---|---|
+| `buildIt` | **Go build it** | There's a gap, and you can reach it. | A real gap exists and the user has an advantage reaching the people in it | The gap, the advantage, the smallest version, the first field test |
+| `compete` | **Worth a fight** | It's crowded, but here's your opening. | Crowded, but reviews show a wedge competitors leave open | The wedge (ERRC grid), who to target first, why they'd switch, the first field test |
+| `useTheirs` | **Already solved** | Something out there does this well. Try it first. | Someone already solves it well, and the user's underlying need is the problem, not the business | The product to go use, what it costs, what it won't do, and a prompt: "Does using this close the need? If yes, archive the idea with a note." |
+| `cantTell` | **Go ask people** | Research ran out. Real people decide this one. | Market exists but demand for *this* angle is unproven | The riskiest assumption and the cheapest field test (Experiment card), with the interview questions or outreach script pre-drafted |
 
 The verdict is advisory. The user records their own decision in the Decision Journal (§5), and that decision — not the verdict — is what the app later checks against reality.
 
@@ -422,7 +426,7 @@ Desk research can reach rung 2 on the evidence ladder: it proves the problem and
 
 - Every claim cites a saved Source. No source, no claim — the report says "could not find" rather than guessing.
 - Pricing and traction figures are quoted with the date fetched.
-- "Use theirs" is a legitimate, non-negative outcome. The app never nudges toward building.
+- "Already solved" is a legitimate, non-negative outcome. The app never nudges toward building.
 - A Reality Check can be re-run later; the app diffs the competitor set and verdict.
 - One Reality Check is the most expensive action in the app (many fetches plus synthesis). Confirm before running; never show a price (§0A); cache results.
 
@@ -458,7 +462,9 @@ Top to bottom:
 2. **The pipeline strip.** Idea → Formation → Reality as glowing 40 pt nodes in the stage colours (Idea lavender, Formation violet, Reality ember) on a gradient line, each with its count and a one-line status ("Waiting for the panel", "Waiting on your ruling", "Out in the world"). Tap a node for its tab.
 3. **Your next move.** One card, whichever is most urgent: the idea just captured (send it to the panel); a check that failed, with its error; the step owed in Reality; a Brief waiting to be heard; else the most recent unchecked idea. A real-world step always outranks a ruling. The Reality step is the next-move card: a 3 pt gradient top edge, the idea's title in serif, the step in 16 pt sans, full-width progress segments, then **What's riding on it**: Potential and Confidence as 56 pt rings, the Projection ("$X / mo if it works") with the verified-vs-estimate bar on Business ideas or the Impact line on Growth and Creative, and one generated line tying the step to the evidence it raises ("This step is how 33 becomes a real number. Five conversations move demand to rung 3."). Ideas with no evaluation hide the panel. *Questions* and *Log a conversation* beneath.
 4. **Capture.** The field, *What if…* in italic serif, with the ember mic button.
-5. **Your ideas, by stakes.** Cards with a stage-coloured side band, stage and verdict in mono, the serif title, five mini orbs in their states, and a labelled **Est. return** row: before any check, "Send to the panel to estimate."; on a checked Business idea, the Investor's monthly range from the prefill ("$900–$2.4k / mo"), striped as AI-found, with a small "from competitor pricing" line; once the user enters price and units or a payment is logged, their single figure with "your numbers"; **Impact** on Growth and Creative ideas. Tapping the row opens the Projection card with the sources the estimate came from. Sorted by that figure, then Confidence. *All* opens the Idea tab. The prefill returns `projectionLow`, `projectionHigh` and `projectionBasis`, so the range is the panel's, never invented by the app.
+5. **Your ideas, by stakes.** Cards with a stage-coloured side band, the idea's spark, the stage and the stage trail on the top line (never wrapping), the serif title, and a labelled **Est. return** row that carries the verdict word ("Go ask people · The desk found no price to go on"): before any check, "Send to the panel to estimate."; on a checked Business idea, the Investor's monthly range from the prefill ("$900–$2.4k / mo"), striped as AI-found, with a small "from competitor pricing" line; once the user enters price and units or a payment is logged, their single figure with "your numbers"; **Impact** on Growth and Creative ideas. Tapping the row opens the Projection card with the sources the estimate came from. Sorted by that figure, then Confidence. *All* opens the Idea tab. Placeholders ("Add who it helps") are 13 pt muted sans, never display serif or colour. An idea in Reality that never saw the panel reads "Reality · started without the panel" with a small *Check it* link. The prefill returns `projectionLow`, `projectionHigh` and `projectionBasis`, so the range is the panel's, never invented by the app.
+
+**The Idea tab** opens with one line a day: a quote in small italic serif with its attribution in mono beneath, rotating daily, dismissible for the day. The quotes live in `Quotes.swift`, every entry with text, author and a source note, and only verifiable quotes are included. Settings: *Quotes · All / Scripture only / Secular only / Off*.
 
 **The same idea never appears twice on the screen.** Whatever idea the next-move card is about is left out of the list.
 

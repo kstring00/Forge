@@ -53,6 +53,16 @@ struct HomeView: View {
                             nextMove
                             QuickCaptureField()
                             stakes
+                            NavigationLink { PatternsView() } label: {
+                                HStack {
+                                    Text("Your patterns").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                                    Text("your record against the panel").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                                    Spacer()
+                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                                }
+                                .modifier(SecondaryButtonChrome())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(ForgeSpacing.m)
@@ -77,7 +87,8 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                 HStack {
                     Text(Date.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()).replacingOccurrences(of: ", ", with: " · "))
-                        .forgeLabel().foregroundStyle(.white.opacity(0.9))
+                        .forgeLabel().foregroundStyle(.white.opacity(0.92))
+                        .shadow(color: .black.opacity(0.3), radius: 4, y: 1)
                     Spacer()
                     NavigationLink { SettingsView() } label: {
                         Image(systemName: "gearshape")
@@ -93,9 +104,11 @@ struct HomeView: View {
                         .font(Font.custom("Fraunces-SemiBold", size: 40, relativeTo: .largeTitle))
                         .foregroundStyle(ForgeColor.ink)
                         .lineSpacing(-2)
+                        .shadow(color: .black.opacity(0.35), radius: 10, y: 2)
                     if !live.isEmpty {
                         Text("\(inMotion) \(inMotion == 1 ? "idea" : "ideas") in motion · \(count(.reality)) out in the world")
                             .font(.system(size: 15)).foregroundStyle(ForgeColor.ink.opacity(0.9))
+                            .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
                     }
                 }
             }
@@ -190,6 +203,8 @@ struct HomeView: View {
 struct SkyHeader: View {
     private let lavender = Color(hex: 0x8F82C8)
     private let violet = Color(hex: 0x7A5BB8)
+    private let indigo = Color(hex: 0x3B2E6E)
+    private let deepViolet = Color(hex: 0x4C3A86)
     private let rose = Color(hex: 0xC97B86)
     private let ember = Color(hex: 0xD9772B)
     private let peach = Color(hex: 0xE8A77A)
@@ -203,14 +218,14 @@ struct SkyHeader: View {
                     [0, 0.72], [0.45, 0.78], [1, 0.70],
                     [0, 1], [0.5, 1], [1, 1],
                 ], colors: [
-                    lavender, violet, lavender,
-                    rose, peach, violet.opacity(0.9),
+                    indigo, deepViolet, indigo,
+                    violet.mixedToward(rose, 0.5), peach.mixedToward(rose, 0.35), violet,
                     ForgeColor.canvas.mixedToward(ember, 0.35), ForgeColor.canvas.mixedToward(peach, 0.45), ForgeColor.canvas.mixedToward(rose, 0.3),
                     ForgeColor.canvas, ForgeColor.canvas, ForgeColor.canvas,
                 ])
             } else {
                 LinearGradient(stops: [
-                    .init(color: lavender, location: 0), .init(color: violet, location: 0.3),
+                    .init(color: indigo, location: 0), .init(color: violet, location: 0.3),
                     .init(color: peach, location: 0.6), .init(color: ForgeColor.canvas, location: 1),
                 ], startPoint: .top, endPoint: .bottom)
             }
@@ -248,7 +263,13 @@ struct StakeCard: View {
                     }
                 }
                 .buttonStyle(.plain)
-                EstimatedReturnRow(idea: idea).frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .bottom, spacing: 8) {
+                    EstimatedReturnRow(idea: idea, prefix: idea.latestRealityCheck?.verdict.displayName)
+                    Spacer(minLength: 0)
+                    if idea.track == .reality && idea.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: idea.lensType) {
+                        RealityCheckButton(idea: idea, pill: true, pillTitle: "Check it")
+                    }
+                }
             }
             .padding(.vertical, 14).padding(.trailing, 14)
         }
@@ -261,9 +282,8 @@ struct StakeCard: View {
     private var heading: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track))
-                Spacer()
-                if let right = rightLabel { Text(right).forgeLabelSmall().foregroundStyle(rightTint) }
+                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).lineLimit(1)
+                Spacer(minLength: 8)
                 StageTrail(track: idea.track)
             }
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
@@ -283,8 +303,9 @@ struct StakeCard: View {
     private var stageLine: String {
         var parts = [track.displayName]
         if checking { parts.append("Checking") }
+        else if track == .reality && idea.latestRealityCheck == nil { parts.append("started without the panel") }
         else if let project = idea.project, project.nextStep != nil {
-            parts.append("\(min(project.nextStepCount, project.nextStepTarget)) of \(max(1, project.nextStepTarget))")
+            parts.append("\(min(project.nextStepCount, project.effectiveTarget)) of \(project.effectiveTarget)")
         } else if tally.total > 0 {
             parts.append(tally.isComplete ? "Ruled" : "Ruled \(tally.ruled) of \(tally.total)")
         } else if !RealityCheckPolicy.isOffered(for: idea.lensType) {
@@ -295,15 +316,6 @@ struct StakeCard: View {
         return parts.joined(separator: " · ")
     }
 
-    /// The verdict once there is one; the lens when the user chose one; else nothing.
-    private var rightLabel: String? {
-        if let v = idea.latestRealityCheck?.verdict { return v.displayName }
-        return idea.lensType?.displayName
-    }
-
-    private var rightTint: Color {
-        idea.latestRealityCheck != nil ? ForgeColor.emberText : ForgeColor.inkSecondary
-    }
 }
 
 /// Idea (n) → Formation (n) → Reality (n): glowing 40 pt nodes in the stage

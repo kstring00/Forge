@@ -75,6 +75,7 @@ struct BriefSection: View {
                 Spacer()
                 Text(check.createdAt.formatted(date: .abbreviated, time: .omitted)).forgeLabel()
             }
+            Text(check.verdict.explanation).font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
             Text(check.summary)
                 .font(ForgeType.body)
                 .foregroundStyle(ForgeColor.ink.opacity(0.85))
@@ -86,7 +87,7 @@ struct BriefSection: View {
         let tally = RoundTally(round.verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) })
         return NavigationLink(value: LabRoute.round(roundID: round.id)) {
             HStack(spacing: ForgeSpacing.s) {
-                Text(tally.ruled == 0 ? "Hear the panel and rule" : tally.isComplete ? "Every voice ruled · summary" : "\(tally.ruled) of \(tally.total) voices ruled")
+                Text(tally.ruled == 0 ? "Hear the panel" : tally.rulingsLine)
                     .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 if !tally.splits.isEmpty && tally.ruled == 0 {
                     Text("· \(tally.splits.count == 1 ? "one split" : "\(tally.splits.count) splits")").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
@@ -206,6 +207,8 @@ struct BriefSection: View {
                                 expectedResult: evaluation.effectiveStep)
         decision.idea = idea
         context.insert(decision)
+        // Looks right is moving on: every voice left untouched counts as agreed.
+        if let round { RulingActions.settleUnruled(round, in: context) }
 
         if idea.project == nil {
             let project = WorkshopActions.convert(idea, with: .init(

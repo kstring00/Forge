@@ -12,6 +12,10 @@ struct SettingsView: View {
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(QuotesPreference.key) private var quotesRaw: String = QuotesSetting.all.rawValue
+    @AppStorage(PanelMemory.noteKey) private var panelNote: String = ""
+    @State private var editingNote = false
+    @State private var noteDraft = ""
     @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
     @AppStorage(AISpend.ceilingKey) private var ceiling: Double = AISpend.defaultCeiling
     @AppStorage(AISpend.totalKey) private var spentThisMonth: Double = 0
@@ -89,6 +93,37 @@ struct SettingsView: View {
             }
 
             Section {
+                Picker("Quotes", selection: $quotesRaw) {
+                    ForEach(QuotesSetting.allCases) { Text($0.displayName).tag($0.rawValue) }
+                }
+            } header: {
+                Text("Idea tab")
+            } footer: {
+                Text("One line a day at the top of the Idea tab. Every quote is attributed to a source you can check.")
+            }
+
+            Section {
+                if panelNote.isEmpty {
+                    Text("Nothing yet. After three recorded outcomes, FORGE writes a short note from your record and shares it with the panel.")
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                } else {
+                    Text(panelNote).font(.footnote)
+                    if PanelMemory.edited {
+                        Text("Edited by you. It stays as you wrote it until you reset it.").font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                    } else if let at = PanelMemory.generatedAt {
+                        Text("Written from your record \(at.formatted(date: .abbreviated, time: .omitted)).").font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                    }
+                }
+                Button("Edit the note") { noteDraft = panelNote; editingNote = true }
+                Button("Reset", role: .destructive) { PanelMemory.reset(); panelNote = "" }.disabled(panelNote.isEmpty && !PanelMemory.edited)
+                NavigationLink("Your patterns") { PatternsView() }
+            } header: {
+                Text("What the panel knows about you")
+            } footer: {
+                Text(PanelMemory.label + " Under 80 words; sent with every Sphere call.")
+            }
+
+            Section {
                 let month = RealityCheckCost.month(checks.map { (date: $0.createdAt, costUSD: $0.actualCostUSD) })
                 LabeledContent("Reality Checks this month", value: "\(month.count)")
                 LabeledContent("Their cost this month", value: AISpend.format(month.spentUSD))
@@ -119,6 +154,28 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.folder, .json], allowsMultipleSelection: false) { result in
             handleImport(result)
+        }
+        .sheet(isPresented: $editingNote) {
+            NavigationStack {
+                Form {
+                    Section {
+                        TextField("About you, for the panel", text: $noteDraft, axis: .vertical).lineLimit(4...10)
+                    } footer: {
+                        Text("Under 80 words. \(PanelMemory.label)")
+                    }
+                }
+                .scrollContentBackground(.hidden)
+                .background(ForgeColor.canvas)
+                .navigationTitle("The note")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editingNote = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") { PanelMemory.edit(noteDraft); panelNote = PanelMemory.note; editingNote = false }.fontWeight(.semibold)
+                    }
+                }
+            }
+            .presentationDetents([.medium])
         }
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK", role: .cancel) {}

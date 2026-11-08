@@ -18,6 +18,7 @@ struct RealityCheckButton: View {
     @Environment(AppEnvironment.self) private var env
     @State private var confirming = false
     @State private var blocked: IdeaGuard.Verdict?
+    @State private var outOfChecks = false
 
     private var runner: RealityCheckRunner { env.realityChecks.runner(for: idea.id) }
     private var failure: String? { env.realityChecks.failure(for: idea.id) }
@@ -73,6 +74,8 @@ struct RealityCheckButton: View {
 
             if let failure {
                 noticeBox(title: "The last check didn't finish", message: failure, detail: env.realityChecks.failureDetails[idea.id]) { env.realityChecks.dismissFailure(idea.id) }
+            } else if outOfChecks {
+                outOfChecksBox
             } else if blocked != nil {
                 noticeBox(title: "The panel needs more to go on", message: IdeaGuard.blockedLine) { blocked = nil }
             } else if case .overCeiling = runner.phase {
@@ -88,7 +91,7 @@ struct RealityCheckButton: View {
     }
 
     private var confirmSheet: some View {
-        AIConfirmSheet(content: .realityCheck(ideaTitle: idea.title)) { send in
+        AIConfirmSheet(content: .realityCheck(ideaTitle: idea.title, allowance: env.entitlements.balance.line)) { send in
             if send { start() }
         }
     }
@@ -125,7 +128,28 @@ struct RealityCheckButton: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// The guard runs on the phone, for free, before anything else.
+    /// Decision 0032, the out-of-checks state: the AI pauses, nothing else does.
+    private var outOfChecksBox: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            Text("You're out of checks for now").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+            Text("So the panel can't look into this one yet. \(env.entitlements.balance.resetsText).")
+                .font(.subheadline).foregroundStyle(ForgeColor.ink)
+            Text("Still free: score it yourself in the Lab, write down what you know, take it straight to Reality, and log and rule on other ideas.")
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button("See plans") { env.showingMembership = true }
+                    .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.emberText)
+                Spacer()
+                Button("Not now") { withAnimation(ForgeMotion.fade) { outOfChecks = false } }
+                    .font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
+            }
+        }
+        .padding(ForgeSpacing.m)
+        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.5)))
+    }
+
+    /// The guard runs on the phone, for free, before anything else; then the allowance.
     private func tap() {
         let verdict = IdeaGuard.check(idea.originalText + " " + idea.notes)
         guard verdict == .ok else {
@@ -133,6 +157,11 @@ struct RealityCheckButton: View {
             return
         }
         blocked = nil
+        guard env.entitlements.canStartCheck(inFlight: env.realityChecks.runningCount) else {
+            if pill { env.showingMembership = true } else { withAnimation(ForgeMotion.fade) { outOfChecks = true } }
+            return
+        }
+        outOfChecks = false
         confirming = true
     }
 

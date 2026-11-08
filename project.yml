@@ -63,6 +63,9 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: "YES"
 
+fileGroups:
+  - Hunch.storekit
+
 schemes:
   Forge:
     build:
@@ -71,6 +74,8 @@ schemes:
         ForgeTests: [test]
     run:
       config: Debug
+      # Decision 0032: purchases run against this file in the simulator until App Store Connect has the products.
+      storeKitConfiguration: Hunch.storekit
     test:
       config: Debug
       gatherCoverageData: true

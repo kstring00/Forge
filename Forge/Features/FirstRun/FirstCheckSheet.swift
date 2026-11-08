@@ -79,6 +79,11 @@ struct FirstCheckSheet: View {
     }
 
     private func lookIntoIt() {
+        guard env.entitlements.canStartCheck(inFlight: env.realityChecks.runningCount) else {
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { env.showingMembership = true }
+            return
+        }
         AIConsent.grant()
         let advantages = (try? context.fetch(FetchDescriptor<Advantage>()))?.map(\.text) ?? []
         let constraints = (try? context.fetch(FetchDescriptor<Constraint>()))?.map(\.text) ?? []

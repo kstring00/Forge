@@ -17,6 +17,8 @@ struct AIConfirmSheet: View {
         /// "Takes 1 to 3 minutes."
         var duration: String
         var sendTitle = "Send"
+        /// Reality Checks: "3 of 15 checks left · resets Dec 1" (decision 0032).
+        var allowance: String? = nil
     }
 
     let content: Content
@@ -34,6 +36,11 @@ struct AIConfirmSheet: View {
                     Text("\(content.whatHappens) \(content.duration)")
                         .font(ForgeType.body).foregroundStyle(ForgeColor.ink.opacity(0.9))
                         .fixedSize(horizontal: false, vertical: true)
+                    if let allowance = content.allowance {
+                        Text("\(allowance). A check that fails or is stopped doesn't count.")
+                            .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
 
                     if firstTime {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
@@ -88,11 +95,12 @@ struct AIConfirmSheet: View {
 }
 
 extension AIConfirmSheet.Content {
-    static func realityCheck(ideaTitle: String) -> Self {
+    static func realityCheck(ideaTitle: String, allowance: String? = nil) -> Self {
         .init(kind: "Reality check",
               title: "Send \(ideaTitle) to the panel?",
               whatHappens: "They'll research who already does this, weigh in from five angles, and hand you one real-world next step.",
-              duration: "Takes 1 to 3 minutes.")
+              duration: "Takes 1 to 3 minutes.",
+              allowance: allowance)
     }
 
     static let expand = Self(kind: "Expand",

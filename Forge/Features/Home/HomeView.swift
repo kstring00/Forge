@@ -95,6 +95,8 @@ struct HomeView: View {
                             .font(.system(.subheadline)).foregroundStyle(ForgeColor.ink.opacity(0.9))
                             .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
                     }
+                    // Decision 0032: the checks pill, always on Home.
+                    ChecksPill().padding(.top, 4)
                 }
             }
             .padding(.horizontal, ForgeSpacing.m)

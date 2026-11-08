@@ -101,3 +101,25 @@ enum PivotActions {
         return parent.pivots.first { $0.id == id }
     }
 }
+
+/// Decision 0032: on Free, the What-if ideas the panel already wrote wait behind Plus.
+struct WhatIfLocked: View {
+    let count: Int
+    @Environment(AppEnvironment.self) private var env
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            Text("What if…").forgeLabel()
+            Text("The panel has \(count) \(count == 1 ? "idea" : "ideas") for raising this one: a change to the idea, the weakness it fixes, and the first test.")
+                .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+            Button { env.showingMembership = true } label: {
+                Text("What-if ideas come with Plus").frame(maxWidth: .infinity).modifier(SecondaryButtonChrome())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(ForgeSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+    }
+}

@@ -24,6 +24,8 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 
 The user-facing unit is a **check** (one idea looked at properly). Retire "credits" in the UI. Monthly checks reset on the renewal date; top-up checks never expire and are used only after monthly checks run out. Show "N of 15 checks left · resets Dec 1" on Home's pill, the confirm sheet and Settings.
 
+**What a run costs, in checks.** A basic check (research, blind verdicts, the Deal) is **1 check**. A full Tank (the pitch, in or out, counteroffers, step-ins, then the Deal) is **2 checks**: it costs two to three times as much to run ($0.35–0.60 against ≤ $0.20, `docs/ENGINE.md` §5). Both come off the same allowance, so Plus's 15 is fifteen basic checks, or seven Tanks and a basic check. The confirm sheet says which before anything is spent: "Uses 2 checks · 13 left after". A Tank that fails or is stopped partway counts nothing, like any check. The Tank is Plus and Pro only, so Free's monthly check and the free first check per device are basic checks.
+
 ## Products (App Store Connect)
 
 One subscription group "Hunch Membership", ranked Pro > Plus:
@@ -49,4 +51,4 @@ Consumable: `hunch.topup.5` $2.99.
 
 ## Economics (estimates)
 
-Plus at $9.99 → ≈ $8.49 after Apple (Small Business Program, 15%). Typical use ≈ 8 checks × ≈ $0.20 = $1.60 → ≈ $6.90/month margin. 500 subscribers ≈ $3,400/month; 1,000 ≈ $6,900/month. Prices can change in App Store Connect without an app update.
+Plus at $9.99 → ≈ $8.49 after Apple (Small Business Program, 15%). Typical use ≈ 8 checks × ≈ $0.20 = $1.60 → ≈ $6.90/month margin. At 2 checks a Tank, one check never costs more than ≈ $0.30 to run, so a Plus member who spends all 15 on Tanks costs ≈ $4.50, still under the $8.49 Plus nets. 500 subscribers ≈ $3,400/month; 1,000 ≈ $6,900/month. Prices can change in App Store Connect without an app update.

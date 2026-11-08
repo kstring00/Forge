@@ -27,5 +27,7 @@ How it lands on what is already built:
 - **Pricing (decision 0032):** Free gets research, blind verdicts and the Deal; the Tank,
   step-ins, counteroffers and test pages are Plus; model choice is Pro. The What-if gate in
   #28 already matches.
-- **Open:** whether a full Tank costs one check or more (a basic check targets ≤ $0.20, a
-  Tank $0.35–0.60). Decide before the Tank PR.
+- **Settled 2026-11-08: a basic check costs 1 check, a full Tank costs 2** (recorded in
+  `docs/PRICING.md` and `docs/ENGINE.md` §5). When the Tank is built, the ledger's commit
+  takes the run's cost (`CheckLedger.commit` in #28 counts 1 today) and the confirm sheet
+  reads "Uses 2 checks · N left after".

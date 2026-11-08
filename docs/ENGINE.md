@@ -201,6 +201,7 @@ After 5 graded outcomes, voice weights adjust ±10% in the Deal blend, shown ope
 Target per full Tank (research + 5 blind verdicts + Advocate + in/out + ≤ 3 counteroffers + Deal), with caching and the fast model on research: **$0.35–0.60**. Basic check (research + blind verdicts + Deal, no Tank) stays at **≤ $0.20**.
 
 - Free and basic: research, blind verdicts, Deal. Plus and Pro: the Tank, step-ins, counteroffers, test pages, model choice (Pro).
+- **In checks** (`docs/PRICING.md`): a basic check costs **1 check**; a full Tank costs **2**. Both come off the person's allowance, the confirm sheet says which before anything runs, and a failed or stopped run counts nothing.
 - Hard caps on the proxy: per-user checks per period (from the ledger), a global daily ceiling that pauses politely, stop button honored at every stage boundary, failed or stopped runs never count.
 - Every stage logs tokens and dollars per provider; Settings → Spend shows cost by stage so the expensive layer is always visible.
 

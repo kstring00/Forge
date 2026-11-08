@@ -20,6 +20,8 @@ enum EstimatedReturn {
         case unchecked
         /// Checked, but nothing in the Library supported a figure.
         case none
+        /// Decision 0037: no price for this idea, or the inputs say nothing yet.
+        case tooEarly(String)
 
         var label: String {
             switch self {
@@ -37,10 +39,25 @@ enum EstimatedReturn {
         if let monthly = e.projection.recurringPerMonth {
             return .yours(monthly: monthly, verified: e.projection.verifiedUnits > 0)
         }
+        // Decision 0037: bottom-up, price × reachable × conversion, never wider than 10×.
+        if let inputs = e.estimateInputs {
+            switch inputs.outcome {
+            case .range(let low, let high, _): return .estimate(low: low, high: high, basis: basis(inputs))
+            case .tooEarly(let why): return .tooEarly(why)
+            }
+        }
+        // Older checks: a top-down range wider than 10× is not an estimate.
         if let low = e.projectionEstimateLow, let high = e.projectionEstimateHigh, high > 0 {
+            if high / max(low, 0.01) > ReturnInputs.maxSpread { return .tooEarly(ReturnInputs.noPrice) }
             return .estimate(low: low, high: high, basis: e.projectionEstimateBasis)
         }
         return idea.latestRealityCheck == nil ? .unchecked : .none
+    }
+
+    /// "price × reach × conversion · 2 of 3 sourced"
+    static func basis(_ i: ReturnInputs) -> String {
+        let sourced = [i.price, i.reachable, i.conversion].filter { !$0.isAssumption }.count
+        return "price × reach × conversion · \(sourced) of 3 sourced"
     }
 
     private static func impact(_ e: Evaluation?) -> Value {
@@ -130,6 +147,8 @@ struct EstimatedReturnRow: View {
             placeholder("Get the panel's take to estimate")
         case .none:
             placeholder("No price found yet")
+        case .tooEarly:
+            placeholder("Too early to estimate")
         }
     }
 
@@ -154,6 +173,7 @@ struct EstimatedReturnRow: View {
         case .impactMissing: "Impact: add who it helps"
         case .unchecked: "No estimate yet. Get the panel's take to estimate."
         case .none: "No price found yet."
+        case .tooEarly(let why): "\(why)."
         }
     }
 }
@@ -186,17 +206,23 @@ struct ProjectionEstimateSheet: View {
                             }
                             Text("The Investor's estimate, from \(basis ?? "the desk research"). It is AI-found: a range the desk supports, not a projection you made. Nothing is yours until you type it.")
                                 .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
+                        case .tooEarly(let why):
+                            Text("Too early").font(ForgeType.numeral).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("\(why). The Investor only multiplies a price someone charges for this kind of offer; a competitor's report price is not this idea's price.")
+                                .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         default:
                             Text("No estimate").font(ForgeType.numeral).foregroundStyle(ForgeColor.inkSecondary)
                             Text("The desk found no price to go on. Enter your own figures below.").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
 
+                    if let inputs = evaluation.estimateInputs { EstimateInputsView(inputs: inputs) }
+
                     ProjectionCard(evaluation: evaluation)
 
                     if !competitors.isEmpty {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                            Text("Where the estimate came from").forgeSubhead()
+                            Text("What competitors charge").forgeSubhead()
                             ForEach(competitors) { c in
                                 HStack(alignment: .top, spacing: ForgeSpacing.s) {
                                     EvidenceChip(pattern: c.source.map { EvidencePattern($0.sourceClass) } ?? .stripes, size: 12).padding(.top, 3)
@@ -206,7 +232,7 @@ struct ProjectionEstimateSheet: View {
                                     }
                                 }
                             }
-                            Text("A competitor's price proves the market exists (proof level 2 of 5 at most). It never proves demand for this idea.")
+                            Text("Context, not this idea's price. A competitor's price proves the market exists (proof level 2 of 5 at most). It never proves demand for this idea.")
                                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
@@ -227,5 +253,39 @@ struct ProjectionEstimateSheet: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .presentationDetents([.large])
+    }
+}
+
+/// Decision 0037: the three inputs, each with what it rests on, or marked an assumption.
+struct EstimateInputsView: View {
+    let inputs: ReturnInputs
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            Text("How the Investor got there").forgeSubhead()
+            row("Price a month", "\(Projection.compact(inputs.price.low))–\(Projection.compact(inputs.price.high))", inputs.price)
+            row("Customers you can reach", "\(Int(inputs.reachable.low))–\(Int(inputs.reachable.high))", inputs.reachable)
+            row("Share who pay", "\(pct(inputs.conversion.low))–\(pct(inputs.conversion.high))", inputs.conversion)
+            Text("Return a month = price × customers × share who pay. Dots are assumptions: replace them with what people tell you.")
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func pct(_ x: Double) -> String { "\(Int((x * 100).rounded()))%" }
+
+    private func row(_ label: String, _ value: String, _ i: ReturnInputs.Input) -> some View {
+        HStack(alignment: .top, spacing: ForgeSpacing.s) {
+            EvidenceChip(pattern: i.isAssumption ? .dots : .stripes, size: 12).padding(.top, 3)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(label).font(.subheadline).foregroundStyle(ForgeColor.ink)
+                    Spacer()
+                    Text(value).font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                }
+                Text(i.isAssumption ? "Assumption · \(i.basis)" : "\(i.basis) · \(i.sourceTitle ?? "a saved source")")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }

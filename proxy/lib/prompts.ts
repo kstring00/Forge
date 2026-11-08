@@ -51,7 +51,12 @@ export function actionInstruction(action: Action): string {
 1. realityCheck: as in REALITY CHECK.
 2. explorations: one proposed answer per Explore prompt key, with source ids. Where the Library says nothing, answer honestly that it is unknown and say what would answer it.
 3. criteria: for every criterion of the lens, a proposed score 1-5 from the rubric anchors and an evidence rung that never exceeds the desk ceiling, a one-line note, and source ids. For A2 the score is the highest rung at least three independent people reached; from a desk that is at most 2.
-4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow and projectionHigh: the Investor's estimated return as a monthly USD range (price × a plausible count in year one, per month), from the same sources; null if no source supports a figure. projectionBasis: what the range rests on, in at most six words ("three competitors' pricing pages"), never a source id.
+4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow, projectionHigh: null (the app computes the return from estimate). projectionBasis: empty.
+   estimate: the Investor builds the return bottom-up for THIS idea, three inputs, each with low, high, basis (at most eight words) and the sourceID it rests on, or null when it is an assumption:
+   - price: what one paying customer pays per month for this idea. Only from a source that prices this kind of offer for this kind of customer. Never a competitor's one-time report price, a different product's price, or a price you would like; if no source prices this offer, sourceID null.
+   - reachable: how many such customers the person could actually reach in year one, given their advantages and constraints.
+   - conversion: the share of those who would pay, as a fraction from 0 to 1.
+   Keep each range honest and as narrow as the sources allow. Null estimate only if the idea gives nothing to price.
 5. riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.
 6. nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.
 7. draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.

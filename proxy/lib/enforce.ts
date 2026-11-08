@@ -72,6 +72,7 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
         return { ...c, score: clamp(c.score, 1, 5), evidenceLevel, sourceIDs };
       }),
     title: shortTitle(p.title),
+    estimate: enforceEstimate(p.estimate ?? null, known),
     riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
     // A range is low to high, never negative, and never one-sided.
     projectionLow: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.min(p.projectionLow, p.projectionHigh)) : null,
@@ -105,4 +106,16 @@ export function shortTitle(t: string | null | undefined): string | null {
   if (!t) return null;
   const words = t.replace(/["“”.!?…:;]/g, " ").split(/\s+/).filter(Boolean).slice(0, 5);
   return words.length >= 2 ? words.join(" ") : null;
+}
+
+type EstimateT = NonNullable<z.infer<typeof PrefillResult>["estimate"]>;
+/// Decision 0037: low ≤ high, nothing negative, conversion a fraction, and a
+/// sourceID only if the app sent that source (otherwise it is an assumption).
+export function enforceEstimate(e: EstimateT | null, known: Set<string>): EstimateT | null {
+  if (!e) return null;
+  const fix = (x: EstimateT["price"], max = Infinity) => {
+    const a = Math.min(Math.max(0, x.low), max), b = Math.min(Math.max(0, x.high), max);
+    return { low: Math.min(a, b), high: Math.max(a, b), basis: x.basis, sourceID: x.sourceID && known.has(x.sourceID) ? x.sourceID : null };
+  };
+  return { price: fix(e.price), reachable: fix(e.reachable), conversion: fix(e.conversion, 1) };
 }

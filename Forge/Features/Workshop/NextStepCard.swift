@@ -243,8 +243,15 @@ struct StakesPanel: View {
                 if let idea {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
                         HStack(spacing: 14) {
-                            smallRing(evaluation.potential, Plain.beside("Potential", "how big"), ForgeColor.ink)
-                            smallRing(evaluation.confidence, Plain.beside("Confidence", "how sure"), ForgeColor.ember)
+                            smallRing(evaluation.potential, "Potential · panel's view", ForgeColor.ink)
+                            if let idea, ProofStage.of(idea).showsNumber {
+                                smallRing(evaluation.confidence, "Proof · \(ProofStage.of(idea).label)", ForgeColor.ink)
+                            } else {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "doc.text.magnifyingglass").font(.title3).foregroundStyle(ForgeColor.inkSecondary).frame(width: 56, height: 56)
+                                    Text("Desk research only").forgeLabelSmall()
+                                }
+                            }
                         }
                     }
                     .buttonStyle(.plain)
@@ -256,7 +263,8 @@ struct StakesPanel: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves))
+            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves,
+                                         hasProof: idea.map { ProofStage.of($0).showsNumber } ?? false))
                 .font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -322,8 +330,8 @@ enum NextStepPlan {
     }
 
     /// "This step is how 33 becomes a real number. Five conversations move Demand to rung 3."
-    static func ridingLine(confidence: Int, target: Int, moves: String?) -> String {
-        let first = "This step is how \(confidence) becomes a real number."
+    static func ridingLine(confidence: Int, target: Int, moves: String?, hasProof: Bool = true) -> String {
+        let first = hasProof ? "This step is how \(confidence) becomes a real number." : "This step turns desk research into proof."
         let countWord = spelled(target)
         let unit = target == 1 ? "conversation" : "conversations"
         if let moves = moves?.trimmingCharacters(in: .whitespacesAndNewlines), !moves.isEmpty {

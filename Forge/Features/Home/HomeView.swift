@@ -255,10 +255,8 @@ struct StakeCard: View {
                 }
                 .buttonStyle(.plain)
                 // Decision 0025: the verdict word on its own line, the figure beneath it, never more than two lines.
-                VStack(alignment: .leading, spacing: 4) {
-                    if let verdict = idea.latestRealityCheck?.verdict {
-                        Text(verdict.displayName).forgeLabel().lineLimit(1)
-                    }
+                VStack(alignment: .leading, spacing: 6) {
+                    PanelAndProof(idea: idea)
                     EstimatedReturnRow(idea: idea)
                 }
                 // Decision 0036: one primary action, full width, at the bottom of the card.

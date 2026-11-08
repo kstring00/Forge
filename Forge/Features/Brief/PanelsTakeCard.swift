@@ -83,16 +83,16 @@ struct PanelsTakeCard: View {
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
+    /// Decision 0037: the panel's view of potential and proof as a stage, not "Confidence".
     private func confidence(_ e: Evaluation) -> some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            HStack(spacing: 4) {
-                if allProposed { EvidenceChip(pattern: .stripes, size: 9) }
-                Text("\(e.confidence)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
-            }
-            Text(Plain.beside("Confidence", "how sure")).forgeLabelSmall()
+        let stage = ProofStage.of(idea)
+        return VStack(alignment: .trailing, spacing: 2) {
+            Text("\(e.potential)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+            Text("Potential · panel's view").forgeLabelSmall()
+            Text(stage.label + (stage.showsNumber ? " · proof \(e.confidence)" : "")).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Confidence \(e.confidence) out of 100\(allProposed ? ", as proposed by the panel" : "")")
+        .accessibilityLabel("Potential \(e.potential), the panel's view. \(stage.label).")
     }
 
     private func orbs(size: CGFloat, spacing: CGFloat) -> some View {
@@ -165,8 +165,8 @@ struct PanelsTakeCard: View {
                 Spacer(minLength: ForgeSpacing.s)
                 if let evaluation {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(evaluation.confidence)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
-                        Text(Plain.beside("Confidence", "how sure")).forgeLabelSmall()
+                        Text("\(evaluation.potential)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                        Text(ProofStage.of(idea).label).forgeLabelSmall().lineLimit(1)
                     }
                 }
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)

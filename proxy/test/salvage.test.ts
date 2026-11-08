@@ -20,7 +20,7 @@ const fixture = {
     competitors: [competitor("Northline", A), competitor("Harbor", B), competitor("Unsourced Co")],
     demandSignals: [{ text: "Owners complain", url: null, rung: 2, sourceID: A }, { text: "Made up", rung: 2 }],
   },
-  explorations: [], criteria: [], projection: null, projectionLow: null, projectionHigh: null, projectionBasis: "", pivots: [],
+  explorations: [], criteria: [], projection: null, projectionLow: null, projectionHigh: null, projectionBasis: "", estimate: null, pivots: [],
   riskiestAssumption: { belief: "b", consequence: "c", sourceIDs: [] },
   nextMove: { recommendation: "testRiskiestAssumption", step: "Ask five", experiment: null },
   draftedAssets: { kind: "interviewQuestions", title: "Five", body: "1." },

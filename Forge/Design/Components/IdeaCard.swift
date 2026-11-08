@@ -105,14 +105,10 @@ struct IdeaCard: View {
             }
         case .impact:
             EstimatedReturnRow(idea: idea)
-        case .checked(let verdict, let confidence):
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: ForgeSpacing.m) {
-                    // Decision 0036: the verdict is a neutral label on cards; its colour lives on the Brief and the Deal.
-                    Text(verdict.displayName).forgeLabel().lineLimit(1)
-                    Spacer()
-                    MiniRing(value: confidence, tint: ForgeColor.ink)
-                }
+        case .checked:
+            // Decision 0037: the panel's view of potential, proof as a stage, no "Confidence".
+            VStack(alignment: .leading, spacing: 6) {
+                PanelAndProof(idea: idea)
                 EstimatedReturnRow(idea: idea)
             }
         }
@@ -125,7 +121,7 @@ struct IdeaCard: View {
         case .checking: parts.append("checking")
         case .checkFailed: parts.append("the last Reality Check failed")
         case .impact: parts.append("judged by impact")
-        case .checked(let v, let c): parts.append("\(v.displayName), confidence \(c)")
+        case .checked(let v, _): parts.append("\(v.displayName), \(ProofStage.of(idea).label)")
         }
         return parts.joined(separator: ", ")
     }

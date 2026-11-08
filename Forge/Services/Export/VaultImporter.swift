@@ -212,6 +212,7 @@ enum VaultImporter {
         idea.notes = x.notes
         idea.pivotTypeRaw = x.pivotType
         idea.titleEdited = x.titleEdited ?? false
+        idea.proofMoves = x.proofMoves ?? []
         idea.archivedAt = x.archivedAt
         idea.createdAt = x.createdAt
         idea.updatedAt = x.updatedAt
@@ -264,11 +265,14 @@ enum VaultImporter {
         evaluation.projectionEstimateLow = e.projectionEstimateLow
         evaluation.projectionEstimateHigh = e.projectionEstimateHigh
         evaluation.projectionEstimateBasis = e.projectionEstimateBasis
+        evaluation.estimateInputs = e.estimateInputs
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id
             score.peopleAtRung = c.peopleAtRung
             score.aiProposed = c.aiProposed ?? false
+            score.deskLevel = c.deskLevel
+            score.deskSourceCount = c.deskSourceCount ?? 0
             for ev in c.evidence {
                 let item = Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text,
                                     source: ev.sourceID.flatMap { sources[$0] })

@@ -146,6 +146,7 @@ struct BriefSection: View {
                                 caption: Plain.confidence + ". Desk research only. Rises when you bring something back from the world.")
             }
             PatternLegend(breakdown: e.confidenceBreakdown)
+            ProofBreakdownView(idea: idea, evaluation: e).padding(.top, ForgeSpacing.s)
         }
     }
 

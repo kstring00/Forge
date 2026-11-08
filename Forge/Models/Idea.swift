@@ -10,6 +10,8 @@ public final class Idea {
     public var title: String = ""
     /// The person renamed it; the panel's proposed title never overwrites theirs.
     public var titleEdited: Bool = false
+    /// Decision 0037: every change in proof from the world, newest last.
+    public var proofMoves: [ProofMove] = []
     public private(set) var originalText: String = ""
     public var aiSummary: String?
     public var aiSummaryConfirmed: Bool = false
@@ -103,6 +105,9 @@ public final class Idea {
             for old in previous.criteria {
                 let score = CriterionScore(key: old.key, score: old.score, evidenceLevel: old.evidenceLevel, note: old.note)
                 score.peopleAtRung = old.peopleAtRung
+                score.aiProposed = old.aiProposed
+                score.deskLevel = old.deskLevel
+                score.deskSourceCount = old.deskSourceCount
                 for ev in old.evidence {
                     score.evidence.append(Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text, source: ev.source))
                 }
@@ -113,6 +118,7 @@ public final class Idea {
             evaluation.recommendationRaw = previous.recommendationRaw
             evaluation.nextStepText = previous.nextStepText
             evaluation.projectionPricePerUnit = previous.projectionPricePerUnit
+            evaluation.estimateInputs = previous.estimateInputs
             evaluation.projectionUnitsYearOne = previous.projectionUnitsYearOne
             evaluation.projectionRecurringPerMonth = previous.projectionRecurringPerMonth
             evaluation.impactWho = previous.impactWho

@@ -50,6 +50,7 @@ struct IdeaExport: Codable {
     var project: ProjectExport?
     /// Optional so old exports import.
     var titleEdited: Bool? = nil
+    var proofMoves: [ProofMove]? = nil
 }
 
 struct TriageExport: Codable {
@@ -92,6 +93,7 @@ struct EvaluationExport: Codable {
     var projectionEstimateHigh: Double?
     var projectionEstimateBasis: String?
     var criteria: [CriterionScoreExport]
+    var estimateInputs: ReturnInputs? = nil
     var experiment: ExperimentExport?
 }
 
@@ -104,6 +106,8 @@ struct CriterionScoreExport: Codable {
     var peopleAtRung: Int
     var aiProposed: Bool?
     var evidence: [EvidenceExport]
+    var deskLevel: Double? = nil
+    var deskSourceCount: Int? = nil
 }
 
 struct EvidenceExport: Codable {

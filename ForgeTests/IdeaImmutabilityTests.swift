@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import ForgeCore
 @testable import Forge
 
 /// Brief §12: original idea text can never be edited or lost.

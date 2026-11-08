@@ -172,6 +172,8 @@ export interface Envelope<T> {
   payload: T;
   rationale: string;
   model: string;
+  /// List items the contract or the source rules removed, by list. Absent when none.
+  dropped?: Record<string, number>;
   usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number; webSearches: number };
   costUSD: number;
 }

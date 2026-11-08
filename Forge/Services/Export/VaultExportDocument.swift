@@ -208,6 +208,7 @@ struct RealityCheckExport: Codable {
     var costEstimate: String
     var rationale: String?
     var actualCostUSD: Double?
+    var droppedFindings: Int?
     var draftedAssetSourceID: UUID?
     var sourceIDs: [UUID]
     var competitors: [CompetitorExport]

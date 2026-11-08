@@ -17,6 +17,8 @@ final class RealityCheckCenter {
     /// or runs again, and across launches, so a failed check never quietly
     /// turns back into an unchecked idea.
     private(set) var failures: [UUID: String] = [:]
+    /// The technical detail behind a failure, shown only behind Details.
+    private(set) var failureDetails: [UUID: String] = [:]
 
     let proxy: ProxyAIClient?
     private let defaults: UserDefaults
@@ -35,6 +37,7 @@ final class RealityCheckCenter {
     /// The user has read the error. The idea goes back to showing the button.
     func dismissFailure(_ ideaID: UUID) {
         failures[ideaID] = nil
+        failureDetails[ideaID] = nil
         saveFailures()
         if let r = runners[ideaID], !r.isRunning { r.reset() }
     }
@@ -42,8 +45,10 @@ final class RealityCheckCenter {
     /// Records how a finished run ended. Exposed for tests.
     func record(_ phase: RealityCheckRunner.Phase, for ideaID: UUID) {
         switch phase {
-        case .failed(let m), .offline(let m), .stopped(let m): failures[ideaID] = m
-        case .done: failures[ideaID] = nil; unseenBriefs.insert(ideaID)
+        case .failed(let m), .offline(let m), .stopped(let m):
+            failures[ideaID] = m
+            failureDetails[ideaID] = runners[ideaID]?.lastFailureDetail
+        case .done: failures[ideaID] = nil; failureDetails[ideaID] = nil; unseenBriefs.insert(ideaID)
         default: break
         }
         saveFailures()

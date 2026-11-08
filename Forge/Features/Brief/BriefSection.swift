@@ -119,6 +119,10 @@ struct BriefSection: View {
                     }
                 }
             }
+            if check.droppedFindings > 0 {
+                Text("\(check.droppedFindings) \(check.droppedFindings == 1 ? "finding the panel offered had no source and was" : "findings the panel offered had no source and were") left out.")
+                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            }
             Text(check.limitsNote).font(.caption).foregroundStyle(ForgeColor.inkSecondary).padding(.top, ForgeSpacing.xs)
         }
     }

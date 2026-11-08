@@ -15,7 +15,7 @@ The developer reports results and screenshots; wait for them.
 Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
-- Whether the Vercel log for `/api/action` shows `json-fallback`. If it does, structured outputs are being rejected and the prefill schema should be split or shrunk so the fallback stops being the normal path.
+- Whether the Vercel log for `/api/action` shows `json-fallback` or `json-retry`. If it does, structured outputs are being rejected and the prefill schema should be split or shrunk so the fallback stops being the normal path. Since decision 0022 a list item that fails the contract is dropped and counted rather than failing the run.
 
 ## Open bugs and known gaps
 

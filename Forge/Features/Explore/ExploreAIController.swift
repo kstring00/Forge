@@ -97,7 +97,9 @@ final class ExploreAIController {
             switch error {
             case .offline, .notConfigured: state = .offline(Self.offlineMessage)
             case .rateLimited: state = .failed("The proxy is rate limiting. Try again in a minute.")
-            case .invalidResponse(let detail): state = .failed("The AI's answer didn't match the contract: \(detail)")
+            case .invalidResponse(let detail):
+                print("Explore AI failure: \(detail)")
+                state = .failed(RealityCheckRunner.trippedLine)
             case .server(let status): state = .failed("The proxy answered with status \(status).")
             }
         } catch {

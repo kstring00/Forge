@@ -35,6 +35,8 @@ public final class RealityCheck {
     /// The panel's three-sentence rationale and the actual cost once known.
     public var rationale: String?
     public var actualCostUSD: Double?
+    /// Findings the panel offered without a source, left out rather than shown as fact.
+    public var droppedFindings: Int = 0
     /// The drafted asset (interview questions, outreach script, landing copy) saved as a Source.
     public var draftedAssetSourceID: UUID?
     public var idea: Idea?

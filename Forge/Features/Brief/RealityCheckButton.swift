@@ -72,7 +72,7 @@ struct RealityCheckButton: View {
             .accessibilityLabel(failure == nil ? "Run a Reality Check. Opens a confirmation first." : "Run the Reality Check again. Opens a confirmation first.")
 
             if let failure {
-                noticeBox(title: "The last check didn't finish", message: failure) { env.realityChecks.dismissFailure(idea.id) }
+                noticeBox(title: "The last check didn't finish", message: failure, detail: env.realityChecks.failureDetails[idea.id]) { env.realityChecks.dismissFailure(idea.id) }
             } else if blocked != nil {
                 noticeBox(title: "The panel needs more to go on", message: IdeaGuard.blockedLine) { blocked = nil }
             } else if case .overCeiling = runner.phase {
@@ -93,7 +93,7 @@ struct RealityCheckButton: View {
         }
     }
 
-    private func noticeBox(title: String, message: String, dismiss: @escaping () -> Void) -> some View {
+    private func noticeBox(title: String, message: String, detail: String? = nil, dismiss: @escaping () -> Void) -> some View {
         HStack(alignment: .top, spacing: ForgeSpacing.s) {
             Image(systemName: "exclamationmark.circle")
                 .foregroundStyle(ForgeColor.emberText)
@@ -103,6 +103,16 @@ struct RealityCheckButton: View {
                 Text(message).font(.caption).foregroundStyle(ForgeColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
+                if let detail {
+                    DisclosureGroup {
+                        Text(detail).font(.caption2.monospaced()).foregroundStyle(ForgeColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    } label: {
+                        Text("Details").font(.caption2.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
+                    }
+                    .tint(ForgeColor.inkSecondary)
+                }
             }
             Spacer(minLength: 0)
             Button("Dismiss", action: dismiss)

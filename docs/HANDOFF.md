@@ -17,6 +17,7 @@ The developer reports results and screenshots; wait for them.
 Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
+- **The engine spec is `docs/ENGINE.md` (decision 0033).** It supersedes brief §6B/6C/6D where they disagree. Build order starts with `bench/`; no engine code ships without bench numbers.
 - Since decision 0029 text sizes have floors and scale with Dynamic Type (`ForgeType.caption/supporting/subhead`, `forgeSubhead()`, `forgeCaption()`), muted ink is lifted, and `Plain` carries the plain-language vocabulary shown beside every brand term.
 - Since decisions 0027/0028 the first check on a device is free (proxy `startCheck`, Apple's DeviceCheck bits) and the app has a first run: `WelcomeView`, `FirstCheckSheet`, `FirstRunCallout`, Settings → Developer → Replay first run (Debug).
 - Since decision 0026 `NewHunchIntent` ("Hey Siri, new hunch", Shortcuts, the Action button) opens voice capture through `QuickActions`.

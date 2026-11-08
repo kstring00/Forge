@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ForgeCore
 
 /// Services the views need, injected once at the root.
 @Observable

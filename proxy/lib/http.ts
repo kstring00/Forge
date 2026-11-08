@@ -16,7 +16,7 @@ export function requireAuth(req: VercelRequest): void {
   }
   const header = req.headers.authorization ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!token || !timingSafeEqual(token, config.proxyToken)) {
+  if (!token || !config.devTokens.some((t) => timingSafeEqual(token, t))) {
     throw new HttpError(401, "unauthorized", "Missing or invalid proxy token.");
   }
 }

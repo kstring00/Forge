@@ -37,6 +37,7 @@ targets:
         excludes:
           - "Config/Info.plist"
           - "Config/Local.xcconfig.example"
+          - "Config/Forge.entitlements"
           - "**/README.md"
     configFiles:
       Debug: Forge/Config/Base.xcconfig

@@ -97,6 +97,8 @@ final class ExploreAIController {
             switch error {
             case .offline, .notConfigured: state = .offline(Self.offlineMessage)
             case .rateLimited: state = .failed("The proxy is rate limiting. Try again in a minute.")
+            case .resting(let line): state = .failed(line)
+            case .staleAttestation: state = .failed("This device had to re-register with the proxy. Try again.")
             case .invalidResponse(let detail):
                 print("Explore AI failure: \(detail)")
                 state = .failed(RealityCheckRunner.trippedLine)

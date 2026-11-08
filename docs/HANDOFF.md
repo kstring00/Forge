@@ -25,7 +25,7 @@ Before 3c, these still need the developer:
 - **Every Reality Check scores under the Business lens.** `PrefillApplier` calls `beginEvaluation(lens: .business)`. Fine until Phase 5; wrong after.
 - **A run survives navigation, not app suspension.** If iOS suspends the app mid-check, the run stops. Saved pages persist; the prefill does not resume.
 - **Re-running a Reality Check does not diff** the competitor set and verdict (§6D).
-- **Rate limiting is per serverless instance**, so it bounds bursts, not totals. The monthly ceiling in the app is the real control.
+- **Rate limiting:** per-device daily checks and a daily spend ceiling live in Redis on the proxy (decision 0021); the per-instance burst limit remains. Without Redis configured the proxy falls back to memory and says so in health.
 - **The cost estimate before the first real run is static** (10–25¢ in `proxy/lib/pricing.ts`). After one finished check, the button quotes the average of the last five (decision 0012).
 
 ## Polish not done

@@ -22,6 +22,11 @@ public enum AIError: Error, Equatable, Sendable {
     case offline
     case notConfigured
     case rateLimited
+    /// The proxy declined politely: this device's checks for the day are used,
+    /// or the whole panel has reached its daily spend. The message is shown as is.
+    case resting(String)
+    /// The proxy no longer knows this device's attested key; the client attests again.
+    case staleAttestation
     case invalidResponse(String)
     case server(status: Int)
 }

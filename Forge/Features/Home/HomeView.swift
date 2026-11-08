@@ -50,7 +50,7 @@ struct HomeView: View {
                         }
                     }
                     .padding(ForgeSpacing.m)
-                    .padding(.bottom, ForgeSpacing.xxl)
+                    .padding(.bottom, ForgeSpacing.dockClearance)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -118,7 +118,7 @@ struct HomeView: View {
                 NavigationLink(value: VaultRoute.idea(id)) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
+                            Text("Your next move").forgeLabel()
                             Spacer()
                             Text(Track.formation.displayName).forgeLabel()
                         }
@@ -127,17 +127,14 @@ struct HomeView: View {
                             .font(.system(.body, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         HStack(spacing: ForgeSpacing.s) {
                             IdeaSpark(idea: idea, size: 28)
-                            Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
+                            Text(check.verdict.displayName).forgeLabelSmall()
                         }
-                        Text("Hear the panel")
-                            .font(.system(.subheadline, weight: .semibold)).foregroundStyle(.white)
-                            .frame(maxWidth: .infinity).frame(height: 48)
-                            .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        PrimaryButtonLabel(title: CardAction.hearPanel.title)
                     }
                     .padding(ForgeSpacing.cardPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+                    .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
                 }
                 .buttonStyle(.plain)
             }
@@ -162,18 +159,19 @@ struct HomeView: View {
                     Text(sort.subline).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 Spacer()
+                // Decision 0036: the sort is a neutral icon; "All" is the header's one orange element.
                 Menu {
                     Picker("Sort", selection: $sortRaw) {
                         ForEach(HomeSort.allCases) { s in Text(s.displayName).tag(s.rawValue) }
                     }
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.arrow.down").font(.footnote.weight(.semibold))
-                        Text(sort.displayName).font(.system(.footnote, weight: .medium))
-                    }
-                    .foregroundStyle(ForgeColor.emberText)
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(ForgeColor.inkSecondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
-                .accessibilityLabel("Sort ideas")
+                .accessibilityLabel("Sort ideas: \(sort.displayName)")
                 Button("All") { env.showIdeas() }
                     .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText)
                     .accessibilityLabel("All ideas")
@@ -183,17 +181,7 @@ struct HomeView: View {
                 Text("Everything you have is in the card above.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(listed.prefix(8)) { idea in
-                if let project = idea.project {
-                    NavigationLink(value: WorkshopRoute.project(project.id)) {
-                        StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    NavigationLink(value: VaultRoute.idea(idea.id)) {
-                        StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
-                    }
-                    .buttonStyle(.plain)
-                }
+                StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
             }
         }
         .padding(.top, ForgeSpacing.s)
@@ -269,16 +257,12 @@ struct StakeCard: View {
                 // Decision 0025: the verdict word on its own line, the figure beneath it, never more than two lines.
                 VStack(alignment: .leading, spacing: 4) {
                     if let verdict = idea.latestRealityCheck?.verdict {
-                        Text(verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                        Text(verdict.displayName).forgeLabel().lineLimit(1)
                     }
-                    HStack(alignment: .bottom, spacing: 8) {
-                        EstimatedReturnRow(idea: idea)
-                        Spacer(minLength: 0)
-                        if idea.track == .reality && idea.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: idea.lensType) {
-                            RealityCheckButton(idea: idea, pill: true, pillTitle: "Check it")
-                        }
-                    }
+                    EstimatedReturnRow(idea: idea)
                 }
+                // Decision 0036: one primary action, full width, at the bottom of the card.
+                CardPrimaryAction(idea: idea).padding(.top, 4)
             }
             .padding(.vertical, 14).padding(.trailing, 14)
         }
@@ -385,7 +369,7 @@ struct AfterCaptureCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
+            Text("Your next move").forgeLabel()
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
             IdeaSubtitle(idea: idea)
             if runner.isRunning {
@@ -397,7 +381,7 @@ struct AfterCaptureCard: View {
                 }
             } else {
                 Text(Spheres.afterCaptureLine).font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
-                RealityCheckButton(idea: idea)
+                RealityCheckButton(idea: idea, showsDisclosure: false)
                 HStack {
                     Spacer()
                     Button("Later") { env.justCapturedIdeaID = nil }
@@ -408,7 +392,7 @@ struct AfterCaptureCard: View {
         .padding(ForgeSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
         .onChange(of: runner.isRunning) { _, running in
             if running { env.justCapturedIdeaID = nil }
         }
@@ -425,7 +409,7 @@ struct UncheckedCard: View {
             NavigationLink(value: VaultRoute.idea(idea.id)) {
                 VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
                     HStack {
-                        Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
+                        Text("Your next move").forgeLabel()
                         Spacer()
                         Text(env.realityChecks.failure(for: idea.id) == nil ? Track.idea.displayName : "Last check didn't finish").forgeLabel()
                     }
@@ -442,7 +426,7 @@ struct UncheckedCard: View {
                     StopCheckButton(ideaID: idea.id)
                 }
             } else {
-                RealityCheckButton(idea: idea, compact: true)
+                RealityCheckButton(idea: idea, showsDisclosure: false)
             }
         }
         .padding(ForgeSpacing.cardPadding)

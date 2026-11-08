@@ -135,14 +135,10 @@ struct ProjectDetailView: View {
             EmptyView()
         } else if project.nextStep != nil {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                NextStepCard(project: project, context: Track.reality.displayName)
-                if project.status == .active {
-                    Button { outcome = .step } label: {
-                        Text(WorkshopActions.targetReached(project) ? "Step done · set the next one" : "Mark the step done")
-                            .frame(maxWidth: .infinity)
-                            .modifier(SecondaryButtonChrome())
-                    }
-                    .buttonStyle(.plain)
+                NextStepCard(project: project, context: Track.reality.displayName, onStepDone: { outcome = .step })
+                if project.status == .active && !WorkshopActions.targetReached(project) {
+                    Button { outcome = .step } label: { SecondaryButtonLabel(title: "Mark the step done") }
+                        .buttonStyle(.plain)
                 }
             }
         } else {
@@ -157,7 +153,8 @@ struct ProjectDetailView: View {
                     .onSubmit(setNextStep)
                     .accessibilityLabel("Next step")
                 if !nextStepDraft.trimmingCharacters(in: .whitespaces).isEmpty {
-                    EmberButton(title: "Set next step", symbol: nil, action: setNextStep)
+                    Button(action: setNextStep) { PrimaryButtonLabel(title: "Set your next step") }
+                        .buttonStyle(.plain)
                 }
             }
         }

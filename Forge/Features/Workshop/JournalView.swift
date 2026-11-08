@@ -44,7 +44,7 @@ struct JournalView: View {
                         }
                     }
                     .padding(ForgeSpacing.m)
-                    .padding(.bottom, ForgeSpacing.xxl)
+                    .padding(.bottom, ForgeSpacing.dockClearance)
                 }
             }
         }

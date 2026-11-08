@@ -39,7 +39,7 @@ struct IdeasView: View {
                                 }
                             }
                             .padding(ForgeSpacing.m)
-                            .padding(.bottom, ForgeSpacing.xxl * 2)
+                            .padding(.bottom, ForgeSpacing.dockClearance)
                         }
                         .onAppear { scrollIfAsked(proxy) }
                         .onChange(of: env.ideasSection) { _, _ in scrollIfAsked(proxy) }
@@ -102,19 +102,10 @@ struct IdeasView: View {
         .accessibilityLabel("\(track.displayName), \(items.count). \(track.tagline)")
     }
 
-    /// An idea in Reality opens its step; everything else opens the idea.
-    @ViewBuilder
+    /// The card's header opens the idea (or its step); its one primary action sits under it.
     private func row(_ idea: Idea) -> some View {
-        let card = IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
-        if let project = idea.project {
-            NavigationLink(value: WorkshopRoute.project(project.id)) { card }
-                .buttonStyle(.plain)
-                .contextMenu { contextMenu(for: idea) }
-        } else {
-            NavigationLink(value: VaultRoute.idea(idea.id)) { card }
-                .buttonStyle(.plain)
-                .contextMenu { contextMenu(for: idea) }
-        }
+        IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
+            .contextMenu { contextMenu(for: idea) }
     }
 
     @ViewBuilder
@@ -125,8 +116,7 @@ struct IdeasView: View {
         } else {
             Text("\(shown.count) archived").forgeLabel()
             ForEach(shown) { idea in
-                NavigationLink(value: VaultRoute.idea(idea.id)) { IdeaCard(idea: idea) }
-                    .buttonStyle(.plain)
+                IdeaCard(idea: idea, showsAction: false)
                     .contextMenu { contextMenu(for: idea) }
             }
         }

@@ -105,6 +105,34 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertEqual(HomeSort.biggestOpportunity.subline, "Biggest opportunity first")
     }
 
+    /// Decision 0036: one primary action per card, from the idea's state.
+    func testCardActionFollowsTheIdeasState() throws {
+        let fresh = idea("Weekend site care for RV parks along one corridor", at: 1)
+        XCTAssertEqual(CardAction.of(fresh), .getTake)
+        XCTAssertEqual(CardAction.getTake.title, "Get the panel's take")
+
+        let checked = idea("checked", at: 2)
+        check(checked, at: 3)
+        XCTAssertEqual(CardAction.of(checked), .hearPanel)
+
+        let working = idea("working", at: 4)
+        check(working, at: 5)
+        let p = WorkshopActions.convert(working, with: .init(name: "W", desiredOutcome: "", nextStep: "Talk to five owners"), in: store.context)
+        WorkshopActions.setNextStep(p, "Talk to five owners", target: 5)
+        XCTAssertEqual(CardAction.of(working), .log(count: 0, target: 5))
+        XCTAssertEqual(CardAction.log(count: 2, target: 5).title, "Log a conversation · 2 of 5")
+        p.nextStepCount = 5
+        XCTAssertEqual(CardAction.of(working), .whatHappened, "the target is reached")
+        p.status = .paused
+        XCTAssertEqual(CardAction.of(working), .none)
+
+        let growth = idea("a growth idea", at: 6)
+        growth.lensType = .growth
+        XCTAssertEqual(CardAction.of(growth), .makeItReal)
+        growth.archive()
+        XCTAssertEqual(CardAction.of(growth), .none)
+    }
+
     func testUncheckedIsTheLastResortAndNewestFirst() throws {
         let old = idea("old", at: 1)
         let new = idea("new", at: 2)

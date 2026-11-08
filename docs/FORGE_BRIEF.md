@@ -295,6 +295,8 @@ This is what separates FORGE from a scoring app. Every idea has its own **Librar
 
 ## 6B. Pivots and Pitches (the app proposes, the user disposes)
 
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
+
 FORGE is not only a filter. It should actively reshape weak ideas and pitch new ones, using what the Vault and Workshop reveal about what is working.
 
 ### Pivots — reshape an idea that isn't working
@@ -334,6 +336,8 @@ Pitches cluster by: fastest cash · recurring revenue · product/asset · creati
 ---
 
 ## 6C. Spheres — the panel (replaces the single "Challenge" action)
+
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
 
 The AI partner is not one voice. It is a panel of **Spheres**: distinct perspectives, each bound to named frameworks, each *required* to argue from its own angle so they cannot all agree. Think Shark Tank, except the sharks must cite sources and are allowed to say "I can't tell yet."
 
@@ -395,6 +399,8 @@ See §11. Spheres land with the Evaluation Lab (verdicts need criteria keys). Th
 ---
 
 ## 6D. Reality Check (the AI goes and looks)
+
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
 
 The user's core ask: "Is this worth pursuing, based on what already exists — and if there are competitors, do I compete, or should I just use their product?"
 

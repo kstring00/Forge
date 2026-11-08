@@ -194,6 +194,10 @@ final class RealityCheckRunner {
             return .failed("\(what): the proxy refused the request. Check PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and that ANTHROPIC_API_KEY is set.\(kept)")
         case .rateLimited:
             return .failed("\(what): the proxy is rate limiting. Try again in a minute.\(kept)\(spent)")
+        case .resting(let line):
+            return .failed("\(line)\(kept)")
+        case .staleAttestation:
+            return .failed("\(what): this device had to re-register with the proxy. Try again.\(kept)")
         case .invalidResponse:
             return .failed("\(trippedLine)\(kept)\(spent)")
         case .server(let s):

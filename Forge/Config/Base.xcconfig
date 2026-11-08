@@ -5,8 +5,14 @@ MARKETING_VERSION = 0.1.0
 CURRENT_PROJECT_VERSION = 1
 IPHONEOS_DEPLOYMENT_TARGET = 17.0
 
-// Proxy. Empty until Phase 2. Overridden by Local.xcconfig.
+// Proxy. PROXY_URL is set in Local.xcconfig. PROXY_TOKEN is a developer token
+// for simulators and debug builds; release builds carry none and prove
+// themselves with App Attest (decision 0021).
 PROXY_URL =
 PROXY_TOKEN =
 
 #include? "Local.xcconfig"
+
+// After the include so it wins: no token in any Release build.
+PROXY_TOKEN[config=Release] =
+CODE_SIGN_ENTITLEMENTS = Forge/Config/Forge.entitlements

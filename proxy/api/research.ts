@@ -3,7 +3,9 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { anthropic } from "../lib/anthropic.js";
 import { config } from "../lib/env.js";
-import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
+import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
+import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
+import { recordUsage, refuseIfResting, startCheck } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { researchSystem } from "../lib/prompts.js";
 
@@ -55,15 +57,21 @@ export interface ResearchResponse {
   costUSD: number;
 }
 
+export const config_ = { api: { bodyParser: false } };
+export { config_ as config };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     requireMethod(req, "POST");
-    requireAuth(req);
+    const raw = await readRawBody(req);
+    const device = await requireDevice(req, raw);
     rateLimit();
 
-    const parsed = ResearchRequest.safeParse(readJSON(req));
+    const parsed = ResearchRequest.safeParse(parseJSONBody(raw));
     if (!parsed.success) throw new HttpError(400, "bad_request", "Request did not match the contract.");
     const { idea, advantages, constraints } = parsed.data;
+    // An opening turn is a new Reality Check; continuations ride on it.
+    if (parsed.data.messages?.length) await refuseIfResting(); else await startCheck(device);
 
     const messages: Anthropic.MessageParam[] = parsed.data.messages?.length
       ? (parsed.data.messages as Anthropic.MessageParam[])
@@ -98,6 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       costUSD: round4(costUSD(config.researchModel, u)),
     };
+    await recordUsage(device, "research", out.costUSD);
     res.status(200).json(out);
   } catch (err) {
     sendError(res, err, "research");

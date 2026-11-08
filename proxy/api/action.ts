@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { config } from "../lib/env.js";
-import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
+import { config as env } from "../lib/env.js";
+import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
+import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
+import { recordUsage, refuseIfResting } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { ActionRequest, payloadSchemas, withRationale, type Action, type Envelope } from "../lib/schemas.js";
 import { actionInstruction, stableSystem, userTurn } from "../lib/prompts.js";
@@ -14,20 +16,26 @@ const fastActions: Action[] = ["expand", "summarize", "explainCriterion", "nextS
 /// Output budget per action. Prefill writes the whole Lab in one object.
 const maxTokensFor = (a: Action) => (a === "prefill" ? 24000 : a === "runRound" || a === "realityCheck" ? 12000 : 8000);
 
+/// The assertion signs the exact body bytes, so Vercel must not parse them first.
+export const config_ = { api: { bodyParser: false } };
+export { config_ as config };
+
 /// POST /api/action — one typed action, one typed envelope back.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     requireMethod(req, "POST");
-    requireAuth(req);
+    const raw = await readRawBody(req);
+    const device = await requireDevice(req, raw);
     rateLimit();
+    await refuseIfResting();
 
-    const parsed = ActionRequest.safeParse(readJSON(req));
+    const parsed = ActionRequest.safeParse(parseJSONBody(raw));
     if (!parsed.success) {
       throw new HttpError(400, "bad_request", "Request did not match the contract: " + parsed.error.issues.map((i) => i.path.join(".") + " " + i.message).join("; "));
     }
     const { action, context, options } = parsed.data;
     const lensType = context.lens ?? "business";
-    const model = fastActions.includes(action) ? config.fastModel : config.sphereModel;
+    const model = fastActions.includes(action) ? env.fastModel : env.sphereModel;
 
     const result = await callStructured({
       label: `action.${action}`,
@@ -71,6 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     if (result.mode !== "structured") res.setHeader("X-Forge-Mode", result.mode === "jsonRetry" ? "json-retry" : "json-fallback");
     if (Object.keys(dropped).length) console.warn(JSON.stringify({ at: `action.${action}`, dropped }));
+    await recordUsage(device, action, envelope.costUSD);
     res.status(200).json(envelope);
   } catch (err) {
     sendError(res, err, "action");

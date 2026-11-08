@@ -163,6 +163,17 @@ struct SettingsView: View {
             Section("About") {
                 LabeledContent("Version", value: Self.versionString)
             }
+
+            #if DEBUG
+            Section {
+                Button("Replay first run") { env.firstRun.startReplay() }
+                    .foregroundStyle(ForgeColor.emberText)
+            } header: {
+                Text("Developer")
+            } footer: {
+                Text("Shows the welcome flow, the free-check screen and the first-Brief guide again. Nothing is deleted, the real flags stay as they are, and the proxy still decides what is free. Debug builds only.")
+            }
+            #endif
         }
         .scrollContentBackground(.hidden)
         .background(ForgeColor.canvas)

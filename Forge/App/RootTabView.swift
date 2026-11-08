@@ -1,9 +1,12 @@
 import SwiftUI
+import SwiftData
 
 /// Home · Ideas · Journal (decision 0025), the capture dock on every
 /// top-level screen, and the one capture sheet.
 struct RootTabView: View {
     @Environment(AppEnvironment.self) private var env
+    @Query private var ideas: [Idea]
+    @Query private var checks: [RealityCheck]
 
     var body: some View {
         @Bindable var env = env
@@ -28,8 +31,19 @@ struct RootTabView: View {
             CaptureSheet(autoStartVoice: request == .voice)
         }
         // §7: saving an idea never lands on a static card; Home turns toward it.
+        // Decision 0028: the first time, the free-check screen asks first.
         .onChange(of: env.justCapturedIdeaID) { _, id in
-            if id != nil { withAnimation(ForgeMotion.settle) { env.tab = .home } }
+            guard let id else { return }
+            withAnimation(ForgeMotion.settle) { env.tab = .home }
+            if env.firstRun.offersFirstCheck(hasAnyCheck: !checks.isEmpty) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { env.firstCheckIdeaID = IdeaRef(id: id) }
+            }
+        }
+        .sheet(item: $env.firstCheckIdeaID) { ref in FirstCheckDestination(id: ref.id) }
+        .fullScreenCover(isPresented: Binding(
+            get: { env.firstRun.showsWelcome(ideasEmpty: ideas.isEmpty) },
+            set: { if !$0 { env.firstRun.markWelcomeSeen() } })) {
+            WelcomeView()
         }
         // Home Screen quick action "New idea" and the "New hunch" intent, at launch or while running.
         .onAppear { consumeQuickAction() }

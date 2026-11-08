@@ -15,6 +15,10 @@ final class AppEnvironment {
     var tab: ForgeTab = .home
     /// The Ideas tab scrolls to this section when set (Home's pipeline nodes), then clears it.
     var ideasSection: Track?
+    /// Decision 0028: welcome, the free first check, the guide on the first Brief.
+    let firstRun = FirstRun()
+    /// The free-check sheet, asked once after the first capture.
+    var firstCheckIdeaID: IdeaRef?
     /// The capture sheet, presented once at the root so the dock, Home's mic,
     /// the Home Screen quick action and (next) Siri all open the same sheet.
     var capture: CaptureRequest?

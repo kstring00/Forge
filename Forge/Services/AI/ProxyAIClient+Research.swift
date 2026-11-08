@@ -11,6 +11,8 @@ struct ResearchResponse: Decodable {
         let retrievedAt: String?
     }
     let status: String            // "done" | "paused"
+    /// Decision 0027: true on the opening turn of this device's free first check. Absent from older proxies.
+    let freeCheck: Bool?
     let messages: [JSONValue]
     let sources: [Source]
     let notes: String

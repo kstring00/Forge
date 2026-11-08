@@ -42,6 +42,11 @@ enum LabRoute: Hashable {
     case brief(ideaID: UUID)
 }
 
+/// An idea id a sheet can be driven by.
+struct IdeaRef: Identifiable, Hashable {
+    let id: UUID
+}
+
 /// How capture was asked for: typing, or straight into voice.
 enum CaptureRequest: String, Identifiable {
     case text, voice

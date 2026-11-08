@@ -93,26 +93,30 @@ struct NextStepCard: View {
         return parts.joined(separator: " · ")
     }
 
+    /// The count stays on one line; what counts as a conversation is a
+    /// sentence of its own underneath, so it wraps instead of widening the page.
     private var progress: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 4) {
-                ForEach(0..<min(target, 12), id: \.self) { i in
-                    Capsule()
-                        .fill(i < count ? ForgeColor.ember : ForgeColor.line)
-                        .frame(maxWidth: style == .home ? .infinity : nil)
-                        .frame(width: style == .home ? nil : (target > 6 ? 10 : 22), height: 5)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                HStack(spacing: 4) {
+                    ForEach(0..<min(target, 12), id: \.self) { i in
+                        Capsule()
+                            .fill(i < count ? ForgeColor.ember : ForgeColor.line)
+                            .frame(maxWidth: style == .home ? .infinity : nil)
+                            .frame(width: style == .home ? nil : (target > 6 ? 10 : 22), height: 5)
+                    }
                 }
+                Text("\(count) of \(target)").forgeLabelSmall().lineLimit(1).fixedSize()
             }
-            Text(progressLine).forgeLabelSmall().lineLimit(1).fixedSize()
+            if style == .page, let moves = project.nextStepMoves {
+                Text("Counts: \(moves)")
+                    .font(.system(size: 13))
+                    .foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(count) of \(target) logged")
-    }
-
-    private var progressLine: String {
-        var parts = ["\(count) of \(target)"]
-        if let moves = project.nextStepMoves, style == .page { parts.append(moves) }
-        return parts.joined(separator: " · ")
+        .accessibilityLabel("\(count) of \(target) logged" + (style == .page ? project.nextStepMoves.map { ". Counts: \($0)" } ?? "" : ""))
     }
 
     private var buttons: some View {

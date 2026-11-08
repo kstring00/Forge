@@ -15,6 +15,7 @@ The developer reports results and screenshots; wait for them.
 Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
+- Since decision 0024 the prefill carries `pivots`; the Brief shows them as "What if…" cards when Confidence is under 40 or the verdict is cantTell or compete, and "Make this its own idea" spawns an unchecked sibling.
 - Since decision 0023 the Brief is its own screen (`BriefView`) behind "The panel's take" card on every checked idea page and on Reality project pages; History lists every take.
 - Whether the Vercel log for `/api/action` shows `json-fallback` or `json-retry`. If it does, structured outputs are being rejected and the prefill schema should be split or shrunk so the fallback stops being the normal path. Since decision 0022 a list item that fails the contract is dropped and counted rather than failing the run.
 

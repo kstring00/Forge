@@ -120,7 +120,7 @@ enum VaultExporter {
             id: rc.id, createdAt: rc.createdAt, verdict: rc.verdictRaw, summary: rc.summary,
             demandSignals: rc.demandSignals, gapMap: rc.gapMap, fitNotes: rc.fitNotes,
             limitsNote: rc.limitsNote, costEstimate: rc.costEstimate,
-            rationale: rc.rationale, actualCostUSD: rc.actualCostUSD, droppedFindings: rc.droppedFindings, draftedAssetSourceID: rc.draftedAssetSourceID,
+            rationale: rc.rationale, actualCostUSD: rc.actualCostUSD, droppedFindings: rc.droppedFindings, pivots: rc.pivots, draftedAssetSourceID: rc.draftedAssetSourceID,
             sourceIDs: rc.sources.map(\.id),
             competitors: rc.competitors.map {
                 CompetitorExport(id: $0.id, name: $0.name, url: $0.url, pricing: $0.pricing, positioning: $0.positioning,

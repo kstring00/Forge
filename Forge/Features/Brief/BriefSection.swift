@@ -40,6 +40,9 @@ struct BriefSection: View {
                 whatWeFound(check)
                 rings(evaluation)
                 theOneThing(evaluation, check)
+                if WhatIfPolicy.shows(confidence: evaluation.confidence, verdict: check.verdict) && !check.pivots.isEmpty {
+                    WhatIfCards(idea: idea, check: check, evaluation: evaluation)
+                }
                 buttons
             }
             .sheet(item: $crossfirePair) { pair in

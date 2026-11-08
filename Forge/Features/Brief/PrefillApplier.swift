@@ -39,6 +39,9 @@ enum PrefillApplier {
         check.fitNotes = clean(r.realityCheck.fitNotes)
         check.draftedAssetSourceID = asset.id
         check.demandSignals = r.realityCheck.demandSignals.map { DemandSignal(text: clean($0.text), url: $0.url, rung: $0.rung, sourceID: $0.sourceID) }
+        check.pivots = (r.pivots ?? []).map {
+            PivotIdea(whatIf: clean($0.whatIf), pivotType: $0.pivotType, fixes: $0.fixes, why: clean($0.why), firstTest: clean($0.firstTest), sourceIDs: $0.sourceIDs)
+        }
         for c in r.realityCheck.competitors {
             check.competitors.append(Competitor(name: clean(c.name), url: c.url, pricing: clean(c.pricing), positioning: clean(c.positioning),
                                                 praises: c.praises.map(clean), complaints: c.complaints.map(clean), tractionSignals: c.tractionSignals.map(clean),

@@ -1,7 +1,7 @@
 // The honesty rules, enforced on the server regardless of what the model wrote.
 import { content } from "./content.js";
 import type { z } from "zod";
-import type { PitchResult, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
+import type { PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
 
 const ceiling = content.deskResearchRungCeiling;
 
@@ -77,7 +77,21 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
     projectionHigh: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.max(p.projectionLow, p.projectionHigh)) : null,
     panel: round.verdicts,
     crossfire: round.crossfire,
+    pivots: enforcePivots(p.pivots ?? [], known, lensKeys),
   };
+}
+
+/// Decision 0024: at most three pivots, each raising a real criterion of the
+/// lens, phrased as a "What if…", citing only known sources.
+export function enforcePivots(pivots: z.infer<typeof PivotDraft>[], known: Set<string>, lensKeys: string[]): z.infer<typeof PivotDraft>[] {
+  return pivots
+    .filter((x) => lensKeys.includes(x.fixes) && x.whatIf.trim().length > 0)
+    .slice(0, 3)
+    .map((x) => {
+      const t = x.whatIf.trim();
+      const whatIf = /^what if/i.test(t) ? t : `What if ${t.charAt(0).toLowerCase()}${t.slice(1)}`;
+      return { ...x, whatIf: whatIf.endsWith("?") || whatIf.endsWith(".") ? whatIf : whatIf + "?", sourceIDs: knownOnly(x.sourceIDs, known) };
+    });
 }
 
 /// A pitch may only claim evidence it can point at.

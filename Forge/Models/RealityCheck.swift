@@ -18,6 +18,34 @@ public struct DemandSignal: Codable, Hashable, Sendable {
     }
 }
 
+/// One "What if…" the Strategist offered with the Brief (decision 0024). Saved
+/// on the check; becomes its own idea only when the user says so.
+public struct PivotIdea: Codable, Hashable, Sendable, Identifiable {
+    public var id: UUID
+    public var whatIf: String
+    public var pivotTypeRaw: String
+    /// The criterion key the change raises.
+    public var fixes: String
+    public var why: String
+    public var firstTest: String
+    public var sourceIDs: [UUID]
+    /// The idea made from it, once "Make this its own idea" was tapped.
+    public var spawnedIdeaID: UUID?
+
+    public init(id: UUID = UUID(), whatIf: String, pivotType: PivotType, fixes: String, why: String, firstTest: String, sourceIDs: [UUID] = [], spawnedIdeaID: UUID? = nil) {
+        self.id = id
+        self.whatIf = whatIf
+        self.pivotTypeRaw = pivotType.rawValue
+        self.fixes = fixes
+        self.why = why
+        self.firstTest = firstTest
+        self.sourceIDs = sourceIDs
+        self.spawnedIdeaID = spawnedIdeaID
+    }
+
+    public var pivotType: PivotType { PivotType(rawValue: pivotTypeRaw) ?? .zoomIn }
+}
+
 /// §6D. A desk-research report on a Business-lens idea ending in one of four
 /// advisory verdicts. Every claim cites a saved Source; the user's own
 /// Decision, not the verdict, is what the app later checks against reality.
@@ -37,6 +65,8 @@ public final class RealityCheck {
     public var actualCostUSD: Double?
     /// Findings the panel offered without a source, left out rather than shown as fact.
     public var droppedFindings: Int = 0
+    /// "What if…" pivots offered with this check (decision 0024).
+    public var pivots: [PivotIdea] = []
     /// The drafted asset (interview questions, outreach script, landing copy) saved as a Source.
     public var draftedAssetSourceID: UUID?
     public var idea: Idea?

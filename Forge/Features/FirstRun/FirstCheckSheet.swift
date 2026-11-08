@@ -35,8 +35,8 @@ struct FirstCheckSheet: View {
                     if guardVerdict != .ok {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                             Text("The panel needs more to go on").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
-                            Text(IdeaGuard.blockedLine).font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
-                            Text("Your free check is still yours. Add to the idea, then send it from its page.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                            Text(IdeaGuard.blockedLine).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
+                            Text("Your free check is still yours. Add to the idea, then send it from its page.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         .padding(ForgeSpacing.m)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -49,8 +49,8 @@ struct FirstCheckSheet: View {
                     } else {
                         Button { lookIntoIt() } label: {
                             HStack(spacing: 6) {
-                                Text("Look into it").font(.system(size: 16, weight: .semibold))
-                                Text("· free").font(.system(size: 16, weight: .regular)).opacity(0.9)
+                                Text("Look into it").font(.system(.body, weight: .semibold))
+                                Text("· free").font(.system(.body, weight: .regular)).opacity(0.9)
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 52)
@@ -59,10 +59,10 @@ struct FirstCheckSheet: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Look into it, free")
                         Text("Your idea text goes to an AI model through the app's own server. Nothing else from your phone goes with it. The full list of what is and isn't sent is in Settings → AI, where you can withdraw this.")
-                            .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                            .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                         Button { dismiss() } label: {
-                            Text("Not yet, just save it").font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("Not yet, just save it").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
@@ -110,10 +110,10 @@ struct FirstRunCallout: View {
         if env.firstRun.showsGuide(step) {
             HStack(alignment: .top, spacing: ForgeSpacing.s) {
                 SparkGlyph().padding(.top, 2)
-                Text(text).font(.system(size: 13)).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+                Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: ForgeSpacing.s)
                 Button { withAnimation(ForgeMotion.fade) { env.firstRun.dismiss(step) } } label: {
-                    Image(systemName: "xmark").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary).frame(width: 28, height: 28)
+                    Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary).frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Dismiss")

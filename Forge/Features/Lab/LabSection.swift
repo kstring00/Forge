@@ -58,11 +58,11 @@ struct LabSection: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
                     Text("Evaluate").forgeLabel()
-                    Text("Screen it in sixty seconds, then score it against the Business lens.")
+                    Text("Screen it in sixty seconds, then score it against the Business criteria (the lens).")
                         .font(ForgeType.body)
                         .foregroundStyle(ForgeColor.ink)
                     Text("Ten yes/no questions first. They surface red flags before you spend an hour scoring.")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
                 Spacer()
@@ -111,7 +111,7 @@ struct LabSection: View {
             Text("Library · \(idea.sources.count) \(idea.sources.count == 1 ? "source" : "sources")").forgeLabel()
             Spacer()
             Text("Phase 4")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
     }

@@ -35,7 +35,7 @@ struct QuickCaptureField: View {
             .accessibilityLabel("Save")
             Button { voice = true } label: {
                 Image(systemName: "mic.fill")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 40, height: 40)
                     .background(ForgeColor.ember, in: Circle())

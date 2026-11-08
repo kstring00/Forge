@@ -103,7 +103,7 @@ struct ProjectDetailView: View {
                 if let idea = project.idea {
                     NavigationLink(value: VaultRoute.idea(idea.id)) {
                         Text("From: \(idea.title)")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
                             .lineLimit(1)
                     }
@@ -147,7 +147,7 @@ struct ProjectDetailView: View {
             }
         } else {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                Text("Next step").forgeLabel()
+                Text(Plain.step).forgeLabel()
                 TextField("What's the one next thing?", text: $nextStepDraft, axis: .vertical)
                     .lineLimit(1...4)
                     .font(ForgeType.body)
@@ -184,7 +184,7 @@ struct ProjectDetailView: View {
                     .foregroundStyle(ForgeColor.ink)
                 if let by = open.expectedBy {
                     Text("by \(by.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
                 Button("Record what happened") { outcome = .decision(open) }
@@ -200,7 +200,7 @@ struct ProjectDetailView: View {
             Text("Journal").forgeLabel()
             if journal.isEmpty {
                 Text("Commitments and outcomes land here.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(journal) { d in
@@ -222,21 +222,21 @@ struct JournalRow: View {
                 Text(decision.kind.displayName).forgeLabel()
                 Spacer()
                 Text(decision.decidedAt, style: .date)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
             Text(decision.decision)
                 .font(ForgeType.body)
                 .foregroundStyle(ForgeColor.ink)
             if showsContext, let name = decision.project?.name ?? decision.idea?.title {
-                Text(name).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text(name).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             if !decision.beliefs.isEmpty {
-                Text("Believed: \(decision.beliefs)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Believed: \(decision.beliefs)").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             if !decision.expectedResult.isEmpty {
                 Text("Expected: \(decision.expectedResult)\(decision.expectedBy.map { " · by \($0.formatted(date: .abbreviated, time: .omitted))" } ?? "")")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             if let ruling = decision.ruling, let line = RulingActions.outcomeLine(ruling) {
                 Text(line).font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.ink)
@@ -247,7 +247,7 @@ struct JournalRow: View {
                     .foregroundStyle(ForgeColor.ink)
             } else if decision.kind == .commit || (decision.kind == .ruling && !decision.expectedResult.isEmpty), let onRecord {
                 Button("Record what happened", action: onRecord)
-                    .font(.caption.weight(.medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(ForgeColor.ink)
             }
         }

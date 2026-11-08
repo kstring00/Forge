@@ -13,7 +13,7 @@ struct RoundRealityRow: View {
             HStack(spacing: 10) {
                 Button { tap("Run a Round") } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: "waveform").font(.system(size: 13, weight: .medium))
+                        Image(systemName: "waveform").font(.system(.footnote, weight: .medium))
                         Text("Run a Round")
                     }
                     .frame(maxWidth: .infinity)
@@ -24,9 +24,9 @@ struct RoundRealityRow: View {
             }
             if let message {
                 HStack(alignment: .top) {
-                    Text(message).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    Text(message).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     Spacer()
-                    Button("OK") { self.message = nil }.font(.caption.weight(.medium))
+                    Button("OK") { self.message = nil }.font(.footnote.weight(.medium))
                 }
             }
         }
@@ -44,7 +44,7 @@ struct RoundRealityRow: View {
 struct SecondaryButtonChrome: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.system(size: 14, weight: .medium))
+            .font(.system(.subheadline, weight: .medium))
             .foregroundStyle(ForgeColor.ink)
             .padding(14)
             .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

@@ -24,7 +24,7 @@ struct SettleRulingsSheet: View {
                         Text(whatHappened).font(ForgeType.originalText).foregroundStyle(ForgeColor.ink)
                     }
                     Text("Does this settle any of the panel's points? Pick only what it settles; the rest can wait.")
-                        .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                     ForEach(rulings) { ruling in
                         if let v = ruling.verdict { row(ruling, v) }
                     }
@@ -49,17 +49,17 @@ struct SettleRulingsSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 OrbView(sphere: v.sphere, state: .verdict(v.kind), size: 24)
-                Text("\(v.sphere.displayName) · \(v.kind.displayName)").font(.system(size: 14, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+                Text("\(v.sphere.displayName) · \(v.kind.displayName)").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
                 Spacer()
                 Text(ruling.implicit ? "You let it stand" : "You: \(ruling.choice.displayName)").forgeLabelSmall()
             }
-            Text(v.reason).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(3)
+            Text(v.reason).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(3)
             HStack(spacing: 8) {
                 ForEach(RulingOutcome.allCases, id: \.self) { o in
                     let on = choices[ruling.id] == o
                     Button { choices[ruling.id] = on ? nil : o } label: {
                         Text(o.displayName)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(.footnote, weight: .medium))
                             .foregroundStyle(on ? .white : ForgeColor.ink)
                             .padding(.horizontal, 12).frame(height: 32)
                             .background(on ? ForgeColor.ember : ForgeColor.canvas, in: Capsule())

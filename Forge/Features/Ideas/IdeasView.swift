@@ -87,10 +87,10 @@ struct IdeasView: View {
                 Text("\(items.count)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.inkSecondary).monospacedDigit()
                 Spacer()
             }
-            Text(track.tagline).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+            Text(track.tagline).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             if items.isEmpty {
                 Text(searching || filter.hasActiveFilter ? "Nothing here matches." : track.howIdeasArrive)
-                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                     .padding(ForgeSpacing.m)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(ForgeColor.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
@@ -143,11 +143,11 @@ struct IdeasView: View {
             }
             .pickerStyle(.menu)
             if filter.sort.requiresLens && filter.lens == nil {
-                Text("Pick a lens to sort by score")
+                Text("Pick a kind of idea to sort by score")
             }
             Divider()
-            Menu("Lens") {
-                Button("Any lens") { filter.lens = nil }
+            Menu("Kind of idea (lens)") {
+                Button("Any kind") { filter.lens = nil }
                 ForEach(LensType.allCases) { lens in
                     Button {
                         filter.lens = lens
@@ -189,8 +189,8 @@ struct IdeasView: View {
     private func chip(_ text: String, clear: @escaping () -> Void) -> some View {
         Button(action: clear) {
             HStack(spacing: ForgeSpacing.xs) {
-                Text(text).font(.caption.weight(.medium))
-                Image(systemName: "xmark").font(.caption2)
+                Text(text).font(.footnote.weight(.medium))
+                Image(systemName: "xmark").font(.footnote)
             }
             .padding(.horizontal, ForgeSpacing.m)
             .padding(.vertical, ForgeSpacing.s)

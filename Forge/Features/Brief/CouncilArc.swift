@@ -55,7 +55,7 @@ struct CouncilArc: View {
                             }
                             .buttonStyle(.plain)
                             Text(s.displayName)
-                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .font(.system(.footnote, design: .monospaced, weight: .medium))
                                 .textCase(.uppercase).kerning(1)
                                 .foregroundStyle(speaking == s ? ForgeColor.emberText : ForgeColor.inkSecondary)
                                 .opacity(s == .steward ? 0.5 : 1)
@@ -77,7 +77,7 @@ struct CouncilArc: View {
                     .transition(.opacity)
             } else if let speaking, speaking != .steward {
                 Text("The \(speaking.displayName) has no verdict on this idea yet.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
     }
@@ -97,7 +97,7 @@ struct CouncilArc: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                 Text(verdict.explanation)
-                    .font(.system(size: 12))
+                    .font(.system(.footnote))
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -106,7 +106,7 @@ struct CouncilArc: View {
                 Button(action: onHear) {
                     HStack(spacing: 4) {
                         Text("Hear the panel").forgeLabel().foregroundStyle(ForgeColor.ink)
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+                        Image(systemName: "chevron.right").font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink)
                     }
                 }
                 .buttonStyle(.plain)
@@ -158,14 +158,14 @@ struct VerdictVoice: View {
                 .foregroundStyle(ForgeColor.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if verdict.kind == .cantTell, let need = verdict.evidenceNeeded {
-                Text("Would change it: \(need)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Would change it: \(need)").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             if !verdict.sources.isEmpty {
                 HStack(spacing: ForgeSpacing.s) {
                     ForEach(verdict.sources.prefix(3)) { s in
                         HStack(spacing: 4) {
                             EvidenceChip(pattern: EvidencePattern(s.sourceClass), size: 10)
-                            Text(s.title).font(.caption2).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                            Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
                         }
                     }
                 }
@@ -175,7 +175,7 @@ struct VerdictVoice: View {
                     HStack(spacing: ForgeSpacing.xs) {
                         Rectangle().fill(ForgeColor.emberText).frame(width: 14, height: 1)
                         OrbView(sphere: pair.other(than: verdict.sphere), size: 12)
-                        Text("Splits with the \(pair.other(than: verdict.sphere).displayName) · crossfire").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Splits with the \(pair.other(than: verdict.sphere).displayName) · crossfire").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -185,7 +185,7 @@ struct VerdictVoice: View {
                     .padding(.top, ForgeSpacing.xs)
                 if let r = verdict.ruling {
                     Text(r.choice == .findOut ? "Ruled: find out. An Experiment card is in the Journal entry." : "Ruled: \(r.choice.displayName.lowercased()). In the Journal.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
         }
@@ -204,7 +204,7 @@ struct RulingButtons: View {
                 let ember = choice == .findOut
                 Button { onRule(choice) } label: {
                     Text(choice.displayName)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(.footnote, weight: .medium))
                         .foregroundStyle(on ? .white : (ember ? ForgeColor.emberText : ForgeColor.ink))
                         .padding(.horizontal, 14).frame(height: 32)
                         .background(on ? ForgeColor.ember : ForgeColor.canvas, in: Capsule())

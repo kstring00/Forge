@@ -40,7 +40,7 @@ struct OutcomeSheet: View {
                     VoiceNoteField(label: prompt, text: $whatHappened, focused: $focused, minHeight: 120)
                     if asksRung { rungPicker }
                     if showsNextStep {
-                        Text("And the one next thing").forgeLabel()
+                        Text("And the one next thing").forgeSubhead()
                         TextField("Leave empty to decide later", text: $nextStep, axis: .vertical)
                             .lineLimit(1...4)
                             .font(ForgeType.body)
@@ -50,7 +50,7 @@ struct OutcomeSheet: View {
                             .accessibilityLabel("Next step")
                     }
                     Text(footnote)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
                 .padding(ForgeSpacing.m)
@@ -83,10 +83,10 @@ struct OutcomeSheet: View {
     private var rungPicker: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack {
-                Text("What did they give?").forgeLabel()
+                Text("What did they give?").forgeSubhead()
                 Spacer()
                 if !touchedRung, let guess, rung == nil {
-                    Text("Sounds like \(guess.because)").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("Sounds like \(guess.because)").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
             HStack(spacing: 8) {
@@ -94,7 +94,7 @@ struct OutcomeSheet: View {
                     let on = effectiveRung == r
                     Button { rung = r; touchedRung = true } label: {
                         Text(RungInference.label(r))
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(.footnote, weight: .medium))
                             .foregroundStyle(on ? .white : ForgeColor.ink)
                             .padding(.horizontal, 12).frame(height: 32)
                             .background(on ? ForgeColor.ember : ForgeColor.surface, in: Capsule())
@@ -105,9 +105,9 @@ struct OutcomeSheet: View {
                 }
             }
             Text(effectiveRung >= 3
-                 ? "Rung \(effectiveRung) on the evidence ladder. Verified by you, so Confidence can rise past what the desk could prove."
+                 ? "\(Plain.rung(effectiveRung).prefix(1).uppercased() + Plain.rung(effectiveRung).dropFirst()) (rung \(effectiveRung)). Verified by you, so Confidence, how sure we are, can rise past what the desk could prove."
                  : "Saved as verified. Nothing claimed on the ladder until a real person gives time, money, or comes back.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
         }
     }
 
@@ -138,7 +138,7 @@ struct VoiceNoteField: View {
                     if speech.isRecording { speech.stop(); focused.wrappedValue = true } else { Task { await start() } }
                 } label: {
                     Label(speech.isRecording ? "Stop" : "Speak", systemImage: speech.isRecording ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(.footnote, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12).frame(height: 30)
                         .background(ForgeColor.ember, in: Capsule())
@@ -166,11 +166,11 @@ struct VoiceNoteField: View {
                         .forgeAnimation(ForgeMotion.fade, value: speech.level)
                         .accessibilityHidden(true)
                     Text("Speak naturally. Tap Stop when you're done, then fix anything it misheard.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
             if let errorText {
-                Text(errorText).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text(errorText).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
         .onChange(of: speech.transcript) { _, transcript in

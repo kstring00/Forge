@@ -56,7 +56,7 @@ struct CriterionDetailView: View {
                 .font(ForgeType.ideaTitleHero)
                 .foregroundStyle(ForgeColor.ink)
             if let alias = criterion.alias {
-                Text("Also called \(alias).").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Also called \(alias).").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             HStack(spacing: ForgeSpacing.l) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -75,14 +75,14 @@ struct CriterionDetailView: View {
                             Text("\(p)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.spark).strikethrough()
                         }
                     }
-                    Text("Evidence rung").forgeLabelSmall()
+                    Text("Proof level (rung)").forgeLabelSmall()
                 }
                 Spacer()
                 EvidenceChip(pattern: evaluation.pattern(for: criterion.key), size: 22)
             }
             if locked {
                 Text("Version \(evaluation.version) is final. Start a new version from the idea to change it.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
     }
@@ -113,7 +113,7 @@ struct CriterionDetailView: View {
                             .background(score?.score == n ? ForgeColor.ink : ForgeColor.surface, in: Circle())
                             .overlay(Circle().strokeBorder(ForgeColor.line))
                         Text(anchor ?? "Between \(n - 1) and \(n + 1).")
-                            .font(.system(size: 14))
+                            .font(.system(.subheadline))
                             .foregroundStyle(anchor == nil ? ForgeColor.inkSecondary : ForgeColor.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -132,7 +132,7 @@ struct CriterionDetailView: View {
 
     private var ladder: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("Evidence · tap the highest rung you have actually reached").forgeLabel()
+            Text("\(Plain.ladder): tap the highest level (rung) you have actually reached").forgeSubhead()
             ForEach(criterion.ladder.reversed()) { rung in
                 let selected = (score?.evidenceLevel ?? -1) == rung.level
                 Button {
@@ -146,9 +146,9 @@ struct CriterionDetailView: View {
                             .background(selected ? ForgeColor.ember : ForgeColor.surface, in: Circle())
                             .overlay(Circle().strokeBorder(selected ? ForgeColor.ember : ForgeColor.line))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(rung.label).font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                            Text(rung.description).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
-                            Text(rung.worth).font(.system(size: 12)).foregroundStyle(ForgeColor.ink.opacity(0.8))
+                            Text(rung.label).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                            Text(rung.description).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
+                            Text(rung.worth).font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.8))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -168,7 +168,7 @@ struct CriterionDetailView: View {
     /// A2 only: the score is the highest rung reached by at least three independent people.
     private var peopleCounter: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("Independent people at this rung").forgeLabel()
+            Text("Independent people at this proof level").forgeSubhead()
             HStack {
                 Stepper(value: Binding(get: { score?.peopleAtRung ?? 0 }, set: { setPeople($0) }), in: 0...99) {
                     Text("\(score?.peopleAtRung ?? 0) of 3 needed")
@@ -176,18 +176,18 @@ struct CriterionDetailView: View {
                 }
                 .disabled(locked)
             }
-            Text("Not family, not close friends, not three people from one conversation. One person at a high rung is a promising signal; it does not move the score.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            Text("Not family, not close friends, not three people from one conversation. One person at a high proof level is a promising signal; it does not move the score.")
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
         }
     }
 
     private var doesNotCount: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("What does not count").forgeLabel()
+            Text("What does not count").forgeSubhead()
             ForEach(criterion.doesNotCount, id: \.self) { item in
                 HStack(alignment: .firstTextBaseline, spacing: ForgeSpacing.s) {
                     Text("•").foregroundStyle(ForgeColor.inkSecondary)
-                    Text(item).font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
+                    Text(item).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
                 }
             }
         }
@@ -195,15 +195,15 @@ struct CriterionDetailView: View {
 
     private var playbook: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("How to find it this week").forgeLabel()
+            Text("How to find it this week").forgeSubhead()
             ForEach(Array(criterion.playbook.enumerated()), id: \.offset) { i, step in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("\(i + 1). \(step.title)").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                        Text("\(i + 1). \(step.title)").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         Spacer()
-                        Text("Rung \(step.reachesRung) · \(step.effort)").forgeLabelSmall()
+                        Text("\(Plain.level(step.reachesRung)) · \(step.effort)").forgeLabelSmall()
                     }
-                    Text(step.body).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+                    Text(step.body).font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
                 }
                 .padding(ForgeSpacing.m)
                 .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
@@ -214,7 +214,7 @@ struct CriterionDetailView: View {
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("Your note · shown on the criterion row").forgeLabel()
+            Text("Your note · shown on the criterion row").forgeSubhead()
             TextField("One line on why this score", text: $note, axis: .vertical)
                 .lineLimit(1...4)
                 .font(ForgeType.body)
@@ -235,7 +235,7 @@ struct CriterionDetailView: View {
                 Text("Evidence attached").forgeLabel()
                 Spacer()
                 if !locked {
-                    Button { addingEvidence = true } label: { Label("Attach", systemImage: "plus").font(.caption.weight(.medium)) }
+                    Button { addingEvidence = true } label: { Label("Attach", systemImage: "plus").font(.footnote.weight(.medium)) }
                         .foregroundStyle(ForgeColor.ink)
                         .disabled(score == nil)
                 }
@@ -245,12 +245,12 @@ struct CriterionDetailView: View {
                     HStack(alignment: .top, spacing: ForgeSpacing.m) {
                         EvidenceChip(pattern: EvidencePattern(ev.source?.sourceClass ?? .assumption), size: 14).padding(.top, 2)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(ev.text).font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
+                            Text(ev.text).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
                             HStack(spacing: ForgeSpacing.s) {
-                                Text("Rung \(ev.ladderRung)").forgeLabelSmall()
+                                Text(Plain.level(ev.ladderRung)).forgeLabelSmall()
                                 if let s = ev.source {
                                     Text(s.sourceClass.displayName).forgeLabelSmall()
-                                    if let url = s.url, !url.isEmpty { Text(url).font(.caption2).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                                    if let url = s.url, !url.isEmpty { Text(url).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
                                 }
                             }
                         }
@@ -261,15 +261,15 @@ struct CriterionDetailView: View {
                     .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                 }
             } else {
-                Text(score == nil ? "Score the criterion first, then attach what you have." : "Nothing attached. The rung above is your word until something is.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text(score == nil ? "Score the criterion first, then attach what you have." : "Nothing attached. The level above is your word until something is.")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
     }
 
     private var boundary: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
-            HStack(spacing: ForgeSpacing.xs) { SparkGlyph(); Text("What the AI may do here").forgeLabel() }
+            HStack(spacing: ForgeSpacing.xs) { SparkGlyph(); Text("What the AI may do here").forgeSubhead() }
             Text(criterion.aiBoundary).font(ForgeType.aiText).foregroundStyle(ForgeColor.spark)
         }
     }
@@ -334,7 +334,7 @@ struct AddEvidenceSheet: View {
                 } header: {
                     Text("Source class")
                 } footer: {
-                    Text("Assumptions never raise Confidence. Verified evidence does, at the rung you pick.")
+                    Text("Assumptions never raise Confidence (how sure we are). Verified evidence does, at the proof level you pick.")
                 }
                 Section {
                     Picker("Rung", selection: $rung) {
@@ -345,9 +345,9 @@ struct AddEvidenceSheet: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 } header: {
-                    Text("Rung this supports")
+                    Text("Proof level (rung) this supports")
                 } footer: {
-                    Text(rungCeiling < 5 ? "A page you have not lived proves the market exists, rung 2 at most. Rungs 3 to 5 are things people did for you." : "Pick the rung the evidence actually reaches, not the one you hope for.")
+                    Text(rungCeiling < 5 ? "A page you have not lived proves the market exists, proof level 2 at most. Levels 3 to 5 are things people did for you." : "Pick the level the evidence actually reaches, not the one you hope for.")
                 }
             }
             .scrollContentBackground(.hidden)

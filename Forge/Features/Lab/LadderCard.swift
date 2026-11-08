@@ -12,9 +12,9 @@ struct LadderCard: View {
         if let criterion {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("Evidence ladder · \(criterion.title)").forgeLabel().lineLimit(1)
+                    Text("\(Plain.ladder) · \(criterion.title)").forgeSubhead().lineLimit(2)
                     Spacer()
-                    Text("Rung \(current) of 5").forgeLabel().foregroundStyle(ForgeColor.emberText)
+                    Text("\(Plain.level(current)) of 5").forgeLabel().foregroundStyle(ForgeColor.emberText)
                 }
                 VStack(spacing: 0) {
                     ForEach(criterion.ladder.reversed()) { rung in
@@ -23,7 +23,7 @@ struct LadderCard: View {
                     }
                 }
                 Text(explanation(for: criterion))
-                    .font(.system(size: 13))
+                    .font(.system(.footnote))
                     .foregroundStyle(ForgeColor.ink.opacity(0.85))
                     .padding(.top, 8)
                     .overlay(alignment: .top) { Rectangle().fill(ForgeColor.line).frame(height: 1) }
@@ -42,7 +42,7 @@ struct LadderCard: View {
         let next = c.rung(current + 1)
         let step = Shortfalls.cheapestStep(reaching: current + 1, in: c)
         var text = here
-        if let next { text += " Rung \(next.level) needs: \(next.description.prefix(1).lowercased() + next.description.dropFirst())" }
+        if let next { text += " Level \(next.level) needs: \(next.description.prefix(1).lowercased() + next.description.dropFirst())" }
         if let step { text += " Cheapest way there: \(step.title.lowercased())." }
         return text
     }
@@ -71,7 +71,7 @@ struct LadderRungRow: View {
             }
             .frame(width: 24)
             Text(rung.label)
-                .font(.system(size: 13, weight: lit ? .semibold : .regular))
+                .font(.system(.footnote, weight: lit ? .semibold : .regular))
                 .foregroundStyle(lit ? ForgeColor.ink : (reached ? ForgeColor.ink.opacity(0.85) : ForgeColor.inkSecondary))
                 .padding(.vertical, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)

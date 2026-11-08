@@ -21,7 +21,7 @@ enum ForgeType {
     static let numeral = Font.custom(serifRegular, size: 28, relativeTo: .title)
     static let numeralMedium = Font.custom(serifRegular, size: 24, relativeTo: .title2)
     static let numeralSmall = Font.custom(serifRegular, size: 22, relativeTo: .title3)
-    static let numeralTiny = Font.custom(serifRegular, size: 12, relativeTo: .caption)
+    static let numeralTiny = Font.custom(serifRegular, size: 13, relativeTo: .footnote)
     /// 19pt serif for the riskiest assumption and other one-line statements.
     static let statement = Font.custom(serifRegular, size: 19, relativeTo: .title3)
 
@@ -30,9 +30,16 @@ enum ForgeType {
     static let secondary = Font.callout
     /// AI text: small sans, muted.
     static let aiText = Font.footnote
-    /// Structure labels: 11pt mono, uppercase, wide tracking.
-    static let label = Font.system(size: 11, weight: .medium, design: .monospaced)
-    static let labelSmall = Font.system(size: 10, weight: .medium, design: .monospaced)
+    /// Structure labels: 12pt mono, uppercase, tracked, scaling with the text
+    /// size setting. Decision 0029: never smaller than 12, and never a sentence;
+    /// anything longer than three words is a subhead.
+    static let label = Font.system(.caption, design: .monospaced, weight: .medium)
+    static let labelSmall = Font.system(.caption, design: .monospaced, weight: .medium)
+    /// Section subheads that used to be uppercase mono sentences: 17pt serif, ink.
+    static let subhead = Font.custom(serifSemiBold, size: 17, relativeTo: .body)
+    /// The floors (decision 0029): supporting text 13pt, secondary 15pt, body 17pt.
+    static let caption = Font.footnote
+    static let supporting = Font.subheadline
 }
 
 extension View {
@@ -41,16 +48,33 @@ extension View {
         self
             .font(ForgeType.label)
             .textCase(.uppercase)
-            .kerning(1.5)
+            .kerning(1.1)
             .foregroundStyle(ForgeColor.inkSecondary)
     }
 
-    /// The smaller 10pt label used under projection figures and on ladder notes.
+    /// A section subhead in sentence case: serif, ink. For anything a label
+    /// can't say in three words (decision 0029).
+    func forgeSubhead() -> some View {
+        self
+            .font(ForgeType.subhead)
+            .foregroundStyle(ForgeColor.ink)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Supporting text: 13pt sans, muted, scaling. The smallest text in the app.
+    func forgeCaption() -> some View {
+        self
+            .font(ForgeType.caption)
+            .foregroundStyle(ForgeColor.inkSecondary)
+    }
+
+    /// The label under projection figures and on ladder notes. Same 12pt
+    /// floor as `forgeLabel`, a little tighter.
     func forgeLabelSmall() -> some View {
         self
             .font(ForgeType.labelSmall)
             .textCase(.uppercase)
-            .kerning(0.6)
+            .kerning(0.8)
             .foregroundStyle(ForgeColor.inkSecondary)
     }
 }

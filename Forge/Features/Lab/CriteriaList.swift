@@ -50,10 +50,10 @@ struct CriterionRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(criterion.title)
-                    .font(.system(size: 15))
+                    .font(.system(.subheadline))
                     .foregroundStyle(ForgeColor.ink)
                 Text(note)
-                    .font(.system(size: 12))
+                    .font(.system(.footnote))
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .lineLimit(2)
             }

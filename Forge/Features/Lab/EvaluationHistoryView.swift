@@ -27,8 +27,8 @@ struct EvaluationHistoryView: View {
                             figure(e.potential, "Potential")
                             figure(e.confidence, "Confidence")
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(e.effectiveMove.displayName).font(.system(size: 13)).foregroundStyle(ForgeColor.ink)
-                                Text(e.createdAt.formatted(date: .abbreviated, time: .omitted)).font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                                Text(e.effectiveMove.displayName).font(.system(.footnote)).foregroundStyle(ForgeColor.ink)
+                                Text(e.createdAt.formatted(date: .abbreviated, time: .omitted)).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                             }
                         }
                         HStack(spacing: ForgeSpacing.s) {
@@ -36,12 +36,12 @@ struct EvaluationHistoryView: View {
                                 VStack(spacing: 2) {
                                     Text(e.criterionScore(for: c.key).map { String($0.score) } ?? "–")
                                         .font(ForgeType.numeralTiny).foregroundStyle(ForgeColor.ink)
-                                    Text(c.key).font(.system(size: 9, design: .monospaced)).foregroundStyle(ForgeColor.inkSecondary)
+                                    Text(c.key).font(.system(.footnote, design: .monospaced)).foregroundStyle(ForgeColor.inkSecondary)
                                 }
                             }
                         }
                         if !e.riskiestAssumption.isEmpty {
-                            Text(e.riskiestAssumption).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                            Text(e.riskiestAssumption).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
                     .padding(ForgeSpacing.cardPadding)
@@ -61,15 +61,15 @@ struct EvaluationHistoryView: View {
     private func take(_ c: RealityCheck, current: Bool) -> some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
             HStack {
-                Text(c.verdict.displayName).font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                Text(c.verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 Spacer()
                 Text(current ? "Current" : c.createdAt.formatted(date: .abbreviated, time: .omitted)).forgeLabel()
             }
             if current {
-                Text(c.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                Text(c.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             if !c.summary.isEmpty {
-                Text(c.summary).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(4)
+                Text(c.summary).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(4)
             }
         }
         .padding(ForgeSpacing.cardPadding)

@@ -41,14 +41,14 @@ struct AIConfirmSheet: View {
                             list("What is sent", AIConsent.whatIsSent)
                             list("Never sent", AIConsent.neverSent)
                             Text("Through \(AIConsent.proxyURL ?? "your proxy"). You can withdraw this in Settings, where the same list is shown.")
-                                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         .padding(ForgeSpacing.m)
                         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                     } else {
                         Text("Your idea text is sent to an AI model through your proxy.")
-                            .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                            .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
 
                     Button {
@@ -57,7 +57,7 @@ struct AIConfirmSheet: View {
                         dismiss()
                     } label: {
                         Text(content.sendTitle)
-                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                            .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 52)
                             .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
@@ -65,7 +65,7 @@ struct AIConfirmSheet: View {
                     .padding(.top, ForgeSpacing.s)
 
                     Button("Cancel") { onDecision(false); dismiss() }
-                        .font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(ForgeSpacing.l)

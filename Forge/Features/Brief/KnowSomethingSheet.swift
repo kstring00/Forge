@@ -23,7 +23,7 @@ struct KnowSomethingSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                 Text("What do you know that the desk can't?").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                Text("Something you saw, heard or did. A conversation, a payment, a number from your own work. It is saved as verified by you and the Spheres re-score only what it touches.")
+                Text("Something you saw, heard or did. A conversation, a payment, a number from your own work. It is saved as verified by you and the panel re-scores only what it touches.")
                     .font(ForgeType.secondary).foregroundStyle(ForgeColor.inkSecondary)
                 TextEditor(text: $text)
                     .font(ForgeType.body)
@@ -35,9 +35,9 @@ struct KnowSomethingSheet: View {
                     .focused($focused)
                     .disabled(running)
                 if running {
-                    HStack(spacing: ForgeSpacing.s) { ProgressView().controlSize(.small); Text("Re-scoring what this touches…").font(.caption).foregroundStyle(ForgeColor.inkSecondary) }
+                    HStack(spacing: ForgeSpacing.s) { ProgressView().controlSize(.small); Text("Re-scoring what this touches…").font(.footnote).foregroundStyle(ForgeColor.inkSecondary) }
                 }
-                if let message { Text(message).font(.caption).foregroundStyle(ForgeColor.inkSecondary) }
+                if let message { Text(message).font(.footnote).foregroundStyle(ForgeColor.inkSecondary) }
                 Spacer()
             }
             .padding(ForgeSpacing.m)

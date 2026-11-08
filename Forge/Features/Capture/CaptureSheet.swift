@@ -57,7 +57,7 @@ struct CaptureSheet: View {
 
                 if let errorText {
                     Text(errorText)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
 
@@ -92,7 +92,7 @@ struct CaptureSheet: View {
                 Text(usedVoice
                      ? "Fix any transcription mistakes now. After you save, this text never changes."
                      : "Saved exactly as written. You can add a title and notes later; this text never changes.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
             .padding(ForgeSpacing.m)
@@ -161,7 +161,7 @@ struct CaptureSheet: View {
                 .forgeAnimation(ForgeMotion.fade, value: speech.level)
                 .accessibilityHidden(true)
             Text("Speak naturally. Tap Stop when you're done, then fix anything it misheard.")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
         .padding(.horizontal, ForgeSpacing.xs)

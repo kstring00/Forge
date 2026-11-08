@@ -62,7 +62,7 @@ struct PanelsTakeCard: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(check.verdict.displayName).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
                             Text(check.verdict.explanation)
-                                .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                                .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: ForgeSpacing.m)
@@ -89,7 +89,7 @@ struct PanelsTakeCard: View {
                 if allProposed { EvidenceChip(pattern: .stripes, size: 9) }
                 Text("\(e.confidence)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
             }
-            Text("Confidence").forgeLabelSmall()
+            Text(Plain.beside("Confidence", "how sure")).forgeLabelSmall()
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Confidence \(e.confidence) out of 100\(allProposed ? ", as proposed by the panel" : "")")
@@ -108,7 +108,7 @@ struct PanelsTakeCard: View {
     private var footer: some View {
         HStack(alignment: .center) {
             if isWorking {
-                Text("The panel is on it").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                Text("The panel is on it").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                 StopCheckButton(ideaID: idea.id)
             } else if RealityCheckPolicy.isOffered(for: idea.lensType) && !idea.isArchived {
                 RealityCheckButton(idea: idea, pill: true, pillTitle: "Check again")
@@ -116,8 +116,8 @@ struct PanelsTakeCard: View {
             Spacer()
             NavigationLink(value: LabRoute.brief(ideaID: idea.id)) {
                 HStack(spacing: 4) {
-                    Text("Open the Brief").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("Open the Brief").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
             .buttonStyle(.plain)
@@ -125,7 +125,7 @@ struct PanelsTakeCard: View {
         if takes > 1 {
             NavigationLink(value: LabRoute.history(ideaID: idea.id)) {
                 Text("Checked \(takes) times · earlier takes in History")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             .buttonStyle(.plain)
         }
@@ -140,14 +140,14 @@ struct PanelsTakeCard: View {
             briefRow(check)
             HStack {
                 if isWorking {
-                    Text("The panel is on it").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("The panel is on it").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                     StopCheckButton(ideaID: idea.id)
                 } else if RealityCheckPolicy.isOffered(for: idea.lensType) && !idea.isArchived {
                     RealityCheckButton(idea: idea, pill: true, pillTitle: "Check again")
                 }
                 Spacer()
                 NavigationLink(value: VaultRoute.idea(idea.id)) {
-                    Text("The idea").font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("The idea").font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -160,16 +160,16 @@ struct PanelsTakeCard: View {
                 orbs(size: 20, spacing: 5)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("The panel's take").forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
-                    Text(check.verdict.displayName).font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                    Text(check.verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 }
                 Spacer(minLength: ForgeSpacing.s)
                 if let evaluation {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("\(evaluation.confidence)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
-                        Text("Confidence").forgeLabelSmall()
+                        Text(Plain.beside("Confidence", "how sure")).forgeLabelSmall()
                     }
                 }
-                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
             }
             .padding(ForgeSpacing.m)
             .frame(maxWidth: .infinity, alignment: .leading)

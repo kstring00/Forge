@@ -111,9 +111,9 @@ struct SettingsView: View {
                 } else {
                     Text(panelNote).font(.footnote)
                     if PanelMemory.edited {
-                        Text("Edited by you. It stays as you wrote it until you reset it.").font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Edited by you. It stays as you wrote it until you reset it.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     } else if let at = PanelMemory.generatedAt {
-                        Text("Written from your record \(at.formatted(date: .abbreviated, time: .omitted)).").font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Written from your record \(at.formatted(date: .abbreviated, time: .omitted)).").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
                 Button("Edit the note") { noteDraft = panelNote; editingNote = true }
@@ -122,7 +122,7 @@ struct SettingsView: View {
             } header: {
                 Text("What the panel knows about you")
             } footer: {
-                Text(PanelMemory.label + " Under 80 words; sent with every Sphere call.")
+                Text(PanelMemory.label + " Under 80 words; sent with every call to the panel.")
             }
 
             Section {
@@ -152,7 +152,7 @@ struct SettingsView: View {
                 if let report = ProjectCleanup.lastReport() {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Project cleanup · \(report.ranAt.formatted(date: .abbreviated, time: .shortened))").forgeLabelSmall()
-                        Text(report.line).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Text(report.line).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
             } header: {

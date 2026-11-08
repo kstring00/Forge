@@ -77,7 +77,7 @@ struct HomeView: View {
                     Spacer()
                     NavigationLink { SettingsView() } label: {
                         Image(systemName: "gearshape")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(.subheadline, weight: .medium))
                             .foregroundStyle(.white)
                             .frame(width: 36, height: 36)
                             .background(.white.opacity(0.18), in: Circle())
@@ -92,7 +92,7 @@ struct HomeView: View {
                         .shadow(color: .black.opacity(0.35), radius: 10, y: 2)
                     if !live.isEmpty {
                         Text("\(inMotion) \(inMotion == 1 ? "idea" : "ideas") in motion · \(count(.reality)) out in the world")
-                            .font(.system(size: 15)).foregroundStyle(ForgeColor.ink.opacity(0.9))
+                            .font(.system(.subheadline)).foregroundStyle(ForgeColor.ink.opacity(0.9))
                             .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
                     }
                 }
@@ -122,13 +122,13 @@ struct HomeView: View {
                         }
                         Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
                         Text("Hear the panel and rule on each voice.")
-                            .font(.system(size: 16, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                            .font(.system(.body, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         HStack(spacing: ForgeSpacing.s) {
                             IdeaSpark(idea: idea, size: 28)
                             Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
                         }
                         Text("Hear the panel")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                            .font(.system(.subheadline, weight: .semibold)).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 48)
                             .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
@@ -157,7 +157,7 @@ struct HomeView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Your ideas").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                    Text(sort.subline).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text(sort.subline).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 Spacer()
                 Menu {
@@ -166,19 +166,19 @@ struct HomeView: View {
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
-                        Text(sort.displayName).font(.system(size: 13, weight: .medium))
+                        Image(systemName: "arrow.up.arrow.down").font(.footnote.weight(.semibold))
+                        Text(sort.displayName).font(.system(.footnote, weight: .medium))
                     }
                     .foregroundStyle(ForgeColor.emberText)
                 }
                 .accessibilityLabel("Sort ideas")
                 Button("All") { env.showIdeas() }
-                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText)
                     .accessibilityLabel("All ideas")
                     .padding(.leading, ForgeSpacing.s)
             }
             if listed.isEmpty {
-                Text("Everything you have is in the card above.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Everything you have is in the card above.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(listed.prefix(8)) { idea in
                 if let project = idea.project {
@@ -267,7 +267,7 @@ struct StakeCard: View {
                 // Decision 0025: the verdict word on its own line, the figure beneath it, never more than two lines.
                 VStack(alignment: .leading, spacing: 4) {
                     if let verdict = idea.latestRealityCheck?.verdict {
-                        Text(verdict.displayName).font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                        Text(verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
                     }
                     HStack(alignment: .bottom, spacing: 8) {
                         EstimatedReturnRow(idea: idea)
@@ -354,7 +354,7 @@ struct PipelineStrip: View {
                 ForEach(Array(Track.allCases.enumerated()), id: \.element) { i, track in
                     VStack(alignment: .leading, spacing: 3) {
                         Text(track.displayName).forgeLabelSmall()
-                        Text(status(track, counts[i])).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                        Text(status(track, counts[i])).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -387,7 +387,7 @@ struct AfterCaptureCard: View {
             if runner.isRunning {
                 HStack(spacing: ForgeSpacing.s) {
                     ProgressView().controlSize(.small)
-                    Text("Working. The panel is on it; the idea sits in Formation when it's back.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("Working. The panel is on it; the idea sits in Formation when it's back.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     Spacer()
                     StopCheckButton(ideaID: idea.id)
                 }
@@ -397,7 +397,7 @@ struct AfterCaptureCard: View {
                 HStack {
                     Spacer()
                     Button("Later") { env.justCapturedIdeaID = nil }
-                        .font(.caption.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
         }
@@ -433,7 +433,7 @@ struct UncheckedCard: View {
             if env.realityChecks.isRunning(idea.id) {
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("The panel is on it.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("The panel is on it.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     Spacer()
                     StopCheckButton(ideaID: idea.id)
                 }

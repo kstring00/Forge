@@ -6,6 +6,7 @@ import ForgeCore
 /// Settings. Phase 1b: export and import of the whole Vault. Later phases add
 /// the AI-sharing disclosure, Advantages, Constraints and the Steward charter.
 struct SettingsView: View {
+    @Environment(AppEnvironment.self) private var env
     @Environment(\.modelContext) private var context
     @Query private var ideas: [Idea]
     @Query private var projects: [Project]
@@ -163,6 +164,17 @@ struct SettingsView: View {
             Section("About") {
                 LabeledContent("Version", value: Self.versionString)
             }
+
+            #if DEBUG
+            Section {
+                Button("Replay first run") { env.firstRun.startReplay() }
+                    .foregroundStyle(ForgeColor.emberText)
+            } header: {
+                Text("Developer")
+            } footer: {
+                Text("Shows the welcome flow, the free-check screen and the first-Brief guide again. Nothing is deleted, the real flags stay as they are, and the proxy still decides what is free. Debug builds only.")
+            }
+            #endif
         }
         .scrollContentBackground(.hidden)
         .background(ForgeColor.canvas)

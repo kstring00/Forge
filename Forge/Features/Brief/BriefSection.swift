@@ -32,7 +32,9 @@ struct BriefSection: View {
                            onHear: round.map { r in { hearing = r } },
                            onCrossfire: { crossfirePair = $0 },
                            onRule: { v, choice in withAnimation(ForgeMotion.settle) { RulingActions.rule(v, choice, on: idea, in: context) } })
+                FirstRunCallout(step: .orbs, text: "The six voices. Tap any one to hear it; a dashed line between two is an argument you can open.")
                 verdictRow(check)
+                FirstRunCallout(step: .verdict, text: "The verdict is the panel's call on the idea as stated. It's advice. Your call comes next, one voice at a time.")
                 if let round { roundLine(round) }
                 if let project = idea.project {
                     NextStepCard(project: project, context: Track.reality.displayName)
@@ -40,6 +42,7 @@ struct BriefSection: View {
                 whatWeFound(check)
                 rings(evaluation)
                 theOneThing(evaluation, check)
+                FirstRunCallout(step: .nextStep, text: "Your next step: the one thing nobody can tell from a desk. Looks right makes it your task; Not quite opens the Lab.")
                 if WhatIfPolicy.shows(confidence: evaluation.confidence, verdict: check.verdict) && !check.pivots.isEmpty {
                     WhatIfCards(idea: idea, check: check, evaluation: evaluation)
                 }
@@ -195,6 +198,12 @@ struct BriefSection: View {
             }
             Text("Looks right accepts the pass as-is and the next move becomes your step in \(Track.reality.displayName). Not quite opens the full Lab, one tap per correction. The third saves what you know as verified and re-scores only what it touches.")
                 .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            if check?.wasFree == true || env.firstRun.replaying {
+                // Decision 0028: one calm line after the first Brief. No pop-up.
+                Text("That was your free check. Want to keep going? Your next ones come from your weekly allowance.")
+                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    .padding(.top, ForgeSpacing.s)
+            }
         }
     }
 

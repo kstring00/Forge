@@ -67,6 +67,8 @@ public final class RealityCheck {
     public var droppedFindings: Int = 0
     /// "What if…" pivots offered with this check (decision 0024).
     public var pivots: [PivotIdea] = []
+    /// Decision 0027: this was the device's free first check.
+    public var wasFree: Bool = false
     /// The drafted asset (interview questions, outreach script, landing copy) saved as a Source.
     public var draftedAssetSourceID: UUID?
     public var idea: Idea?

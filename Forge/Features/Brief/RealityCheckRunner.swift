@@ -89,6 +89,7 @@ final class RealityCheckRunner {
         savedThisRun = []
         var step = Step.research
         var pagesSaved = 0
+        var wasFree = false
         do {
             // 1. Research, one turn per call.
             var messages: [JSONValue]? = nil
@@ -99,6 +100,7 @@ final class RealityCheckRunner {
                 let r = try await proxy.research(ideaID: idea.id, title: idea.title, originalText: idea.originalText,
                                                  advantages: advantages, constraints: constraints, messages: messages)
                 spendRecord(r.costUSD)
+                if turn == 1, r.freeCheck == true { wasFree = true }
                 try Task.checkCancellation()
                 gathered.append(contentsOf: r.sources)
                 if !r.notes.isEmpty { notes = r.notes }
@@ -126,6 +128,7 @@ final class RealityCheckRunner {
             AISpend.lastRealityCheckUSD = spentUSD
             applied.realityCheck.actualCostUSD = spentUSD
             applied.realityCheck.droppedFindings = envelope.dropped?.values.reduce(0, +) ?? 0
+            applied.realityCheck.wasFree = wasFree
             try? context.save()
             phase = .done
         } catch is CancellationError {

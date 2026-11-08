@@ -85,6 +85,13 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
     draftedAssets: { kind: "interviewQuestions", title: "t", body: "b" },
     panel: [{ sphere: "skeptic", verdict: "onTrack", criterionKey: "A2", reason: "r", sourceIDs: [], evidenceNeeded: null }],
     crossfire: [],
+    pivots: [
+      { whatIf: "you sold to the park owners' association instead of parks one by one", pivotType: "channel", fixes: "A5", why: "Three parks name the same association.", firstTest: "Email the association.", sourceIDs: [A, UNKNOWN] },
+      { whatIf: "What if the site were free and the upsell were bookings?", pivotType: "businessModel", fixes: "Z9", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if only RV parks on I-10?", pivotType: "zoomIn", fixes: "A2", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if a fourth?", pivotType: "zoomOut", fixes: "A1", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if a fifth?", pivotType: "technology", fixes: "A3", why: "w", firstTest: "f", sourceIDs: [] },
+    ],
   });
   const dropped: Record<string, number> = {};
   const e = enforcePrefill(p, new Set([A]), lens("business").criteria.map((c) => c.key), content.explorePrompts.map((x) => x.key), dropped);
@@ -98,6 +105,10 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
   assert.equal(e.criteria[1].evidenceLevel, 1, "no source: at most rung 1");
   assert.deepEqual(e.riskiestAssumption.sourceIDs, []);
   assert.equal(e.panel[0].verdict, "cantTell");
+  assert.equal(e.pivots.length, 3, "at most three pivots, and never one that raises a criterion the lens does not have");
+  assert.equal(e.pivots[0].whatIf, "What if you sold to the park owners' association instead of parks one by one?", "phrased as a what-if");
+  assert.deepEqual(e.pivots[0].sourceIDs, [A], "cites only known sources");
+  assert.deepEqual(e.pivots.map((x) => x.fixes), ["A5", "A2", "A1"]);
   // The range is put in order.
   assert.equal(e.projectionLow, 900);
   assert.equal(e.projectionHigh, 2400);

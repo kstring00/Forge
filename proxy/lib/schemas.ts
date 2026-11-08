@@ -129,6 +129,16 @@ export const RealityCheckResult = z.object({
   costEstimate: z.string(),
 });
 
+/// One "What if…" pivot: the sentence, its type, the criterion it raises, why, and the first test.
+export const PivotDraft = z.object({
+  whatIf: z.string(),
+  pivotType,
+  fixes: z.string(),
+  why: z.string(),
+  firstTest: z.string(),
+  sourceIDs: z.array(sourceId),
+});
+
 /// §0A. One typed object that pre-fills the whole Lab, every field carrying source IDs.
 export const PrefillResult = z.object({
   realityCheck: RealityCheckResult,
@@ -150,6 +160,8 @@ export const PrefillResult = z.object({
   draftedAssets: z.object({ kind: z.enum(["interviewQuestions", "outreachScript", "landingCopy"]), title: z.string(), body: z.string() }),
   panel: z.array(VerdictDraft),
   crossfire: z.array(CrossfireDraft),
+  /// "What if…" pivots (decision 0024): two or three when the idea is weak, grounded in the Library; empty otherwise.
+  pivots: z.array(PivotDraft),
 });
 
 export const payloadSchemas = {

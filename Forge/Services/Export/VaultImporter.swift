@@ -295,6 +295,7 @@ enum VaultImporter {
         check.rationale = rc.rationale
         check.actualCostUSD = rc.actualCostUSD
         check.droppedFindings = rc.droppedFindings ?? 0
+        check.pivots = rc.pivots ?? []
         check.draftedAssetSourceID = rc.draftedAssetSourceID
         check.sources = rc.sourceIDs.compactMap { sources[$0] }
         for c in rc.competitors {

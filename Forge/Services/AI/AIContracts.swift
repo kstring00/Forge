@@ -189,6 +189,18 @@ public struct PrefillResult: Codable, Sendable {
     public var draftedAssets: DraftedAssets
     public var panel: [RoundResult.VerdictDraft]
     public var crossfire: [RoundResult.CrossfireDraft]
+    /// "What if…" pivots (decision 0024). Optional so an older proxy's answer still decodes.
+    public var pivots: [PivotDraft]?
+
+    public struct PivotDraft: Codable, Sendable {
+        public var whatIf: String
+        public var pivotType: PivotType
+        /// The key of the criterion the change raises.
+        public var fixes: String
+        public var why: String
+        public var firstTest: String
+        public var sourceIDs: [UUID]
+    }
 }
 
 /// Sugar so each action names its payload type in one place.

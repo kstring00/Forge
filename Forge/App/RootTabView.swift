@@ -31,7 +31,7 @@ struct RootTabView: View {
         .onChange(of: env.justCapturedIdeaID) { _, id in
             if id != nil { withAnimation(ForgeMotion.settle) { env.tab = .home } }
         }
-        // Home Screen quick action "New idea", at launch or while running.
+        // Home Screen quick action "New idea" and the "New hunch" intent, at launch or while running.
         .onAppear { consumeQuickAction() }
         .onChange(of: QuickActions.shared.pending) { _, _ in consumeQuickAction() }
     }
@@ -40,6 +40,7 @@ struct RootTabView: View {
         guard let action = QuickActions.shared.take() else { return }
         switch action {
         case .newIdea: env.capture = .text
+        case .newHunch: env.capture = .voice
         }
     }
 }

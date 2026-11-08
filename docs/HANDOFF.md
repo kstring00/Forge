@@ -15,6 +15,7 @@ The developer reports results and screenshots; wait for them.
 Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
+- Since decision 0026 `NewHunchIntent` ("Hey Siri, new hunch", Shortcuts, the Action button) opens voice capture through `QuickActions`.
 - Since decision 0025 the bottom bar is Home · Ideas · Journal; `IdeasView` lists every idea by track, `TrackCounts` is the one count, `ProjectCleanup` runs once at launch (report in Settings → Ideas), and capture is the docked ember button plus the Home Screen quick action.
 - Since decision 0024 the prefill carries `pivots`; the Brief shows them as "What if…" cards when Confidence is under 40 or the verdict is cantTell or compete, and "Make this its own idea" spawns an unchecked sibling.
 - Since decision 0023 the Brief is its own screen (`BriefView`) behind "The panel's take" card on every checked idea page and on Reality project pages; History lists every take.

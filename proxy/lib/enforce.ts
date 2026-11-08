@@ -42,23 +42,26 @@ export function enforceRound(r: z.infer<typeof RoundResult>, known: Set<string>)
   };
 }
 
-export function enforceRealityCheck(r: z.infer<typeof RealityCheckResult>, known: Set<string>): z.infer<typeof RealityCheckResult> {
+/// Items without a saved source are not findings. They are dropped and counted
+/// (the app shows the count, never the item), so one unsourced competitor can
+/// never sink a run or pass as fact.
+export function enforceRealityCheck(r: z.infer<typeof RealityCheckResult>, known: Set<string>, dropped: Record<string, number> = {}): z.infer<typeof RealityCheckResult> {
+  const competitors = r.competitors.filter((c) => c.sourceID && known.has(c.sourceID));
+  const demandSignals = r.demandSignals.filter((d) => d.sourceID && known.has(d.sourceID));
+  if (competitors.length < r.competitors.length) dropped["realityCheck.competitors"] = (dropped["realityCheck.competitors"] ?? 0) + r.competitors.length - competitors.length;
+  if (demandSignals.length < r.demandSignals.length) dropped["realityCheck.demandSignals"] = (dropped["realityCheck.demandSignals"] ?? 0) + r.demandSignals.length - demandSignals.length;
   return {
     ...r,
-    competitors: r.competitors.map((c) => ({ ...c, sourceID: c.sourceID && known.has(c.sourceID) ? c.sourceID : null })),
-    demandSignals: r.demandSignals.map((d) => ({
-      ...d,
-      rung: clamp(d.rung, 0, ceiling),
-      sourceID: d.sourceID && known.has(d.sourceID) ? d.sourceID : null,
-    })),
+    competitors,
+    demandSignals: demandSignals.map((d) => ({ ...d, rung: clamp(d.rung, 0, ceiling) })),
   };
 }
 
-export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[]): z.infer<typeof PrefillResult> {
+export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[], dropped: Record<string, number> = {}): z.infer<typeof PrefillResult> {
   const round = enforceRound({ verdicts: p.panel, crossfire: p.crossfire }, known);
   return {
     ...p,
-    realityCheck: enforceRealityCheck(p.realityCheck, known),
+    realityCheck: enforceRealityCheck(p.realityCheck, known, dropped),
     explorations: p.explorations.filter((e) => promptKeys.includes(e.promptKey)).map((e) => ({ ...e, sourceIDs: knownOnly(e.sourceIDs, known) })),
     criteria: p.criteria
       .filter((c) => lensKeys.includes(c.key))

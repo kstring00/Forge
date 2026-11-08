@@ -86,6 +86,8 @@ public struct AIEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
         public var webSearches: Int
     }
     public var payload: Payload
+    /// List items the proxy removed for failing the contract or lacking a source, by list.
+    public var dropped: [String: Int]?
     public var rationale: String
     public var model: String?
     /// Filled by the proxy; absent from canned and offline clients.

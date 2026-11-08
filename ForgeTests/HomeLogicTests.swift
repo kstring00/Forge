@@ -159,7 +159,8 @@ final class HomeLogicTests: XCTestCase {
 
         let prefill = RealityCheckRunner.failurePhase(AIError.invalidResponse("The model ran out of room"), step: .prefill, pagesSaved: 6, spentUSD: 0.04)
         guard case .failed(let m2) = prefill else { return XCTFail("expected failed") }
-        XCTAssertTrue(m2.hasPrefix("The panel stopped before the Brief: The model ran out of room."))
+        XCTAssertTrue(m2.hasPrefix(RealityCheckRunner.trippedLine), "contract failures read as the panel's fault, with the detail behind Details")
+        XCTAssertEqual(RealityCheckRunner.failureDetail(AIError.invalidResponse("The model ran out of room")), "The model ran out of room")
         XCTAssertTrue(m2.contains("6 sources it found are saved in the Library."))
         XCTAssertFalse(m2.contains("$"), "no prices outside Settings → Spend")
         XCTAssertTrue(m2.contains("Settings → Spend"))

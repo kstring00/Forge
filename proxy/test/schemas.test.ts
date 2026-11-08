@@ -86,8 +86,10 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
     panel: [{ sphere: "skeptic", verdict: "onTrack", criterionKey: "A2", reason: "r", sourceIDs: [], evidenceNeeded: null }],
     crossfire: [],
   });
-  const e = enforcePrefill(p, new Set([A]), lens("business").criteria.map((c) => c.key), content.explorePrompts.map((x) => x.key));
-  assert.equal(e.realityCheck.competitors[0].sourceID, null);
+  const dropped: Record<string, number> = {};
+  const e = enforcePrefill(p, new Set([A]), lens("business").criteria.map((c) => c.key), content.explorePrompts.map((x) => x.key), dropped);
+  assert.equal(e.realityCheck.competitors.length, 0, "an unknown source is not a finding");
+  assert.equal(dropped["realityCheck.competitors"], 1);
   assert.equal(e.realityCheck.demandSignals[0].rung, 2);
   assert.deepEqual(e.explorations.map((x) => x.promptKey), ["problem"]);
   assert.deepEqual(e.criteria.map((c) => c.key), ["A2", "A1"]);

@@ -45,12 +45,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const known = new Set(context.sources.map((s) => s.id));
+    const dropped: Record<string, number> = { ...result.dropped };
     let payload: unknown = result.parsed.payload;
     if (action === "runRound") payload = enforceRound(payload as never, known);
-    if (action === "realityCheck") payload = enforceRealityCheck(payload as never, known);
+    if (action === "realityCheck") payload = enforceRealityCheck(payload as never, known, dropped);
     if (action === "pitch") payload = enforcePitch(payload as never, known);
     if (action === "prefill") {
-      payload = enforcePrefill(payload as never, known, lens(lensType).criteria.map((c) => c.key), content.explorePrompts.map((p) => p.key));
+      payload = enforcePrefill(payload as never, known, lens(lensType).criteria.map((c) => c.key), content.explorePrompts.map((p) => p.key), dropped);
     }
 
     const u = result.response.usage;
@@ -66,8 +67,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         webSearches: 0,
       },
       costUSD: round4(costUSD(model, u)),
+      dropped: Object.keys(dropped).length ? dropped : undefined,
     };
-    if (result.mode === "jsonFallback") res.setHeader("X-Forge-Mode", "json-fallback");
+    if (result.mode !== "structured") res.setHeader("X-Forge-Mode", result.mode === "jsonRetry" ? "json-retry" : "json-fallback");
+    if (Object.keys(dropped).length) console.warn(JSON.stringify({ at: `action.${action}`, dropped }));
     res.status(200).json(envelope);
   } catch (err) {
     sendError(res, err, "action");

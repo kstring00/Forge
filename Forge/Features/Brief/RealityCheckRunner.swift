@@ -23,6 +23,8 @@ final class RealityCheckRunner {
     }
 
     private(set) var phase: Phase = .idle
+    /// The technical reason behind the last failure, for the Details disclosure and the log.
+    private(set) var lastFailureDetail: String?
     private(set) var litSpheres: Set<Sphere> = []
     private(set) var spentUSD: Double = 0
     private(set) var estimate: ClosedRange<Double> = 0.10...0.25
@@ -123,6 +125,7 @@ final class RealityCheckRunner {
             litSpheres = Set(Sphere.phase3Panel)
             AISpend.lastRealityCheckUSD = spentUSD
             applied.realityCheck.actualCostUSD = spentUSD
+            applied.realityCheck.droppedFindings = envelope.dropped?.values.reduce(0, +) ?? 0
             try? context.save()
             phase = .done
         } catch is CancellationError {
@@ -138,8 +141,18 @@ final class RealityCheckRunner {
                 phase = .stopped(Self.stoppedLine(step: step, spentUSD: spentUSD))
                 return
             }
+            lastFailureDetail = Self.failureDetail(error)
             phase = Self.failurePhase(error, step: step, pagesSaved: pagesSaved, spentUSD: spentUSD)
         }
+    }
+
+    /// The friendly line for anything that is the panel's fault, not the user's.
+    static let trippedLine = "The panel tripped on one of its findings. Nothing you saved was lost. Try again."
+
+    /// What the proxy or the model said, kept behind Details.
+    static func failureDetail(_ error: Error) -> String? {
+        if let ai = error as? AIError, case .invalidResponse(let d) = ai { return d }
+        return nil
     }
 
     /// Stop keeps nothing: the pages this run saved go back out of the Library.
@@ -181,9 +194,8 @@ final class RealityCheckRunner {
             return .failed("\(what): the proxy refused the request. Check PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and that ANTHROPIC_API_KEY is set.\(kept)")
         case .rateLimited:
             return .failed("\(what): the proxy is rate limiting. Try again in a minute.\(kept)\(spent)")
-        case .invalidResponse(let d):
-            let detail = d.hasSuffix(".") ? d : d + "."
-            return .failed("\(what): \(detail)\(kept)\(spent)")
+        case .invalidResponse:
+            return .failed("\(trippedLine)\(kept)\(spent)")
         case .server(let s):
             return .failed("\(what): the proxy answered with status \(s).\(kept)\(spent) Vercel → Logs has the detail.")
         }

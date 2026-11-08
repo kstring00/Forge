@@ -30,7 +30,7 @@ struct RealityCheckButton: View {
         VStack(alignment: .trailing, spacing: 4) {
             Button { tap() } label: {
                 Text(failure == nil ? pillTitle : "Try again")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(.footnote, weight: .medium))
                     .foregroundStyle(ForgeColor.emberText)
                     .padding(.horizontal, 12).frame(height: 32)
                     .overlay(Capsule().strokeBorder(ForgeColor.emberText))
@@ -40,7 +40,7 @@ struct RealityCheckButton: View {
             .opacity(runner.isRunning ? 0.5 : 1)
             .accessibilityLabel("Send to the panel. Opens a confirmation first.")
             if blocked != nil {
-                Text(IdeaGuard.blockedLine).font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                Text(IdeaGuard.blockedLine).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     .multilineTextAlignment(.trailing).frame(maxWidth: 180)
             }
         }
@@ -56,12 +56,12 @@ struct RealityCheckButton: View {
                             .font(ForgeType.label).textCase(.uppercase).kerning(1.3)
                             .foregroundStyle(Color(red: 1.0, green: 0.886, blue: 0.839))
                         if !compact {
-                            Text("Who already does this, what they charge, what people complain about, and what the panel makes of it.")
-                                .font(.system(size: 15)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                            Text("Who already does this, what they charge, what people complain about, and what the panel (five perspectives) makes of it.")
+                                .font(.system(.subheadline)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     Spacer()
-                    Image(systemName: "arrow.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                    Image(systemName: "arrow.right").font(.system(.subheadline, weight: .semibold)).foregroundStyle(.white)
                 }
                 .padding(compact ? 14 : 18)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -77,11 +77,11 @@ struct RealityCheckButton: View {
                 noticeBox(title: "The panel needs more to go on", message: IdeaGuard.blockedLine) { blocked = nil }
             } else if case .overCeiling = runner.phase {
                 Text("This month's AI ceiling is reached. Raise it in Settings to run another check.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
 
             Text(RealityCheckCost.disclosure + " Nothing is sent until you confirm.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .sheet(isPresented: $confirming) { confirmSheet }
@@ -99,24 +99,24 @@ struct RealityCheckButton: View {
                 .foregroundStyle(ForgeColor.emberText)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
-                Text(title).font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.ink)
-                Text(message).font(.caption).foregroundStyle(ForgeColor.ink)
+                Text(title).font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                Text(message).font(.footnote).foregroundStyle(ForgeColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
                 if let detail {
                     DisclosureGroup {
-                        Text(detail).font(.caption2.monospaced()).foregroundStyle(ForgeColor.inkSecondary)
+                        Text(detail).font(.footnote.monospaced()).foregroundStyle(ForgeColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                             .textSelection(.enabled)
                     } label: {
-                        Text("Details").font(.caption2.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Details").font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
                     }
                     .tint(ForgeColor.inkSecondary)
                 }
             }
             Spacer(minLength: 0)
             Button("Dismiss", action: dismiss)
-                .font(.caption.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
         .padding(ForgeSpacing.m)
@@ -152,7 +152,7 @@ struct StopCheckButton: View {
     var body: some View {
         Button { env.realityChecks.stop(ideaID) } label: {
             Label("Stop", systemImage: "stop.fill")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(.footnote, weight: .medium))
                 .foregroundStyle(ForgeColor.ink)
                 .padding(.horizontal, 12).frame(height: 32)
                 .background(ForgeColor.canvas, in: Capsule())

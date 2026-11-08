@@ -18,7 +18,7 @@ struct NextMoveButton: View {
                         .kerning(1.3)
                         .foregroundStyle(Color(red: 1.0, green: 0.886, blue: 0.839))
                     Text(evaluation.effectiveStep)
-                        .font(.system(size: 15))
+                        .font(.system(.subheadline))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
@@ -66,7 +66,7 @@ struct NextMoveSheet: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(r.displayName).foregroundStyle(ForgeColor.ink)
                                     if r == suggested {
-                                        Text("Suggested from your scores").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                                        Text("Suggested from your scores").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                                     }
                                 }
                                 Spacer()

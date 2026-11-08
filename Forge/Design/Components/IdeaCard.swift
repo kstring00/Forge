@@ -67,7 +67,7 @@ struct IdeaCard: View {
             HStack(spacing: ForgeSpacing.s) {
                 Text(idea.track == .reality ? "No panel yet" : "Not yet checked").forgeLabel()
                 Spacer()
-                Text(idea.createdAt, style: .date).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text(idea.createdAt, style: .date).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .checking:
             HStack(spacing: ForgeSpacing.s) {
@@ -76,15 +76,15 @@ struct IdeaCard: View {
             }
         case .checkFailed:
             HStack(spacing: ForgeSpacing.s) {
-                Image(systemName: "exclamationmark.circle").font(.caption).foregroundStyle(ForgeColor.emberText)
-                Text("Check failed · open to see why").forgeLabel().foregroundStyle(ForgeColor.emberText)
+                Image(systemName: "exclamationmark.circle").font(.footnote).foregroundStyle(ForgeColor.emberText)
+                Text("Check failed · open to see why").font(ForgeType.caption.weight(.medium)).foregroundStyle(ForgeColor.emberText)
             }
         case .impact:
             EstimatedReturnRow(idea: idea)
         case .checked(let verdict, let confidence):
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: ForgeSpacing.m) {
-                    Text(verdict.displayName).font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                    Text(verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
                     Spacer()
                     MiniRing(value: confidence, tint: ForgeColor.ember)
                 }

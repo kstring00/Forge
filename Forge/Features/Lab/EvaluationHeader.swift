@@ -8,11 +8,11 @@ struct RingsRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: ForgeSpacing.m - 4) {
             RingCard(value: evaluation.potential, label: "Potential", tint: ForgeColor.ink,
-                     caption: "Your structured assessment. Not a prediction.", captionColor: ForgeColor.inkSecondary)
+                     caption: Plain.potential + ". " + "Your structured assessment. Not a prediction.", captionColor: ForgeColor.inkSecondary)
             RingCard(value: evaluation.confidence, label: "Confidence", tint: ForgeColor.ember,
-                     caption: Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence)
+                     caption: Plain.confidence + ". " + (Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence)
                         ? "Mostly enthusiasm so far."
-                        : "Backed by what people did.",
+                        : "Backed by what people did."),
                      captionColor: Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence) ? ForgeColor.emberText : ForgeColor.inkSecondary)
         }
     }
@@ -43,7 +43,7 @@ struct RingCard: View {
             }
             .frame(width: 84, height: 84)
             Text(caption)
-                .font(.system(size: 12))
+                .font(.system(.footnote))
                 .foregroundStyle(captionColor)
                 .fixedSize(horizontal: false, vertical: true)
         }

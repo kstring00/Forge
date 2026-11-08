@@ -31,12 +31,12 @@ struct CaptureStateSection: View {
                 }
             }
             ForEach(RealityCheckCenter.narration(for: runner.phase, lit: runner.litSpheres), id: \.0) { sphere, line in
-                Text("\(sphere.displayName) · \(line)").font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
+                Text("\(sphere.displayName) · \(line)").font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
             }
-            Text(progressText).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            Text(progressText).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             HStack(alignment: .top) {
                 Text("Usually one to three minutes. You can leave this screen; the panel keeps working and the idea sits in Formation when it's back.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 Spacer()
                 StopCheckButton(ideaID: idea.id)
             }

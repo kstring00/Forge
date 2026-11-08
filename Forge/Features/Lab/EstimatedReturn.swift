@@ -86,13 +86,13 @@ struct EstimatedReturnRow: View {
             VStack(alignment: alignment, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(value.label).forgeLabelSmall()
-                    if let prefix { Text("\(prefix) ·").font(.system(size: 12, weight: .medium)).foregroundStyle(ForgeColor.emberText) }
+                    if let prefix { Text("\(prefix) ·").font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText) }
                     if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
                     if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
                     figure
                 }
                 if let basis {
-                    Text(basis).font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                    Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
                 }
             }
             .contentShape(Rectangle())
@@ -112,17 +112,17 @@ struct EstimatedReturnRow: View {
         case .yours(let monthly, _):
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(Projection.compact(monthly)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.emberText)
-                Text("/ mo").font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary)
+                Text("/ mo").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .estimate(let low, let high, _):
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(EstimatedReturn.range(low, high)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.emberText)
-                Text("/ mo").font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary)
+                Text("/ mo").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .impact(let lead, let rest):
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(1)
-                if let rest { Text(rest).font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                if let rest { Text(rest).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
             }
         case .impactMissing:
             placeholder("Add who it helps")
@@ -135,7 +135,7 @@ struct EstimatedReturnRow: View {
 
     /// Placeholders are 13 pt muted sans, never display serif or colour.
     private func placeholder(_ text: String) -> some View {
-        Text(text).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
     }
 
     private var basis: String? {
@@ -177,18 +177,18 @@ struct ProjectionEstimateSheet: View {
                         switch EstimatedReturn.value(for: idea) {
                         case .yours(let m, let verified):
                             Text("\(Projection.compact(m)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
-                            Text(verified ? "Your numbers, partly verified by a real payment." : "Your numbers. Drawn as an assumption until a payment is attached as evidence at rung 4.")
-                                .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                            Text(verified ? "Your numbers, partly verified by a real payment." : "Your numbers. Drawn as an assumption until a payment is attached as evidence at proof level 4 (a real payment).")
+                                .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         case .estimate(let low, let high, let basis):
                             HStack(spacing: 8) {
                                 EvidenceChip(pattern: .stripes, size: 12)
                                 Text("\(EstimatedReturn.range(low, high)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
                             }
                             Text("The Investor's estimate, from \(basis ?? "the desk research"). It is AI-found: a range the desk supports, not a projection you made. Nothing is yours until you type it.")
-                                .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                                .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         default:
                             Text("No estimate").font(ForgeType.numeral).foregroundStyle(ForgeColor.inkSecondary)
-                            Text("The desk found no price to go on. Enter your own figures below.").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("The desk found no price to go on. Enter your own figures below.").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
 
@@ -196,18 +196,18 @@ struct ProjectionEstimateSheet: View {
 
                     if !competitors.isEmpty {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                            Text("Where the estimate came from").forgeLabel()
+                            Text("Where the estimate came from").forgeSubhead()
                             ForEach(competitors) { c in
                                 HStack(alignment: .top, spacing: ForgeSpacing.s) {
                                     EvidenceChip(pattern: c.source.map { EvidencePattern($0.sourceClass) } ?? .stripes, size: 12).padding(.top, 3)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("\(c.name) · \(c.pricing)").font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
-                                        if let s = c.source { Text(s.title).font(.caption2).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                                        Text("\(c.name) · \(c.pricing)").font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
+                                        if let s = c.source { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
                                     }
                                 }
                             }
-                            Text("A competitor's price proves the market exists (rung 2 at most). It never proves demand for this idea.")
-                                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("A competitor's price proves the market exists (proof level 2 of 5 at most). It never proves demand for this idea.")
+                                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
 

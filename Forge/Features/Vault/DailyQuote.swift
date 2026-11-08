@@ -33,7 +33,7 @@ struct DailyQuote: View {
                 }
                 Spacer(minLength: 0)
                 Button { withAnimation(ForgeMotion.fade) { dismissedDay = today } } label: {
-                    Image(systemName: "xmark").font(.caption2.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                    Image(systemName: "xmark").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
                         .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)

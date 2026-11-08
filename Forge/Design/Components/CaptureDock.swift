@@ -17,7 +17,7 @@ struct CaptureDockButton: View {
                     .background(ForgeColor.ember, in: Circle())
                     .shadow(color: ForgeColor.ember.opacity(0.4), radius: 16, y: 6)
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .heavy))
+                    .font(.system(.footnote, weight: .heavy))
                     .foregroundStyle(ForgeColor.ember)
                     .frame(width: 20, height: 20)
                     .background(.white, in: Circle())

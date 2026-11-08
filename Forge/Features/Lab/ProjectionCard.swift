@@ -62,8 +62,8 @@ struct ProjectionCard: View {
             }
         }
         note(p.isEmpty
-             ? "Tap to enter a price and a count. Every figure stays yours, drawn as an assumption until a real payment is attached as evidence at rung 4."
-             : "Every figure here is yours until someone pays for month two. A slice goes solid only when a real payment is attached as evidence at rung 4 or above.")
+             ? "Tap to enter a price and a count. Every figure stays yours, drawn as an assumption until a real payment is attached as evidence at proof level 4 (a real payment)."
+             : "Every figure here is yours until someone pays for month two. A slice goes solid only when a real payment is attached as evidence at proof level 4 (a real payment) or above.")
     }
 
     // MARK: Impact (Growth, Creative)
@@ -91,7 +91,7 @@ struct ProjectionCard: View {
         return VStack(alignment: .leading, spacing: 2) {
             Text(label).forgeLabelSmall()
             Text(empty ? "Add \(label.prefix(1).lowercased() + label.dropFirst())" : value!)
-                .font(empty ? .system(size: 13) : ForgeType.body)
+                .font(empty ? .system(.footnote) : ForgeType.body)
                 .foregroundStyle(empty ? ForgeColor.inkSecondary : ForgeColor.ink)
         }
     }
@@ -127,7 +127,7 @@ struct ProjectionCard: View {
 
     private func note(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13))
+            .font(.system(.footnote))
             .foregroundStyle(ForgeColor.ink.opacity(0.85))
             .padding(.top, 8)
             .overlay(alignment: .top) { Rectangle().fill(ForgeColor.line).frame(height: 1) }

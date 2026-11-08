@@ -35,14 +35,14 @@ struct WelcomeView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { env.capture = .text }
                     } label: {
                         Text("Capture your first hunch")
-                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                            .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 52)
                             .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     Button { seeExample() } label: {
                         Text("No idea right now? See an example")
-                            .font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                            .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
                     }
                     .buttonStyle(.plain)
                 }

@@ -131,14 +131,14 @@ struct IdeaDetailView: View {
     private var metadata: some View {
         HStack(spacing: ForgeSpacing.m) {
             Menu {
-                Button("No lens yet") { idea.lensType = nil }
+                Button("Not sure yet") { idea.lensType = nil }
                 ForEach(LensType.allCases) { lens in
                     Button(lens.displayName) { idea.lensType = lens }
                 }
             } label: {
-                pill(idea.lensType?.displayName ?? "Choose a lens", tint: ForgeColor.lensTint(idea.lensType))
+                pill(idea.lensType.map { "\($0.displayName) idea" } ?? Plain.lens, tint: ForgeColor.lensTint(idea.lensType))
             }
-            .accessibilityLabel("Lens")
+            .accessibilityLabel("Kind of idea (lens)")
 
             Menu {
                 ForEach(Track.allCases) { track in
@@ -156,8 +156,8 @@ struct IdeaDetailView: View {
     private func pill(_ text: String, tint: Color) -> some View {
         HStack(spacing: ForgeSpacing.xs) {
             Circle().fill(tint).frame(width: 7, height: 7)
-            Text(text).font(.caption.weight(.medium))
-            Image(systemName: "chevron.down").font(.caption2)
+            Text(text).font(.footnote.weight(.medium))
+            Image(systemName: "chevron.down").font(.footnote)
         }
         .foregroundStyle(ForgeColor.ink)
         .padding(.horizontal, ForgeSpacing.m)
@@ -171,7 +171,7 @@ struct IdeaDetailView: View {
             HStack(spacing: ForgeSpacing.s) {
                 Text("Original").forgeLabel()
                 Image(systemName: "lock")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .accessibilityLabel("Cannot be edited")
                 if idea.audioFileName != nil {
@@ -224,7 +224,7 @@ struct IdeaDetailView: View {
                             .font(ForgeType.ideaTitle)
                             .foregroundStyle(ForgeColor.ink)
                         Text("Commit to one next step and say what launched means. No evaluation required.")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
                     }
                     Spacer()
@@ -280,7 +280,7 @@ struct IdeaDetailView: View {
                 Text("Archived \(at.formatted(date: .abbreviated, time: .shortened))")
             }
         }
-        .font(.caption)
+        .font(.footnote)
         .foregroundStyle(ForgeColor.inkSecondary)
     }
 

@@ -53,13 +53,13 @@ struct NextStepCard: View {
                     .buttonStyle(.plain)
                 } else {
                     Text(step)
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(.body, weight: .medium))
                         .foregroundStyle(ForgeColor.ink)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let caveat = project.nextStepCaveat, style == .page {
                     Text(caveat)
-                        .font(.system(size: 13))
+                        .font(.system(.footnote))
                         .foregroundStyle(ForgeColor.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -99,13 +99,13 @@ struct NextStepCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
             Text(step)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(.body, weight: .medium))
                 .foregroundStyle(ForgeColor.ink)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 4) {
                 Text(idea.latestRealityCheck.map { "See the panel's take · \($0.verdict.displayName)" } ?? "Open the step")
-                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.emberText)
-                Image(systemName: "chevron.right").font(.caption2.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,7 +138,7 @@ struct NextStepCard: View {
             }
             if style == .page, let moves = project.nextStepMoves {
                 Text("Counts: \(moves)")
-                    .font(.system(size: 13))
+                    .font(.system(.footnote))
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -152,7 +152,7 @@ struct NextStepCard: View {
             if asset != nil {
                 Button { showingAsset = true } label: {
                     Text("Questions")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(ForgeColor.ink)
                         .padding(.horizontal, 18).frame(height: 48)
                         .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -163,7 +163,7 @@ struct NextStepCard: View {
             }
             Button { logging = true } label: {
                 Text("Log a conversation")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity).frame(height: 48)
                     .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -192,8 +192,8 @@ struct StakesPanel: View {
                 if let idea {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
                         HStack(spacing: 14) {
-                            smallRing(evaluation.potential, "Potential", ForgeColor.ink)
-                            smallRing(evaluation.confidence, "Confidence", ForgeColor.ember)
+                            smallRing(evaluation.potential, Plain.beside("Potential", "how big"), ForgeColor.ink)
+                            smallRing(evaluation.confidence, Plain.beside("Confidence", "how sure"), ForgeColor.ember)
                         }
                     }
                     .buttonStyle(.plain)
@@ -206,7 +206,7 @@ struct StakesPanel: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
             Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves))
-                .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+                .font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)

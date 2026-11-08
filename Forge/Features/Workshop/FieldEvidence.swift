@@ -90,8 +90,8 @@ enum FieldEvidence {
         guard let key = r.criterionKey, r.evidence != nil else { return "Saved as verified by you." }
         let title = lens.criterion(key)?.title ?? key
         if r.levelAfter > r.levelBefore {
-            return "Saved as verified. \(title) moved to rung \(r.levelAfter); Confidence \(r.confidenceBefore) → \(r.confidenceAfter)."
+            return "Saved as verified. \(title) moved to \(Plain.rung(r.levelAfter)); Confidence (how sure we are) \(r.confidenceBefore) → \(r.confidenceAfter)."
         }
-        return "Saved as verified on \(title) at rung \(r.levelAfter)."
+        return "Saved as verified on \(title) at \(Plain.rung(r.levelAfter))."
     }
 }

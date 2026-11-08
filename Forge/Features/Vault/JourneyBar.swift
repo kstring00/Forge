@@ -52,7 +52,7 @@ struct JourneyBar: View {
             }
             .frame(height: 18)
             Text(track.displayName).forgeLabelSmall().foregroundStyle(here ? StakeCard.color(track) : ForgeColor.inkSecondary)
-            Text(here ? "You are here" : " ").font(.system(size: 10)).foregroundStyle(ForgeColor.inkSecondary)
+            Text(here ? "You are here" : " ").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
         }
         .frame(width: 84)
     }
@@ -61,7 +61,7 @@ struct JourneyBar: View {
     @ViewBuilder
     private var action: some View {
         if idea.isArchived {
-            Text("Archived. Bring it back from the menu to pick up where it was.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            Text("Archived. Bring it back from the menu to pick up where it was.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
         } else if let project = idea.project {
             NavigationLink(value: WorkshopRoute.project(project.id)) {
                 forwardRow("Open your step", detail: project.nextStep ?? "Set the next step")
@@ -70,12 +70,12 @@ struct JourneyBar: View {
         } else if current == .idea {
             if offersCheck {
                 HStack(alignment: .center, spacing: ForgeSpacing.m) {
-                    Text(env.realityChecks.isRunning(idea.id) ? "The panel is on it." : "Next: send it to the panel.").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text(env.realityChecks.isRunning(idea.id) ? "The panel is on it." : "Next: send it to the panel.").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                     Spacer()
                     if env.realityChecks.isRunning(idea.id) { StopCheckButton(ideaID: idea.id) } else { RealityCheckButton(idea: idea, pill: true) }
                 }
             } else {
-                Button { converting = true } label: { forwardRow("Make it real", detail: "This lens is judged by impact; commit to a first step.") }
+                Button { converting = true } label: { forwardRow("Make it real", detail: "This kind of idea is judged by impact; commit to a first step.") }
                     .buttonStyle(.plain)
             }
         } else if current == .formation {
@@ -97,11 +97,11 @@ struct JourneyBar: View {
     private func forwardRow(_ title: String, detail: String) -> some View {
         HStack(spacing: ForgeSpacing.s) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                Text(detail).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+                Text(title).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                Text(detail).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
             }
             Spacer()
-            Image(systemName: "arrow.right").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+            Image(systemName: "arrow.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
         }
         .contentShape(Rectangle())
     }

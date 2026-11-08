@@ -19,7 +19,7 @@ struct RiskiestAssumptionBlock: View {
                         .foregroundStyle(ForgeColor.ink)
                     if let why = evaluation.riskiestAssumptionConsequence, !why.isEmpty {
                         Text(why)
-                            .font(.system(size: 12))
+                            .font(.system(.footnote))
                             .foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
@@ -42,7 +42,7 @@ struct RiskiestAssumptionSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-                Text("The one belief that, if wrong, kills it").forgeLabel()
+                Text("The one belief that, if wrong, kills it").forgeSubhead()
                 TextField("That a park owner will pay monthly for a site they don't check…", text: $belief, axis: .vertical)
                     .lineLimit(2...5)
                     .font(ForgeType.statement)
@@ -57,7 +57,7 @@ struct RiskiestAssumptionSheet: View {
                     .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                 Text("Lean Startup: the riskiest assumption is the one to test first, because it is the cheapest way to find out you are wrong.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
                 Spacer()
             }

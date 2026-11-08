@@ -17,7 +17,7 @@ struct WhatIfCards: View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Text("What if…").forgeLabel()
             Text("The Strategist's pivots. Each keeps what scored well and changes one thing the Library gives a reason to change.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             ForEach(check.pivots) { pivot in card(pivot) }
         }
         .navigationDestination(item: $opened) { IdeaDetailView(idea: $0) }
@@ -32,16 +32,16 @@ struct WhatIfCards: View {
                 Text(pivot.pivotType.displayName).forgeLabelSmall()
             }
             Text(pivot.whatIf).font(ForgeType.statement).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
-            Text(pivot.why).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
-            Text("First test: \(pivot.firstTest)").font(.system(size: 13)).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+            Text(pivot.why).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("First test: \(pivot.firstTest)").font(.system(.footnote)).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             if !pivot.sourceIDs.isEmpty {
-                Text(sourceLine(pivot)).font(.caption2).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+                Text(sourceLine(pivot)).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
             }
             if let spawned {
                 Button { opened = spawned } label: {
                     HStack(spacing: 4) {
-                        Text("Open the idea").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Open the idea").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
                 .buttonStyle(.plain)

@@ -60,7 +60,7 @@ struct HearThePanelView: View {
                 summary
                 if tally.unruled > 0 {
                     Text("Agree is the default: the \(tally.unruled) \(tally.unruled == 1 ? "voice" : "voices") you leave untouched count as agreed when you move on. Only Disagree and Find out need a tap.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
             }
             .padding(.horizontal, 20)
@@ -84,7 +84,7 @@ struct HearThePanelView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Round \(number) · \(round.verdicts.count) \(round.verdicts.count == 1 ? "voice" : "voices")").forgeLabel()
-            Text("Hear the panel on").forgeLabel().foregroundStyle(ForgeColor.emberText).padding(.top, 8)
+            Text("Hear the panel on").forgeSubhead().foregroundStyle(ForgeColor.emberText).padding(.top, 8)
             Text(idea?.title ?? "this idea")
                 .font(ForgeType.ideaTitleHero)
                 .foregroundStyle(ForgeColor.ink)
@@ -92,7 +92,7 @@ struct HearThePanelView: View {
                 Text(v.displayName).font(ForgeType.statement).foregroundStyle(ForgeColor.emberText)
             }
             Text("Each voice argues from its own framework and only from what was found. Agree is the default; tap Disagree or Find out where you differ. Your rulings go in the Journal. No score changes here.")
-                .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 4)
+                .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 4)
         }
     }
 
@@ -101,9 +101,9 @@ struct HearThePanelView: View {
         HStack(alignment: .top, spacing: 12) {
             OrbView(sphere: .steward, state: .dormant, size: 40)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Steward").font(.system(size: 14, weight: .semibold)).foregroundStyle(ForgeColor.inkSecondary)
-                Text("Whether this is worth your life right now. Arrives with the Personal Growth lens, arguing from a charter you write.")
-                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+                Text("Steward").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Whether this is worth your life right now. Arrives with the Personal Growth kind of idea (the lens), arguing from a charter you write.")
+                    .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(14)
@@ -118,14 +118,14 @@ struct HearThePanelView: View {
             Text(tally.panelLine).font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
             ForEach(tally.splits) { p in
                 Text("\(p.a.displayName) and \(p.b.displayName) split on \(splitKeys(p)).")
-                    .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+                    .font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             }
-            Text(tally.rulingsLine).font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+            Text(tally.rulingsLine).font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
             Text("No score changed. The Lab is where you change a score; here you only said what you believe.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             if let idea {
                 NavigationLink(value: WorkshopRoute.journal) {
-                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) in the Journal").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                    Text("\(idea.decisions.filter { $0.kind == .ruling }.count) in the Journal").font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.ink)
                 }
             }
         }
@@ -159,7 +159,7 @@ struct SplitBracket: View {
         Button(action: onTap) {
             HStack(spacing: 4) {
                 Text("Split")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.system(.footnote, design: .monospaced, weight: .medium))
                     .textCase(.uppercase).kerning(1)
                     .foregroundStyle(ForgeColor.emberText)
                     .rotationEffect(.degrees(90))
@@ -205,12 +205,12 @@ struct VerdictCard: View {
             OrbView(sphere: verdict.sphere, state: .verdict(verdict.kind), size: 40)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(verdict.sphere.displayName).font(.system(size: 15, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+                    Text(verdict.sphere.displayName).font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
                     Spacer()
                     Text(verdict.kind.displayName).forgeLabel().foregroundStyle(VerdictPalette.color(verdict.kind))
                 }
                 Text(verdict.reason)
-                    .font(.system(size: 14)).lineSpacing(2)
+                    .font(.system(.subheadline)).lineSpacing(2)
                     .foregroundStyle(Color(hex: 0xD9D2C7))
                     .fixedSize(horizontal: false, vertical: true)
                 sourceLine
@@ -235,7 +235,7 @@ struct VerdictCard: View {
                 Text("No source")
             }
         }
-        .font(.system(size: 10, weight: .medium, design: .monospaced))
+        .font(.system(.footnote, design: .monospaced, weight: .medium))
         .textCase(.uppercase).kerning(0.6)
         .foregroundStyle(ForgeColor.inkSecondary)
         .lineLimit(1)
@@ -243,18 +243,18 @@ struct VerdictCard: View {
 
     private func rulingLine(_ ruling: Ruling) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Text(rulingSentence(ruling)).font(.caption).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            Text(rulingSentence(ruling)).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             if ruling.choice != .findOut, let onNote {
                 Button(ruling.note == nil ? "Say why" : "Edit") { onNote() }
-                    .font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                    .font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.ink)
             }
         }
     }
 
     private func rulingSentence(_ r: Ruling) -> String {
         switch r.choice {
-        case .agree: r.resultingEvidence != nil ? "In the Journal. The cited source is attached to \(verdict.criterionKey) at the desk rung." : "In the Journal."
+        case .agree: r.resultingEvidence != nil ? "In the Journal. The cited source is attached to \(verdict.criterionKey) at the desk's proof level." : "In the Journal."
         case .disagree: r.note.map { "In the Journal as your belief: \($0)" } ?? "In the Journal as your belief against the panel's."
         case .findOut: "In the Journal. An Experiment card is drafted" + (r.resultingDecision?.expectedBy.map { ", due \($0.formatted(date: .abbreviated, time: .omitted))." } ?? ".")
         }
@@ -314,7 +314,7 @@ struct CrossfireSheet: View {
                         Text("Crossfire").forgeLabel()
                         if exchange.isEmpty {
                             Text("Neither voice replied to the other this round. The verdicts above are the whole disagreement.")
-                                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         ForEach(exchange) { c in
                             HStack(alignment: .top, spacing: ForgeSpacing.s) {
@@ -325,7 +325,7 @@ struct CrossfireSheet: View {
                                 }
                             }
                         }
-                        Text("One exchange per pair. This is not a chat; you rule. Side with one for free.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("One exchange per pair. This is not a chat; you rule. Side with one for free.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
                 }
                 .padding(.horizontal, 20)

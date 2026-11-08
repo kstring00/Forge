@@ -148,7 +148,7 @@ struct CriteriaDestination: View {
                     PatternLegend(breakdown: evaluation.confidenceBreakdown)
                     CriteriaList(evaluation: evaluation)
                     Text("Each row opens the criterion: its rubric, the ladder, and the evidence behind the score. Scores change here, never from a ruling.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 .padding(ForgeSpacing.m)
                 .padding(.bottom, ForgeSpacing.xxl)

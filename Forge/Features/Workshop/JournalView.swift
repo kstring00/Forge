@@ -24,11 +24,11 @@ struct JournalView: View {
                             NavigationLink { PatternsView() } label: {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Your patterns").font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                                        Text("Your record against the panel, and what it knows about you.").font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                                        Text("Your patterns").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                                        Text("Your record against the panel, and what it knows about you.").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                                     }
                                     Spacer()
-                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                                    Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                                 }
                                 .modifier(SecondaryButtonChrome())
                             }
@@ -36,7 +36,7 @@ struct JournalView: View {
                             .padding(.bottom, ForgeSpacing.s)
                             if decisions.isEmpty {
                                 Text("When you commit to an idea or record what happened, it lands here next to what you expected.")
-                                    .font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                                    .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                             }
                         }
                         ForEach(decisions) { d in

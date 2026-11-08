@@ -107,8 +107,8 @@ enum VaultExporter {
                                      resultingDecisionID: ru.resultingDecision?.id,
                                      resultingEvidenceID: ru.resultingEvidence?.id,
                                      resultingAssumptionID: ru.resultingAssumption?.id,
-                                     resultingExperiment: ru.resultingExperiment.map(export,
-                                     implicit: ru.implicit, outcome: ru.outcomeRaw, outcomeNote: ru.outcomeNote, outcomeRecordedAt: ru.outcomeRecordedAt))
+                                     resultingExperiment: ru.resultingExperiment.map(export),
+                                     implicit: ru.implicit, outcome: ru.outcomeRaw, outcomeNote: ru.outcomeNote, outcomeRecordedAt: ru.outcomeRecordedAt)
                     })
             },
             crossfire: r.crossfire.map { CrossfireExport(id: $0.id, fromSphere: $0.fromSphereRaw, toSphere: $0.toSphereRaw, text: $0.text) }

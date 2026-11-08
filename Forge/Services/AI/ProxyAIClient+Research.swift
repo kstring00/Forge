@@ -11,6 +11,8 @@ struct ResearchResponse: Decodable {
         let retrievedAt: String?
     }
     let status: String            // "done" | "paused"
+    /// Decision 0027: true on the opening turn of this device's free first check. Absent from older proxies.
+    let freeCheck: Bool?
     let messages: [JSONValue]
     let sources: [Source]
     let notes: String
@@ -31,7 +33,7 @@ extension ProxyAIClient {
                   advantages: [String], constraints: [String], messages: [JSONValue]?) async throws -> ResearchResponse {
         let body = ResearchRequest(idea: .init(id: ideaID, title: title, originalText: originalText),
                                    advantages: advantages, constraints: constraints, messages: messages)
-        let data = try await post(path: "api/research", body: body, timeout: 125)
+        let data = try await post(path: "api/research", body: body, timeout: 125, withDeviceToken: messages == nil)
         do {
             return try JSONDecoder().decode(ResearchResponse.self, from: data)
         } catch {

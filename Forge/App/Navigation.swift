@@ -47,4 +47,6 @@ enum LabRoute: Hashable {
     case round(roundID: UUID)
     /// The criteria with their evidence, from the "What's riding on it" rings.
     case criteria(ideaID: UUID)
+    /// The full Brief, from "The panel's take" (decision 0023).
+    case brief(ideaID: UUID)
 }

@@ -29,6 +29,9 @@ struct ProjectDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
                 header
+                if let idea = project.idea, idea.latestRealityCheck != nil {
+                    PanelsTakeCard(idea: idea, compact: true)
+                }
                 nextStepCard
                 outcomeSection
                 journalSection

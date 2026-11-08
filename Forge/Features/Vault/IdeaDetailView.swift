@@ -12,8 +12,6 @@ struct IdeaDetailView: View {
     @State private var confirmingArchive = false
     @State private var converting = false
     @State private var playback = AudioPlayback()
-    /// "Not quite" expands the Brief into the full Lab; also the state for ideas with no check yet.
-    @State private var expanded = false
     @State private var showingMore = false
 
     private var offersCheck: Bool { RealityCheckPolicy.isOffered(for: idea.lensType) }
@@ -36,6 +34,11 @@ struct IdeaDetailView: View {
                         .textFieldStyle(.plain)
                         .accessibilityLabel("Idea title")
 
+                    // Decision 0023: a checked idea leads with the panel's take; the Brief is its own screen.
+                    if idea.latestRealityCheck != nil {
+                        PanelsTakeCard(idea: idea)
+                    }
+
                     original
 
                     if let summary = idea.aiSummary, idea.aiSummaryConfirmed {
@@ -44,9 +47,7 @@ struct IdeaDetailView: View {
 
                     metadata
 
-                    if idea.latestRealityCheck != nil && !expanded {
-                        BriefSection(idea: idea) { withAnimation(ForgeMotion.settle) { expanded = true } }
-                    } else if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
+                    if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
                         // §6D: the check is for Business ideas (or ones with no lens yet);
                         // Growth and Creative get the Impact card (§4.0).
                         if let lens = idea.lensType, !offersCheck {
@@ -54,25 +55,9 @@ struct IdeaDetailView: View {
                         } else {
                             CaptureStateSection(idea: idea)
                         }
-                    } else {
-                        if idea.latestRealityCheck != nil {
-                            Button { withAnimation(ForgeMotion.settle) { expanded = false } } label: {
-                                Label("Back to the Brief", systemImage: "chevron.up").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
-                            }
-                            .buttonStyle(.plain)
-                        } else if offersCheck && !idea.isArchived {
-                            // Scored by hand in the Lab, never checked: the button still belongs here.
-                            CaptureStateSection(idea: idea)
-                        }
-                        LabSection(idea: idea)
-                        ExploreSection(idea: idea)
-                        makeItReal
-                    }
-
-                    if idea.latestRealityCheck != nil && !expanded || (idea.latestRealityCheck == nil && idea.latestEvaluation == nil) {
                         DisclosureGroup(isExpanded: $showingMore) {
                             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                                if idea.latestRealityCheck == nil { ExploreSection(idea: idea) }
+                                ExploreSection(idea: idea)
                                 makeItReal
                                 tags
                                 notes
@@ -83,6 +68,13 @@ struct IdeaDetailView: View {
                         }
                         .tint(ForgeColor.inkSecondary)
                     } else {
+                        if idea.latestRealityCheck == nil && offersCheck && !idea.isArchived {
+                            // Scored by hand in the Lab, never checked: the button still belongs here.
+                            CaptureStateSection(idea: idea)
+                        }
+                        LabSection(idea: idea)
+                        ExploreSection(idea: idea)
+                        makeItReal
                         tags
                         notes
                     }

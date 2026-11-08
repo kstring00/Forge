@@ -81,6 +81,8 @@ public final class Idea {
     public func archive() {
         archivedAt = Date()
         stage = .archived
+        // Decision 0025: an archived idea's project leaves Reality with it. Launched stays launched.
+        if let project, project.status == .active || project.status == .paused { project.status = .archived }
     }
 
     public func unarchive() {

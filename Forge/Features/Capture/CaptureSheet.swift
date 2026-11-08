@@ -3,6 +3,8 @@ import SwiftData
 
 /// Capture in seconds: type, paste, or speak. A voice transcript stays
 /// editable until Save (decision 0005); after Save the text never changes.
+/// Opens with the keyboard up and "What's your hunch?" in the field; the big
+/// mic is the other way in (decision 0025).
 struct CaptureSheet: View {
     var autoStartVoice = false
     @Environment(\.modelContext) private var context
@@ -29,6 +31,17 @@ struct CaptureSheet: View {
                     .font(ForgeType.body)
                     .scrollContentBackground(.hidden)
                     .padding(ForgeSpacing.s)
+                    .overlay(alignment: .topLeading) {
+                        if text.isEmpty && !speech.isRecording {
+                            Text("What's your hunch?")
+                                .font(ForgeType.originalText)
+                                .foregroundStyle(ForgeColor.inkSecondary)
+                                .padding(.horizontal, ForgeSpacing.s + 5)
+                                .padding(.top, ForgeSpacing.s + 8)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
                     .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous)
@@ -48,19 +61,31 @@ struct CaptureSheet: View {
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
 
-                HStack(spacing: ForgeSpacing.m) {
+                HStack(alignment: .center, spacing: ForgeSpacing.m) {
                     PasteButton(payloadType: String.self) { strings in
                         guard let pasted = strings.first, !pasted.isEmpty else { return }
                         append(pasted)
                     }
                     .buttonBorderShape(.capsule)
-                    .labelStyle(.titleAndIcon)
+                    .labelStyle(.iconOnly)
                     .tint(ForgeColor.ink)
                     .disabled(speech.isRecording)
 
                     Spacer()
-
                     voiceButton
+                    Spacer()
+
+                    Button { save() } label: {
+                        Text("Save")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(canSave ? .white : ForgeColor.inkSecondary)
+                            .padding(.horizontal, ForgeSpacing.l).frame(height: 44)
+                            .background(canSave ? ForgeColor.ember : ForgeColor.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(canSave ? Color.clear : ForgeColor.line))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSave)
+                    .accessibilityLabel("Save")
                 }
                 .padding(.top, ForgeSpacing.xs)
 
@@ -72,7 +97,7 @@ struct CaptureSheet: View {
             }
             .padding(ForgeSpacing.m)
             .background(ForgeColor.canvas)
-            .navigationTitle("Capture")
+            .navigationTitle("New idea")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -105,17 +130,21 @@ struct CaptureSheet: View {
 
     // MARK: Voice
 
+    /// The large mic: 72 pt, ember, a stop square while listening.
     private var voiceButton: some View {
         Button {
             if speech.isRecording { stopVoice() } else { Task { await startVoice() } }
         } label: {
-            Label(speech.isRecording ? "Stop" : "Speak",
-                  systemImage: speech.isRecording ? "stop.fill" : "mic.fill")
-                .font(.body.weight(.semibold))
-                .padding(.horizontal, ForgeSpacing.l)
-                .padding(.vertical, ForgeSpacing.s + 4)
-                .foregroundStyle(.white)
-                .background(ForgeColor.ember, in: Capsule())
+            VStack(spacing: 6) {
+                Image(systemName: speech.isRecording ? "stop.fill" : "mic.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 72, height: 72)
+                    .background(ForgeColor.ember, in: Circle())
+                    .scaleEffect(speech.isRecording ? 1 + CGFloat(speech.level) * 0.12 : 1)
+                    .shadow(color: ForgeColor.ember.opacity(speech.isRecording ? 0.5 : 0.3), radius: 14, y: 4)
+                Text(speech.isRecording ? "Stop" : "Speak").forgeLabelSmall()
+            }
         }
         .buttonStyle(.plain)
         .disabled(!speech.isAvailable && !speech.isRecording)

@@ -11,8 +11,19 @@ final class AppEnvironment {
     let realityChecks: RealityCheckCenter
     /// §7: the idea just saved; Home turns toward it until the user sends it to the panel or taps Later.
     var justCapturedIdeaID: UUID?
-    /// The selected tab, here so Home's "All" links and capture can switch it.
+    /// The selected tab, here so Home's links and capture can switch it.
     var tab: ForgeTab = .home
+    /// The Ideas tab scrolls to this section when set (Home's pipeline nodes), then clears it.
+    var ideasSection: Track?
+    /// The capture sheet, presented once at the root so the dock, Home's mic,
+    /// the Home Screen quick action and (next) Siri all open the same sheet.
+    var capture: CaptureRequest?
+
+    /// Home → the Ideas tab, scrolled to one section.
+    func showIdeas(_ section: Track? = nil) {
+        ideasSection = section
+        tab = .ideas
+    }
 
     init(ai: any AIClient, speech: SpeechCapture) {
         self.ai = ai

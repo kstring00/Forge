@@ -73,6 +73,38 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertNil(a.track)
     }
 
+    /// Decision 0025: the pipeline nodes, Home's subline and the Ideas sections count the same ideas.
+    func testTrackCountsAreIdeasByTrackAndMatchTheGroups() throws {
+        let a = idea("a", at: 1)                       // Idea
+        let b = idea("b", at: 2); b.stage = .evaluate  // Formation
+        let c = idea("c", at: 3)                       // Reality via a project
+        _ = WorkshopActions.convert(c, with: .init(name: "C", desiredOutcome: "", nextStep: "call"), in: store.context)
+        let d = idea("d", at: 4); d.stage = .build     // Reality without a project
+        let e = idea("e", at: 5); e.archive()          // nowhere
+        // A second project with no idea must not count as an idea in Reality.
+        store.context.insert(Project(name: "stray"))
+
+        let all = [a, b, c, d, e]
+        XCTAssertEqual(TrackCounts.counts(all), [1, 1, 2])
+        XCTAssertEqual(TrackCounts.count(.reality, in: all), 2)
+        let g = TrackCounts.grouped(all)
+        XCTAssertEqual(g[.reality]?.map(\.id), [c.id, d.id], "the Reality section lists exactly what the node counts")
+        XCTAssertEqual(g[.idea]?.count, 1)
+        XCTAssertEqual(TrackCounts.live(all).count, 4)
+    }
+
+    func testHomeSortOrders() throws {
+        let fresh = idea("fresh", at: 30)
+        let checked = idea("checked", at: 20); check(checked, at: 21)
+        let working = idea("working", at: 10)
+        _ = WorkshopActions.convert(working, with: .init(name: "W", desiredOutcome: "", nextStep: "call"), in: store.context)
+        let all = [working, checked, fresh]
+        XCTAssertEqual(HomeSort.sorted(all, by: .newest).map(\.id), [fresh.id, checked.id, working.id])
+        XCTAssertEqual(HomeSort.sorted(all, by: .needsThePanel).first?.id, fresh.id, "the newest unchecked idea leads")
+        XCTAssertEqual(HomeSort.sorted(all, by: .inProgress).first?.id, working.id, "an active step leads")
+        XCTAssertEqual(HomeSort.biggestOpportunity.subline, "Biggest opportunity first")
+    }
+
     func testUncheckedIsTheLastResortAndNewestFirst() throws {
         let old = idea("old", at: 1)
         let new = idea("new", at: 2)

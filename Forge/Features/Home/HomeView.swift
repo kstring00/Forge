@@ -8,14 +8,14 @@ import ForgeCore
 /// on it; capture; then the ideas by stakes. The next move's idea never
 /// appears twice.
 struct HomeView: View {
-    let onCapture: () -> Void
-
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @Query(filter: #Predicate<Project> { $0.statusRaw == "active" }) private var activeProjects: [Project]
+    @AppStorage("home.sort") private var sortRaw = HomeSort.biggestOpportunity.rawValue
 
-    private var live: [Idea] { ideas.filter { !$0.isArchived } }
+    private var sort: HomeSort { HomeSort(rawValue: sortRaw) ?? .biggestOpportunity }
+    private var live: [Idea] { TrackCounts.live(ideas) }
     private var move: HomeCard {
         HomeCard.choose(justCaptured: env.justCapturedIdeaID, ideas: ideas, projects: activeProjects, unseenBriefs: env.realityChecks.unseenBriefs,
                         failedChecks: Set(env.realityChecks.failures.keys))
@@ -28,16 +28,9 @@ struct HomeView: View {
         case .none: nil
         }
     }
-    private func count(_ track: Track) -> Int { live.filter { $0.track == track }.count }
-    private var byStakes: [Idea] {
-        live.filter { $0.id != moveIdeaID }.sorted { a, b in
-            let ma = EstimatedReturn.sortKey(for: a), mb = EstimatedReturn.sortKey(for: b)
-            if (ma ?? -1) != (mb ?? -1) { return (ma ?? -1) > (mb ?? -1) }
-            let ca = a.latestEvaluation?.confidence ?? -1, cb = b.latestEvaluation?.confidence ?? -1
-            if ca != cb { return ca > cb }
-            return a.updatedAt > b.updatedAt
-        }
-    }
+    /// Decision 0025: the same count the Ideas tab's sections show.
+    private func count(_ track: Track) -> Int { TrackCounts.count(track, in: ideas) }
+    private var listed: [Idea] { HomeSort.sorted(live.filter { $0.id != moveIdeaID }, by: sort) }
 
     var body: some View {
         NavigationStack {
@@ -49,20 +42,11 @@ struct HomeView: View {
                             EmptyPanel()
                             QuickCaptureField(focusOnAppear: true)
                         } else {
-                            PipelineStrip(counts: Track.allCases.map(count)) { env.tab = ForgeTab($0) }
-                            nextMove
+                            // Decision 0025: capture first, under the sky; the pipeline nodes open the Ideas tab at their section.
                             QuickCaptureField()
+                            PipelineStrip(counts: TrackCounts.counts(ideas)) { env.showIdeas($0) }
+                            nextMove
                             stakes
-                            NavigationLink { PatternsView() } label: {
-                                HStack {
-                                    Text("Your patterns").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                                    Text("your record against the panel").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
-                                    Spacer()
-                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                                }
-                                .modifier(SecondaryButtonChrome())
-                            }
-                            .buttonStyle(.plain)
                         }
                     }
                     .padding(ForgeSpacing.m)
@@ -73,6 +57,7 @@ struct HomeView: View {
             .background(ForgeColor.canvas)
             .ignoresSafeArea(edges: .top)
             .toolbar(.hidden, for: .navigationBar)
+            .captureDock()
             .forgeDestinations()
         }
     }
@@ -170,16 +155,32 @@ struct HomeView: View {
     private var stakes: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Your ideas, by stakes").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Your ideas").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                    Text(sort.subline).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                }
                 Spacer()
-                Button("All") { env.tab = .idea }
+                Menu {
+                    Picker("Sort", selection: $sortRaw) {
+                        ForEach(HomeSort.allCases) { s in Text(s.displayName).tag(s.rawValue) }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
+                        Text(sort.displayName).font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(ForgeColor.emberText)
+                }
+                .accessibilityLabel("Sort ideas")
+                Button("All") { env.showIdeas() }
                     .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.emberText)
                     .accessibilityLabel("All ideas")
+                    .padding(.leading, ForgeSpacing.s)
             }
-            if byStakes.isEmpty {
+            if listed.isEmpty {
                 Text("Everything you have is in the card above.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             }
-            ForEach(byStakes.prefix(8)) { idea in
+            ForEach(listed.prefix(8)) { idea in
                 if let project = idea.project {
                     NavigationLink(value: WorkshopRoute.project(project.id)) {
                         StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
@@ -263,11 +264,17 @@ struct StakeCard: View {
                     }
                 }
                 .buttonStyle(.plain)
-                HStack(alignment: .bottom, spacing: 8) {
-                    EstimatedReturnRow(idea: idea, prefix: idea.latestRealityCheck?.verdict.displayName)
-                    Spacer(minLength: 0)
-                    if idea.track == .reality && idea.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: idea.lensType) {
-                        RealityCheckButton(idea: idea, pill: true, pillTitle: "Check it")
+                // Decision 0025: the verdict word on its own line, the figure beneath it, never more than two lines.
+                VStack(alignment: .leading, spacing: 4) {
+                    if let verdict = idea.latestRealityCheck?.verdict {
+                        Text(verdict.displayName).font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                    }
+                    HStack(alignment: .bottom, spacing: 8) {
+                        EstimatedReturnRow(idea: idea)
+                        Spacer(minLength: 0)
+                        if idea.track == .reality && idea.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: idea.lensType) {
+                            RealityCheckButton(idea: idea, pill: true, pillTitle: "Check it")
+                        }
                     }
                 }
             }
@@ -303,7 +310,7 @@ struct StakeCard: View {
     private var stageLine: String {
         var parts = [track.displayName]
         if checking { parts.append("Checking") }
-        else if track == .reality && idea.latestRealityCheck == nil { parts.append("started without the panel") }
+        else if track == .reality && idea.latestRealityCheck == nil { parts.append("No panel yet") }
         else if let project = idea.project, project.nextStep != nil {
             parts.append("\(min(project.nextStepCount, project.effectiveTarget)) of \(project.effectiveTarget)")
         } else if tally.total > 0 {

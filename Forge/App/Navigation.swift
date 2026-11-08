@@ -1,33 +1,24 @@
 import Foundation
 import ForgeCore
 
-/// Brief v4.2 §2: Home, then one tab per track.
+/// Decision 0025: Home · Ideas · Journal. Every idea lives in one list, grouped
+/// by track, so nothing vanishes from one tab and reappears in another.
 enum ForgeTab: String, Hashable, CaseIterable {
-    case home, idea, formation, reality
+    case home, ideas, journal
 
     var title: String {
         switch self {
         case .home: "Home"
-        case .idea: Track.idea.displayName
-        case .formation: Track.formation.displayName
-        case .reality: Track.reality.displayName
+        case .ideas: "Ideas"
+        case .journal: "Journal"
         }
     }
 
     var symbol: String {
         switch self {
         case .home: "house"
-        case .idea: "lightbulb"
-        case .formation: "circle.hexagonpath"
-        case .reality: "hammer"
-        }
-    }
-
-    init(_ track: Track) {
-        switch track {
-        case .idea: self = .idea
-        case .formation: self = .formation
-        case .reality: self = .reality
+        case .ideas: "lightbulb"
+        case .journal: "book.closed"
         }
     }
 }
@@ -49,4 +40,10 @@ enum LabRoute: Hashable {
     case criteria(ideaID: UUID)
     /// The full Brief, from "The panel's take" (decision 0023).
     case brief(ideaID: UUID)
+}
+
+/// How capture was asked for: typing, or straight into voice.
+enum CaptureRequest: String, Identifiable {
+    case text, voice
+    var id: String { rawValue }
 }

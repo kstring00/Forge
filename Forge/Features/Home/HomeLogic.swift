@@ -66,6 +66,81 @@ extension Idea {
     }
 }
 
+/// Home's "Your ideas" order (decision 0025). Biggest opportunity is the default.
+enum HomeSort: String, CaseIterable, Identifiable {
+    case biggestOpportunity, newest, needsThePanel, inProgress
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .biggestOpportunity: "Biggest opportunity"
+        case .newest: "Newest"
+        case .needsThePanel: "Needs the panel"
+        case .inProgress: "In progress"
+        }
+    }
+
+    /// The muted line under "Your ideas".
+    var subline: String {
+        switch self {
+        case .biggestOpportunity: "Biggest opportunity first"
+        case .newest: "Newest first"
+        case .needsThePanel: "Ideas the panel hasn't seen, first"
+        case .inProgress: "Ideas with a step in the world, first"
+        }
+    }
+
+    static func sorted(_ ideas: [Idea], by sort: HomeSort) -> [Idea] {
+        switch sort {
+        case .biggestOpportunity:
+            return ideas.sorted { a, b in
+                let ma = EstimatedReturn.sortKey(for: a), mb = EstimatedReturn.sortKey(for: b)
+                if (ma ?? -1) != (mb ?? -1) { return (ma ?? -1) > (mb ?? -1) }
+                let ca = a.latestEvaluation?.confidence ?? -1, cb = b.latestEvaluation?.confidence ?? -1
+                if ca != cb { return ca > cb }
+                return a.updatedAt > b.updatedAt
+            }
+        case .newest:
+            return ideas.sorted { $0.createdAt > $1.createdAt }
+        case .needsThePanel:
+            func rank(_ i: Idea) -> Int { i.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: i.lensType) ? 0 : 1 }
+            return ideas.sorted { (rank($0), $1.createdAt) < (rank($1), $0.createdAt) }
+        case .inProgress:
+            func rank(_ i: Idea) -> Int {
+                if let p = i.project, p.status == .active { return 0 }
+                if i.track == .reality { return 1 }
+                if i.track == .formation { return 2 }
+                return 3
+            }
+            return ideas.sorted { (rank($0), $1.updatedAt) < (rank($1), $0.updatedAt) }
+        }
+    }
+}
+
+/// Decision 0025: the one place ideas are counted and grouped by track. The
+/// pipeline nodes, Home's subline, the Ideas sections and Settings all read
+/// from here, so a count always matches the list behind it.
+enum TrackCounts {
+    /// Ideas that are not archived, in the order given.
+    static func live(_ ideas: [Idea]) -> [Idea] { ideas.filter { !$0.isArchived } }
+
+    /// Live ideas by track, in the order given. Every track has a key.
+    static func grouped(_ ideas: [Idea]) -> [Track: [Idea]] {
+        var out: [Track: [Idea]] = Dictionary(uniqueKeysWithValues: Track.allCases.map { ($0, []) })
+        for idea in live(ideas) { if let t = idea.track { out[t, default: []].append(idea) } }
+        return out
+    }
+
+    static func count(_ track: Track, in ideas: [Idea]) -> Int { grouped(ideas)[track]?.count ?? 0 }
+
+    /// Idea, Formation, Reality, in `Track.allCases` order.
+    static func counts(_ ideas: [Idea]) -> [Int] {
+        let g = grouped(ideas)
+        return Track.allCases.map { g[$0]?.count ?? 0 }
+    }
+}
+
 extension Idea {
     /// Where the idea sits on screen. A project puts it in Reality whatever the
     /// stored stage says, so the strip, the sections and the tabs agree.

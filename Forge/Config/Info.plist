@@ -38,6 +38,19 @@
 		<string>Fraunces-SemiBold.ttf</string>
 		<string>Fraunces-Italic.ttf</string>
 	</array>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>app.forge.newIdea</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>New idea</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Catch a hunch</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>lightbulb</string>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

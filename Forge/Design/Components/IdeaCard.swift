@@ -29,7 +29,8 @@ struct IdeaCard: View {
                     Text(idea.title)
                         .font(ForgeType.ideaTitle)
                         .foregroundStyle(ForgeColor.ink)
-                        .lineLimit(compact ? 2 : 3)
+                        .lineLimit(2)
+                    IdeaSubtitle(idea: idea)
                     statusBlock
                 }
             }
@@ -123,5 +124,20 @@ struct MiniRing: View {
             Text("\(value)").font(ForgeType.numeralTiny).foregroundStyle(ForgeColor.ink)
         }
         .accessibilityLabel("Confidence \(value)")
+    }
+}
+
+/// The person's own words under a short title: one muted line.
+struct IdeaSubtitle: View {
+    let idea: Idea
+
+    private var words: String {
+        idea.originalText.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.first { !$0.isEmpty } ?? ""
+    }
+
+    var body: some View {
+        if !words.isEmpty && words != idea.title {
+            Text(words).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+        }
     }
 }

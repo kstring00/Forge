@@ -71,6 +71,7 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
         const evidenceLevel = sourceIDs.length === 0 ? Math.min(1, clamp(c.evidenceLevel, 0, ceiling)) : clamp(c.evidenceLevel, 0, ceiling);
         return { ...c, score: clamp(c.score, 1, 5), evidenceLevel, sourceIDs };
       }),
+    title: shortTitle(p.title),
     riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
     // A range is low to high, never negative, and never one-sided.
     projectionLow: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.min(p.projectionLow, p.projectionHigh)) : null,
@@ -97,4 +98,11 @@ export function enforcePivots(pivots: z.infer<typeof PivotDraft>[], known: Set<s
 /// A pitch may only claim evidence it can point at.
 export function enforcePitch(p: z.infer<typeof PitchResult>, known: Set<string>): z.infer<typeof PitchResult> {
   return { pitches: p.pitches.map((x) => ({ ...x, groundedIn: knownOnly(x.groundedIn, known) })) };
+}
+
+/// At most five words, no wrapping quotes or end punctuation; null under two words.
+export function shortTitle(t: string | null | undefined): string | null {
+  if (!t) return null;
+  const words = t.replace(/["“”.!?…:;]/g, " ").split(/\s+/).filter(Boolean).slice(0, 5);
+  return words.length >= 2 ? words.join(" ") : null;
 }

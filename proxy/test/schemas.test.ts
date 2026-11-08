@@ -70,6 +70,7 @@ test("crossfire survives only between conflicting verdicts, once per pair", () =
 
 test("prefill is clamped to the desk ceiling and known keys", () => {
   const p = PrefillResult.parse({
+    title: "\"Weekend site care for RV parks along one corridor.\"",
     realityCheck: { verdict: "compete", summary: "s", competitors: [{ name: "X", url: null, pricing: "$99", positioning: "p", praises: [], complaints: [], tractionSignals: [], sourceID: UNKNOWN }],
       demandSignals: [{ text: "d", url: null, rung: 5, sourceID: A }], gapMap: "g", fitNotes: "f", experiment: null, costEstimate: "$0.3" },
     explorations: [{ promptKey: "problem", answer: "a", sourceIDs: [A] }, { promptKey: "bogus", answer: "b", sourceIDs: [] }],
@@ -105,6 +106,7 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
   assert.equal(e.criteria[1].evidenceLevel, 1, "no source: at most rung 1");
   assert.deepEqual(e.riskiestAssumption.sourceIDs, []);
   assert.equal(e.panel[0].verdict, "cantTell");
+  assert.equal(e.title, "Weekend site care for RV", "a title is at most five words, unquoted");
   assert.equal(e.pivots.length, 3, "at most three pivots, and never one that raises a criterion the lens does not have");
   assert.equal(e.pivots[0].whatIf, "What if you sold to the park owners' association instead of parks one by one?", "phrased as a what-if");
   assert.deepEqual(e.pivots[0].sourceIDs, [A], "cites only known sources");

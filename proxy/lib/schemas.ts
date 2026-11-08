@@ -141,6 +141,8 @@ export const PivotDraft = z.object({
 
 /// §0A. One typed object that pre-fills the whole Lab, every field carrying source IDs.
 export const PrefillResult = z.object({
+  /// The idea's name, 2 to 5 plain words. Null only if the idea gives nothing to name.
+  title: z.string().nullable(),
   realityCheck: RealityCheckResult,
   explorations: z.array(z.object({ promptKey: z.string(), answer: z.string(), sourceIDs: z.array(sourceId) })),
   criteria: z.array(z.object({ key: z.string(), score: z.number().int(), evidenceLevel: z.number().int(), note: z.string(), sourceIDs: z.array(sourceId) })),

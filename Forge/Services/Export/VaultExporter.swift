@@ -47,7 +47,8 @@ enum VaultExporter {
             },
             rounds: idea.rounds.sorted { $0.createdAt < $1.createdAt }.map(export),
             realityChecks: idea.realityChecks.sorted { $0.createdAt < $1.createdAt }.map(export),
-            project: idea.project.map(export)
+            project: idea.project.map(export),
+            titleEdited: idea.titleEdited
         )
     }
 

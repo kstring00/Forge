@@ -114,6 +114,10 @@ enum PrefillApplier {
         }
         idea.rounds.append(round)
 
+        // The panel's name for it, unless the person has named it themselves.
+        if !idea.titleEdited, let proposed = r.title.map(clean), let short = ShortTitle.clamp(proposed) {
+            idea.title = short
+        }
         idea.stage = .evaluate
         idea.touch()
         return Applied(realityCheck: check, evaluation: evaluation, round: round, draftedAsset: asset)

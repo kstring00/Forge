@@ -4,10 +4,11 @@ import ForgeCore
 
 /// One pass over records written before a rule existed, run at launch and
 /// kept idempotent: source ids the model wrote into prose become titles or go;
-/// a step's target is read from its text when it was stored as the default.
+/// a step's target is read from its text when it was stored as the default;
+/// a long title becomes a short one (2 to 5 words).
 enum LegacyCleanup {
     static let versionKey = "legacyCleanup.version"
-    static let version = 2
+    static let version = 3
 
     @MainActor
     static func runIfNeeded(in context: ModelContext, defaults: UserDefaults = .standard) {
@@ -60,6 +61,10 @@ enum LegacyCleanup {
                 s.title = clean(s.title)
                 s.fullText = clean(s.fullText)
                 for ch in s.chunks { ch.text = clean(ch.text) }
+            }
+            // v3: every idea has a 2-to-5-word name; one the person typed is left alone.
+            if !idea.titleEdited && ShortTitle.wordCount(idea.title) > ShortTitle.maxWords {
+                idea.title = ShortTitle.make(from: idea.originalText)
             }
             if let project = idea.project {
                 project.nextStep = cleanOpt(project.nextStep)

@@ -22,8 +22,19 @@ struct NextStepCard: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var logging = false
-    @State private var interviewing = false
-    @State private var reading: Interview?
+    /// One sheet for interviews: the current draft, or a past one to read.
+    @State private var interview: InterviewRoute?
+
+    enum InterviewRoute: Identifiable {
+        case current
+        case read(Interview)
+        var id: String {
+            switch self {
+            case .current: "current"
+            case .read(let i): i.id.uuidString
+            }
+        }
+    }
 
     private var idea: Idea? { project.idea }
     private var evaluation: Evaluation? { idea?.latestEvaluation }
@@ -81,17 +92,13 @@ struct NextStepCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
             .sheet(isPresented: $logging) {
-                OutcomeSheet(title: "Log a conversation", subject: step, prompt: "What did they say or do?",
-                             footnote: "One conversation. It counts toward \(target), lands in the Journal, and is saved as verified by you on the criterion this step tests.",
-                             minimumRung: 3) { report, _ in
-                    WorkshopActions.logConversation(project, whatHappened: report.text, rung: report.rung, audioFileName: report.audioFileName, in: modelContext)
+                QuickLogSheet(project: project)
+            }
+            .sheet(item: $interview) { route in
+                switch route {
+                case .current: InterviewSheet(project: project)
+                case .read(let i): InterviewSheet(project: project, readOnly: i)
                 }
-            }
-            .sheet(isPresented: $interviewing) {
-                InterviewSheet(project: project)
-            }
-            .sheet(item: $reading) { i in
-                InterviewSheet(project: project, readOnly: i)
             }
         }
     }
@@ -104,7 +111,7 @@ struct NextStepCard: View {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 Text("Conversations · \(done.count)").forgeLabel()
                 ForEach(done) { i in
-                    Button { reading = i } label: {
+                    Button { interview = .read(i) } label: {
                         HStack(spacing: ForgeSpacing.s) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(1)
@@ -114,9 +121,11 @@ struct NextStepCard: View {
                             Spacer()
                             Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
+                        .padding(.vertical, 6)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityHint("Opens the conversation")
                 }
             }
             .padding(.top, 4)
@@ -127,6 +136,7 @@ struct NextStepCard: View {
     private func homeHeading(_ idea: Idea, _ step: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+            IdeaSubtitle(idea: idea)
             Text(step)
                 .font(.system(.body, weight: .medium))
                 .foregroundStyle(ForgeColor.ink)
@@ -179,7 +189,7 @@ struct NextStepCard: View {
     private var buttons: some View {
         HStack(spacing: 10) {
             if project.status == .active {
-                Button { interviewing = true } label: {
+                Button { interview = .current } label: {
                     Text(project.interviews.contains(where: \.isDraft) ? "Resume" : "Questions")
                         .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(ForgeColor.ink)

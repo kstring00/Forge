@@ -21,6 +21,8 @@ struct InterviewSheet: View {
     @State private var finishing = false
     @State private var rung: Int?
     @State private var copied = false
+    /// After Save: the confirmation, never a blank sheet.
+    @State private var saved: Interview?
 
     init(project: Project, readOnly: Interview? = nil) {
         self.project = project
@@ -31,16 +33,17 @@ struct InterviewSheet: View {
     }
 
     private var isReadOnly: Bool { readOnly != nil }
+    private var hasName: Bool { !interview.who.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     private var guess: Int { RungInference.infer(interview.transcript)?.rung ?? 3 }
     private var effectiveRung: Int { max(3, rung ?? guess) }
 
     var body: some View {
         NavigationStack {
             Group {
-                if editingQuestions { questionEditor } else { answering }
+                if let saved { confirmation(saved) } else if editingQuestions { questionEditor } else { answering }
             }
             .background(ForgeColor.canvas)
-            .navigationTitle(isReadOnly ? "Conversation" : (editingQuestions ? "Questions" : "Interview"))
+            .navigationTitle(saved != nil ? "Saved" : isReadOnly ? "Conversation" : (editingQuestions ? "Questions" : "Interview"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .onAppear {
@@ -51,7 +54,7 @@ struct InterviewSheet: View {
                 }
             }
             .onChange(of: interview) { _, i in
-                if !isReadOnly { WorkshopActions.saveDraft(i, on: project) }
+                if !isReadOnly && saved == nil { WorkshopActions.saveDraft(i, on: project) }
             }
         }
         .presentationDetents([.large])
@@ -89,8 +92,8 @@ struct InterviewSheet: View {
             if isReadOnly {
                 Text(interview.headline).font(ForgeType.body).foregroundStyle(ForgeColor.ink)
             } else {
-                field("Name or nickname", text: $interview.who)
-                field("Who they are · runs a daycare in Katy", text: $interview.whoIs)
+                field("Who was it?", text: $interview.who)
+                field("Who they are (optional) · runs a daycare in Katy", text: $interview.whoIs)
             }
         }
     }
@@ -148,7 +151,9 @@ struct InterviewSheet: View {
                 Button {
                     WorkshopActions.finishInterview(interview, rung: effectiveRung, on: project, in: context)
                     try? context.save()
-                    dismiss()
+                    var done = interview
+                    done.rung = effectiveRung
+                    withAnimation(ForgeMotion.settle) { saved = done }
                 } label: {
                     Text("Save conversation")
                         .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
@@ -162,14 +167,45 @@ struct InterviewSheet: View {
                 Text("Done")
                     .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).frame(height: 50)
-                    .background(interview.hasContent ? ForgeColor.ember : ForgeColor.inkSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(hasName ? ForgeColor.ember : ForgeColor.inkSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
-            .disabled(!interview.hasContent)
-            Text(interview.hasContent ? "Done counts this as one conversation. Your draft is saved as you type; Close keeps it for later."
-                                      : "Write who you talked to or one answer, and Done lights up. Your draft is saved as you type.")
+            .disabled(!hasName)
+            Text(hasName ? "Done counts this as one conversation. Your draft is saved as you type; Close keeps it for later."
+                         : "Add who it was, and Done lights up. Your draft is saved as you type.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
         }
+    }
+
+    // MARK: Saved
+
+    private func confirmation(_ i: Interview) -> some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 44)).foregroundStyle(ForgeColor.ember)
+                .accessibilityHidden(true)
+            Text("Saved: \(i.answeredCount) of \(i.answers.count) answered · \(RungInference.label(i.rung ?? 3))").forgeSubhead()
+            Text("\(i.headline). Counted as \(min(project.nextStepCount, project.effectiveTarget)) of \(project.effectiveTarget), written to the Journal, and saved as verified by you.")
+                .font(.subheadline).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            Button { dismiss() } label: {
+                Text("Close")
+                    .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).frame(height: 50)
+                    .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, ForgeSpacing.s)
+            Button {
+                interview = Interview(questions: questions)
+                rung = nil
+                finishing = false
+                withAnimation(ForgeMotion.settle) { saved = nil }
+            } label: {
+                Text("Start the next conversation").frame(maxWidth: .infinity).modifier(SecondaryButtonChrome())
+            }
+            .buttonStyle(.plain)
+            Spacer()
+        }
+        .padding(ForgeSpacing.l)
     }
 
     // MARK: Editing the questions
@@ -220,12 +256,12 @@ struct InterviewSheet: View {
         ToolbarItem(placement: .cancellationAction) {
             if editingQuestions {
                 Button("Done") { applyQuestions() }.fontWeight(.semibold)
-            } else {
+            } else if saved == nil {
                 Button("Close") { dismiss() }
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            if !editingQuestions {
+            if !editingQuestions && saved == nil {
                 Menu {
                     if !isReadOnly {
                         Button { editingQuestions = true } label: { Label("Edit questions", systemImage: "pencil") }

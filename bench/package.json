@@ -1,0 +1,24 @@
+{
+  "name": "hunch-bench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The engine's test suite (docs/ENGINE.md §6): real ideas, hand-written answer keys, two baselines, one report.",
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "bench": "tsx src/run.ts",
+    "report": "tsx src/report-cli.ts",
+    "import-vault": "tsx src/import-vault.ts"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.130.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "capturedAt": "YYYY-MM-DD",
+  "verdict": "what it concluded, in its words, or null",
+  "competitors": [
+    {
+      "name": "as listed",
+      "url": null,
+      "pricing": "the price it states, in its words"
+    }
+  ],
+  "riskiestAssumption": "the risk it names, its words",
+  "theTest": "the next step it suggests, its words",
+  "minutes": 3
+}

@@ -205,7 +205,7 @@ struct SkyHeader: View {
                 ], colors: [
                     lavender, violet, lavender,
                     rose, peach, violet.opacity(0.9),
-                    ForgeColor.canvas.opacity(0.0).mixedToward( ember, 0.35), ForgeColor.canvas.mixedToward( peach, 0.45), ForgeColor.canvas.mixedToward( rose, 0.3),
+                    ForgeColor.canvas.mixedToward(ember, 0.35), ForgeColor.canvas.mixedToward(peach, 0.45), ForgeColor.canvas.mixedToward(rose, 0.3),
                     ForgeColor.canvas, ForgeColor.canvas, ForgeColor.canvas,
                 ])
             } else {

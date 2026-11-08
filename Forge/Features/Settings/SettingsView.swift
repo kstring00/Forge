@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import StoreKit
 import ForgeCore
 
 /// Settings. Phase 1b: export and import of the whole Vault. Later phases add
@@ -28,12 +29,33 @@ struct SettingsView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
+    @State private var managingSubscription = false
+    @AppStorage("membership.foundingPreview") private var foundingPreview = true
 
     private var liveCount: Int { ideas.filter { !$0.isArchived }.count }
     private var archivedCount: Int { ideas.count - liveCount }
 
     var body: some View {
         List {
+            Section {
+                LabeledContent("Plan", value: env.entitlements.state.plan.displayName
+                               + (env.entitlements.state.isTrial ? " · free trial" : "")
+                               + (env.entitlements.state.founding ? " · founding member" : ""))
+                Text(env.entitlements.balance.line).font(.subheadline).foregroundStyle(ForgeColor.ink)
+                Button("Plans and checks") { env.showingMembership = true }
+                Button("Restore purchases") { Task { await env.membership.restore() } }
+                if env.entitlements.state.plan != .free {
+                    Button("Manage subscription") { managingSubscription = true }
+                }
+                if let message = env.membership.message {
+                    Text(message).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                }
+            } header: {
+                Text("Membership")
+            } footer: {
+                Text("Your ideas, steps and Journal are yours on every plan. A check that fails or is stopped never counts.")
+            }
+
             Section {
                 Button {
                     export()
@@ -169,16 +191,20 @@ struct SettingsView: View {
             Section {
                 Button("Replay first run") { env.firstRun.startReplay() }
                     .foregroundStyle(ForgeColor.emberText)
+                Button("Give checks back") { (env.entitlements as? LocalEntitlements)?.resetForTesting() }
+                    .foregroundStyle(ForgeColor.emberText)
+                Toggle("Show the founding offer", isOn: $foundingPreview)
             } header: {
                 Text("Developer")
             } footer: {
-                Text("Shows the welcome flow, the free-check screen and the first-Brief guide again. Nothing is deleted, the real flags stay as they are, and the proxy still decides what is free. Debug builds only.")
+                Text("Replay shows the welcome flow, the free-check screen and the first-Brief guide again without deleting anything. Give checks back restores this month's checks and the free first check; bought checks stay. Purchases here use Hunch.storekit: Debug → StoreKit → Manage Transactions refunds or expires them. Debug builds only.")
             }
             #endif
         }
         .scrollContentBackground(.hidden)
         .background(ForgeColor.canvas)
         .navigationTitle("Settings")
+        .manageSubscriptionsSheet(isPresented: $managingSubscription)
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.folder, .json], allowsMultipleSelection: false) { result in
             handleImport(result)
         }

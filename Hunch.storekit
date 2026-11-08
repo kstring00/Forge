@@ -1,0 +1,148 @@
+{
+  "identifier": "8C3F1A20",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "7D2E4B10",
+      "localizations": [
+        {
+          "description": "Five more checks. They never expire and are used after your monthly ones.",
+          "displayName": "5 extra checks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "hunch.topup.5",
+      "referenceName": "Top-up \u00b7 5 checks",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [
+    {
+      "id": "5A0B3C01",
+      "localizations": [],
+      "name": "Hunch Membership",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "24.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6C1D2E01",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "60 checks a month, faster answers, deeper research and exportable reports.",
+              "displayName": "Hunch Pro",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "hunch.pro.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Pro \u00b7 monthly",
+          "subscriptionGroupID": "5A0B3C01",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "179.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6C1D2E02",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "60 checks a month, faster answers, deeper research and exportable reports.",
+              "displayName": "Hunch Pro (yearly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "hunch.pro.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Pro \u00b7 yearly",
+          "subscriptionGroupID": "5A0B3C01",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "9.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "6C1D2E03",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "15 checks a month, What-if ideas, Argue it out and the Library.",
+              "displayName": "Hunch Plus",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "hunch.plus.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Plus \u00b7 monthly",
+          "subscriptionGroupID": "5A0B3C01",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "59.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "6C1D2E04",
+          "introductoryOffer": {
+            "internalID": "6C1D2E14",
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W"
+          },
+          "localizations": [
+            {
+              "description": "15 checks a month, What-if ideas, Argue it out and the Library.",
+              "displayName": "Hunch Plus (yearly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "hunch.plus.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Plus \u00b7 yearly",
+          "subscriptionGroupID": "5A0B3C01",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "39.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "6C1D2E05",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Plus at the founding price, for as long as you stay subscribed.",
+              "displayName": "Hunch Plus \u00b7 founding member",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "hunch.plus.founding.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Plus \u00b7 founding yearly",
+          "subscriptionGroupID": "5A0B3C01",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

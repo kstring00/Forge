@@ -10,6 +10,12 @@ final class AppEnvironment {
     let speech: SpeechCapture
     /// Reality Checks run here so they survive navigation and Home can narrate them.
     let realityChecks: RealityCheckCenter
+    /// Decision 0032: whether a check may start, and what's left. Local today, the proxy ledger later.
+    let entitlements: any EntitlementService
+    /// StoreKit 2: products, purchases, restore, renewals.
+    let membership: MembershipStore
+    /// The Membership screen, from Home's pill, Settings, or the out-of-checks state.
+    var showingMembership = false
     /// §7: the idea just saved; Home turns toward it until the user sends it to the panel or taps Later.
     var justCapturedIdeaID: UUID?
     /// The selected tab, here so Home's links and capture can switch it.
@@ -34,6 +40,10 @@ final class AppEnvironment {
         self.ai = ai
         self.speech = speech
         self.realityChecks = RealityCheckCenter(proxy: ai as? ProxyAIClient)
+        let entitlements = LocalEntitlements()
+        self.entitlements = entitlements
+        self.membership = MembershipStore(entitlements: entitlements)
+        realityChecks.entitlements = entitlements
     }
 
     /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.

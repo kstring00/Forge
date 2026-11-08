@@ -27,6 +27,8 @@ struct RootTabView: View {
             .tag(ForgeTab.journal)
         }
         .forgeAnimation(ForgeMotion.settle, value: env.tab)
+        .sheet(isPresented: $env.showingMembership) { MembershipView() }
+        .task { await env.membership.start() }
         .sheet(item: $env.capture) { request in
             CaptureSheet(autoStartVoice: request == .voice)
         }

@@ -33,7 +33,7 @@ final class InterviewTests: XCTestCase {
         let idea = Idea(originalText: "Weekend site care for RV parks along one corridor")
         idea.lensType = .business
         store.context.insert(idea)
-        let e = idea.startEvaluation(lensType: .business)
+        let e = idea.beginEvaluation(lens: .business)
         try e.set(key: "A2", score: 1, evidenceLevel: 0)
         let project = WorkshopActions.convert(idea, with: .init(name: "RV sites", desiredOutcome: "", nextStep: "Talk to five park owners"), in: store.context)
         WorkshopActions.setNextStep(project, "Talk to five park owners", target: 5, criterionKey: "A2")

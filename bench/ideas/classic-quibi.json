@@ -1,0 +1,44 @@
+{
+  "id": "classic-quibi",
+  "kind": "classic",
+  "title": "Premium short shows for phones",
+  "text": "A mobile-only streaming service with premium, Hollywood-made shows cut into episodes under ten minutes, for people watching on their phones in spare moments, at $4.99 a month with ads.",
+  "lens": "business",
+  "outcome": "Quibi launched in April 2020 and shut down in December 2020 after raising about $1.75 billion.",
+  "key": {
+    "competitors": [
+      {
+        "name": "YouTube",
+        "aliases": [
+          "YouTube Premium",
+          "YouTube Shorts"
+        ],
+        "url": "https://www.youtube.com/premium",
+        "priceLow": 13.99,
+        "priceHigh": 13.99,
+        "priceNote": "Premium; the free tier is the real competitor"
+      },
+      {
+        "name": "TikTok",
+        "aliases": [],
+        "url": "https://www.tiktok.com",
+        "priceLow": null,
+        "priceHigh": null,
+        "priceNote": "free"
+      },
+      {
+        "name": "Netflix",
+        "aliases": [],
+        "url": "https://www.netflix.com/signup/planform",
+        "priceLow": 7.99,
+        "priceHigh": 24.99,
+        "priceNote": "Standard with ads to Premium, monthly (US)"
+      }
+    ],
+    "riskiestAssumption": "People will pay for short premium shows on their phone when YouTube and TikTok already give them short video for free.",
+    "notes": "",
+    "keyedBy": "Claude, from public history and pricing pages as remembered; a person must check every price",
+    "keyedAt": "2026-11-08",
+    "verified": false
+  }
+}

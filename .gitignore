@@ -22,3 +22,7 @@ proxy/.env*
 
 # OS
 .DS_Store
+
+# Bench (decision 0034): dependencies and fetched pages stay local
+bench/node_modules/
+bench/results/*/raw/

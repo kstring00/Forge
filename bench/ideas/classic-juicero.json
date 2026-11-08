@@ -1,0 +1,55 @@
+{
+  "id": "classic-juicero",
+  "kind": "classic",
+  "title": "A connected juice press with fresh packs",
+  "text": "A Wi-Fi connected countertop juice press that squeezes single-serve packs of chopped fresh fruit and vegetables, delivered weekly by subscription, so busy people get cold-pressed juice at home without cleaning a juicer.",
+  "lens": "business",
+  "outcome": "Juicero shut down in September 2017, months after reporters showed the packs could be squeezed by hand as fast as the $400 machine.",
+  "key": {
+    "competitors": [
+      {
+        "name": "Pressed",
+        "aliases": [
+          "Pressed Juicery"
+        ],
+        "url": "https://pressed.com",
+        "priceLow": 6,
+        "priceHigh": 10,
+        "priceNote": "per bottle"
+      },
+      {
+        "name": "Nama",
+        "aliases": [
+          "Nama J2"
+        ],
+        "url": "https://namawell.com",
+        "priceLow": 549,
+        "priceHigh": 599,
+        "priceNote": "J2 cold-press juicer"
+      },
+      {
+        "name": "Hurom",
+        "aliases": [],
+        "url": "https://hurom.com",
+        "priceLow": 399,
+        "priceHigh": 599,
+        "priceNote": "slow juicers"
+      },
+      {
+        "name": "Suja",
+        "aliases": [
+          "Suja Organic"
+        ],
+        "url": "https://www.sujaorganic.com",
+        "priceLow": 4,
+        "priceHigh": 7,
+        "priceNote": "per bottle, grocery"
+      }
+    ],
+    "riskiestAssumption": "People will pay for an expensive press plus a subscription when the packs, a regular juicer or a bottle of cold-pressed juice give the same result for less.",
+    "notes": "The deeper failure was that the machine added nothing over squeezing the pack by hand.",
+    "keyedBy": "Claude, from public history and pricing pages as remembered; a person must check every price",
+    "keyedAt": "2026-11-08",
+    "verified": false
+  }
+}

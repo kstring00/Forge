@@ -1,0 +1,57 @@
+{
+  "id": "classic-dropbox",
+  "kind": "classic",
+  "title": "A folder that syncs everywhere",
+  "text": "A folder on my computer that automatically syncs my files to every device I own and to the web, so I stop emailing files to myself and carrying a USB stick around.",
+  "lens": "business",
+  "outcome": "Dropbox launched in 2008 and became a public company. Today the problem is solved by storage bundled with every phone and computer, so the honest verdict for a new entrant is 'Already solved'.",
+  "key": {
+    "competitors": [
+      {
+        "name": "Google Drive",
+        "aliases": [
+          "Google One"
+        ],
+        "url": "https://one.google.com/about/plans",
+        "priceLow": 1.99,
+        "priceHigh": 9.99,
+        "priceNote": "Google One 100 GB to 2 TB, monthly"
+      },
+      {
+        "name": "iCloud",
+        "aliases": [
+          "iCloud+",
+          "iCloud Drive"
+        ],
+        "url": "https://www.apple.com/icloud/",
+        "priceLow": 0.99,
+        "priceHigh": 9.99,
+        "priceNote": "iCloud+ 50 GB to 2 TB, monthly (US)"
+      },
+      {
+        "name": "OneDrive",
+        "aliases": [
+          "Microsoft OneDrive",
+          "Microsoft 365"
+        ],
+        "url": "https://www.microsoft.com/microsoft-365/onedrive/compare-onedrive-plans",
+        "priceLow": 1.99,
+        "priceHigh": 9.99,
+        "priceNote": "100 GB plan to Microsoft 365 Personal, monthly"
+      },
+      {
+        "name": "Dropbox",
+        "aliases": [],
+        "url": "https://www.dropbox.com/plans",
+        "priceLow": 9.99,
+        "priceHigh": 11.99,
+        "priceNote": "Plus, billed yearly vs monthly"
+      }
+    ],
+    "riskiestAssumption": "People will pay for another sync service when Google Drive, iCloud and OneDrive already come with their phone or computer, free up to a limit.",
+    "notes": "A desk check should land on 'Already solved' or a narrow wedge. Naming Dropbox itself counts as a competitor match.",
+    "keyedBy": "Claude, from public history and pricing pages as remembered; a person must check every price",
+    "keyedAt": "2026-11-08",
+    "verified": false
+  }
+}

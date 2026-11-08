@@ -1,0 +1,57 @@
+{
+  "id": "person-hunch",
+  "kind": "person",
+  "title": "An app that gauges my ideas",
+  "text": "An app that helps me gauge my ideas: I say an idea out loud, a panel of AI perspectives researches it and argues about it, and tells me whether to build it and what to test first this week.",
+  "lens": "business",
+  "outcome": "",
+  "key": {
+    "competitors": [
+      {
+        "name": "IdeaProof",
+        "aliases": [],
+        "url": "https://ideaproof.ai",
+        "priceLow": 19,
+        "priceHigh": 19,
+        "priceNote": "per idea (docs/PRICING.md)"
+      },
+      {
+        "name": "IdeaValidator",
+        "aliases": [
+          "Idea Validator"
+        ],
+        "url": null,
+        "priceLow": 14.99,
+        "priceHigh": 14.99,
+        "priceNote": "Pro, monthly (docs/PRICING.md)"
+      },
+      {
+        "name": "ChatGPT",
+        "aliases": [
+          "ChatGPT Plus",
+          "OpenAI"
+        ],
+        "url": "https://openai.com/chatgpt/pricing",
+        "priceLow": 20,
+        "priceHigh": 20,
+        "priceNote": "Plus, monthly; the free tier is the real alternative"
+      },
+      {
+        "name": "Claude",
+        "aliases": [
+          "Claude Pro",
+          "Anthropic"
+        ],
+        "url": "https://claude.com/pricing",
+        "priceLow": 20,
+        "priceHigh": 20,
+        "priceNote": "Pro, monthly"
+      }
+    ],
+    "riskiestAssumption": "Strangers will pay for, or keep coming back to, another AI idea-judging panel when free chat prompts and cheap validators already exist.",
+    "notes": "The panel's own first check on this idea said the market is crowded and paid for; the user built it for themselves anyway.",
+    "keyedBy": "Kyle, via docs/PRICING.md and the panel's first Brief (text paraphrased; replace with the words from the app)",
+    "keyedAt": "2026-11-08",
+    "verified": false
+  }
+}

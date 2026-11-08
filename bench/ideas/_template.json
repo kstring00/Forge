@@ -1,0 +1,41 @@
+{
+  "id": "person-your-idea",
+  "kind": "person",
+  "title": "A short title",
+  "text": "The idea in your own words, at least eight words, naming a problem or a person.",
+  "lens": "business",
+  "outcome": "For classics only: what actually happened.",
+  "key": {
+    "competitors": [
+      {
+        "name": "Competitor one",
+        "aliases": [],
+        "url": "https://example.com/pricing",
+        "priceLow": 10,
+        "priceHigh": 20,
+        "priceNote": "which plan, which period"
+      },
+      {
+        "name": "Competitor two",
+        "aliases": [],
+        "url": null,
+        "priceLow": null,
+        "priceHigh": null,
+        "priceNote": ""
+      },
+      {
+        "name": "Competitor three",
+        "aliases": [],
+        "url": null,
+        "priceLow": null,
+        "priceHigh": null,
+        "priceNote": ""
+      }
+    ],
+    "riskiestAssumption": "The one belief that, if wrong, sinks it.",
+    "notes": "Anything the judge should know.",
+    "keyedBy": "your name",
+    "keyedAt": "YYYY-MM-DD",
+    "verified": true
+  }
+}

@@ -31,7 +31,7 @@ struct HomeView: View {
     private func count(_ track: Track) -> Int { live.filter { $0.track == track }.count }
     private var byStakes: [Idea] {
         live.filter { $0.id != moveIdeaID }.sorted { a, b in
-            let ma = Stake.monthly(a.latestEvaluation), mb = Stake.monthly(b.latestEvaluation)
+            let ma = EstimatedReturn.sortKey(for: a), mb = EstimatedReturn.sortKey(for: b)
             if (ma ?? -1) != (mb ?? -1) { return (ma ?? -1) > (mb ?? -1) }
             let ca = a.latestEvaluation?.confidence ?? -1, cb = b.latestEvaluation?.confidence ?? -1
             if ca != cb { return ca > cb }
@@ -73,19 +73,18 @@ struct HomeView: View {
 
     private var header: some View {
         ZStack(alignment: .bottomLeading) {
-            GrainGradient(colors: ForgeColor.sky(for: .evaluate) + [ForgeColor.canvas], grain: 0.3)
-                .mask(LinearGradient(colors: [.black, .black, .black.opacity(0)], startPoint: .top, endPoint: .bottom))
+            SkyHeader()
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                 HStack {
                     Text(Date.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()).replacingOccurrences(of: ", ", with: " · "))
-                        .forgeLabel().foregroundStyle(ForgeColor.ink.opacity(0.85))
+                        .forgeLabel().foregroundStyle(.white.opacity(0.9))
                     Spacer()
                     NavigationLink { SettingsView() } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(ForgeColor.ink)
+                            .foregroundStyle(.white)
                             .frame(width: 36, height: 36)
-                            .background(.white.opacity(0.12), in: Circle())
+                            .background(.white.opacity(0.18), in: Circle())
                     }
                     .accessibilityLabel("Settings")
                 }
@@ -96,7 +95,7 @@ struct HomeView: View {
                         .lineSpacing(-2)
                     if !live.isEmpty {
                         Text("\(inMotion) \(inMotion == 1 ? "idea" : "ideas") in motion · \(count(.reality)) out in the world")
-                            .font(.system(size: 15)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+                            .font(.system(size: 15)).foregroundStyle(ForgeColor.ink.opacity(0.9))
                     }
                 }
             }
@@ -127,7 +126,7 @@ struct HomeView: View {
                         Text("Hear the panel and rule on each voice.")
                             .font(.system(size: 16, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         HStack(spacing: ForgeSpacing.s) {
-                            MiniPanel(verdicts: idea.rounds.max { $0.createdAt < $1.createdAt }?.verdicts ?? [])
+                            IdeaSpark(idea: idea, size: 28)
                             Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
                         }
                         Text("Hear the panel")
@@ -185,8 +184,48 @@ struct HomeView: View {
     }
 }
 
+/// The sky behind the header: lavender into violet, rose and ember, with the
+/// grain, ending in the page's own colour so it melts into the ground in
+/// either theme. A mesh where the OS has one; a soft linear fade before iOS 18.
+struct SkyHeader: View {
+    private let lavender = Color(hex: 0x8F82C8)
+    private let violet = Color(hex: 0x7A5BB8)
+    private let rose = Color(hex: 0xC97B86)
+    private let ember = Color(hex: 0xD9772B)
+    private let peach = Color(hex: 0xE8A77A)
+
+    var body: some View {
+        ZStack {
+            if #available(iOS 18, *) {
+                MeshGradient(width: 3, height: 4, points: [
+                    [0, 0], [0.5, 0], [1, 0],
+                    [0, 0.38], [0.55, 0.42], [1, 0.34],
+                    [0, 0.72], [0.45, 0.78], [1, 0.70],
+                    [0, 1], [0.5, 1], [1, 1],
+                ], colors: [
+                    lavender, violet, lavender,
+                    rose, peach, violet.opacity(0.9),
+                    ForgeColor.canvas.opacity(0.0).mixedToward( ember, 0.35), ForgeColor.canvas.mixedToward( peach, 0.45), ForgeColor.canvas.mixedToward( rose, 0.3),
+                    ForgeColor.canvas, ForgeColor.canvas, ForgeColor.canvas,
+                ])
+            } else {
+                LinearGradient(stops: [
+                    .init(color: lavender, location: 0), .init(color: violet, location: 0.3),
+                    .init(color: peach, location: 0.6), .init(color: ForgeColor.canvas, location: 1),
+                ], startPoint: .top, endPoint: .bottom)
+            }
+            // Grain only where the sky still has colour.
+            GrainGradient(colors: [.clear, .clear], grain: 0.22)
+                .blendMode(.multiply)
+                .mask(LinearGradient(colors: [.black, .black.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// One idea by stakes: a stage-coloured side band, stage and verdict in mono,
-/// the serif title, five mini orbs in their states, and the stake.
+/// the serif title, five mini orbs in their states, and the Est. return row
+/// (or Impact). The title opens the idea; the row opens the estimate.
 struct StakeCard: View {
     let idea: Idea
     var checking = false
@@ -194,32 +233,43 @@ struct StakeCard: View {
     private var track: Track { idea.track ?? .idea }
     private var round: Round? { idea.rounds.max { $0.createdAt < $1.createdAt } }
     private var verdicts: [Verdict] { round?.verdicts ?? [] }
-    private var evaluation: Evaluation? { idea.latestEvaluation }
     private var tally: RoundTally { RoundTally(verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) }) }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 12) {
             Rectangle().fill(Self.color(track)).frame(width: 3)
+            IdeaSpark(idea: idea, size: 44).padding(.top, 14)
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track))
-                    Spacer()
-                    Text(rightLabel).forgeLabelSmall().foregroundStyle(rightTint)
+                Group {
+                    if let project = idea.project {
+                        NavigationLink(value: WorkshopRoute.project(project.id)) { heading }
+                    } else {
+                        NavigationLink(value: VaultRoute.idea(idea.id)) { heading }
+                    }
                 }
-                Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
-                HStack(alignment: .lastTextBaseline) {
-                    MiniPanel(verdicts: verdicts, working: checking, size: 20, spheres: Sphere.phase3Panel)
-                    Spacer()
-                    stake
-                }
+                .buttonStyle(.plain)
+                EstimatedReturnRow(idea: idea).frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.vertical, 14).padding(.horizontal, 14)
+            .padding(.vertical, 14).padding(.trailing, 14)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
-        .accessibilityElement(children: .combine)
+    }
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track))
+                Spacer()
+                if let right = rightLabel { Text(right).forgeLabelSmall().foregroundStyle(rightTint) }
+                StageTrail(track: idea.track)
+            }
+            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .contentShape(Rectangle())
     }
 
     static func color(_ t: Track) -> Color {
@@ -233,8 +283,8 @@ struct StakeCard: View {
     private var stageLine: String {
         var parts = [track.displayName]
         if checking { parts.append("Checking") }
-        else if idea.project != nil, let step = idea.project?.nextStep, !step.isEmpty {
-            parts.append("\(min(idea.project!.nextStepCount, idea.project!.nextStepTarget)) of \(max(1, idea.project!.nextStepTarget))")
+        else if let project = idea.project, project.nextStep != nil {
+            parts.append("\(min(project.nextStepCount, project.nextStepTarget)) of \(max(1, project.nextStepTarget))")
         } else if tally.total > 0 {
             parts.append(tally.isComplete ? "Ruled" : "Ruled \(tally.ruled) of \(tally.total)")
         } else if !RealityCheckPolicy.isOffered(for: idea.lensType) {
@@ -245,35 +295,14 @@ struct StakeCard: View {
         return parts.joined(separator: " · ")
     }
 
-    private var rightLabel: String {
+    /// The verdict once there is one; the lens when the user chose one; else nothing.
+    private var rightLabel: String? {
         if let v = idea.latestRealityCheck?.verdict { return v.displayName }
-        return idea.lensType?.displayName ?? "No lens yet"
+        return idea.lensType?.displayName
     }
 
     private var rightTint: Color {
         idea.latestRealityCheck != nil ? ForgeColor.emberText : ForgeColor.inkSecondary
-    }
-
-    @ViewBuilder
-    private var stake: some View {
-        if let e = evaluation, e.lensType == .business, let line = Stake.projectionLine(e) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(line.figure).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.emberText)
-                Text(line.suffix).font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary)
-            }
-        } else if let e = evaluation, e.lensType != .business {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(e.impactWho?.split(separator: " ").first.map(String.init) ?? "Impact").font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F))
-                Text(e.impactWhatChanges ?? e.impactSignal ?? "").font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
-            }
-        } else if RealityCheckPolicy.isOffered(for: idea.lensType) && idea.latestRealityCheck == nil {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text("?").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.inkSecondary)
-                Text("send to the panel").font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary)
-            }
-        } else {
-            Text("No figures yet").font(.system(size: 11)).foregroundStyle(ForgeColor.inkSecondary)
-        }
     }
 }
 

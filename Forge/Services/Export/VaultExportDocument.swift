@@ -86,6 +86,9 @@ struct EvaluationExport: Codable {
     var nextStepText: String?
     var aiFilledAt: Date?
     var projectionSuggestion: String?
+    var projectionEstimateLow: Double?
+    var projectionEstimateHigh: Double?
+    var projectionEstimateBasis: String?
     var criteria: [CriterionScoreExport]
     var experiment: ExperimentExport?
 }

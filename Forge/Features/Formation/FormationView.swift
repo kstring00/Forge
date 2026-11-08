@@ -51,18 +51,21 @@ struct FormationRow: View {
     private var tally: RoundTally { RoundTally(verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) }) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            HStack {
-                MiniPanel(verdicts: verdicts, working: checking)
-                Spacer()
-                if checking {
-                    Text("Checking").forgeLabel()
-                } else if let check = idea.latestRealityCheck {
-                    Text(check.verdict.displayName).forgeLabel().foregroundStyle(ForgeColor.emberText)
+        HStack(alignment: .top, spacing: 12) {
+            IdeaSpark(idea: idea, size: 44)
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                HStack(spacing: 8) {
+                    if checking {
+                        Text("Checking").forgeLabelSmall()
+                    } else if let check = idea.latestRealityCheck {
+                        Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
+                    }
+                    Spacer()
+                    StageTrail(track: idea.track)
                 }
+                Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                Text(statusLine).forgeLabelSmall()
             }
-            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
-            Text(statusLine).forgeLabelSmall()
         }
         .padding(ForgeSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,30 +81,5 @@ struct FormationRow: View {
         var parts = [tally.isComplete ? "Ruled" : "\(tally.ruled) of \(tally.total) ruled"]
         if !tally.splits.isEmpty { parts.append(tally.splits.count == 1 ? "1 split" : "\(tally.splits.count) splits") }
         return parts.joined(separator: " · ")
-    }
-}
-
-/// Six 18 pt orbs in verdict states, overlapping like the canvas.
-struct MiniPanel: View {
-    let verdicts: [Verdict]
-    var working = false
-    var size: CGFloat = 18
-    /// Six by default; the stakes cards show the five that sit on the panel today.
-    var spheres: [Sphere] = Panel.order
-
-    private func state(_ s: Sphere) -> OrbState {
-        if s == .steward { return .dormant }
-        if working { return .working }
-        if let v = verdicts.first(where: { $0.sphere == s }) { return .verdict(v.kind) }
-        return .idle
-    }
-
-    var body: some View {
-        HStack(spacing: -size * 0.3) {
-            ForEach(spheres) { s in
-                OrbView(sphere: s, state: state(s), size: size)
-            }
-        }
-        .accessibilityHidden(true)
     }
 }

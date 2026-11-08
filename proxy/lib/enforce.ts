@@ -69,6 +69,9 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
         return { ...c, score: clamp(c.score, 1, 5), evidenceLevel, sourceIDs };
       }),
     riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
+    // A range is low to high, never negative, and never one-sided.
+    projectionLow: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.min(p.projectionLow, p.projectionHigh)) : null,
+    projectionHigh: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.max(p.projectionLow, p.projectionHigh)) : null,
     panel: round.verdicts,
     crossfire: round.crossfire,
   };

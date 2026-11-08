@@ -50,7 +50,7 @@ export function actionInstruction(action: Action): string {
 1. realityCheck: as in REALITY CHECK.
 2. explorations: one proposed answer per Explore prompt key, with source ids. Where the Library says nothing, answer honestly that it is unknown and say what would answer it.
 3. criteria: for every criterion of the lens, a proposed score 1-5 from the rubric anchors and an evidence rung that never exceeds the desk ceiling, a one-line note, and source ids. For A2 the score is the highest rung at least three independent people reached; from a desk that is at most 2.
-4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure.
+4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow and projectionHigh: the Investor's estimated return as a monthly USD range (price × a plausible count in year one, per month), from the same sources; null if no source supports a figure. projectionBasis: what the range rests on, in at most six words ("three competitors' pricing pages"), never a source id.
 5. riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.
 6. nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.
 7. draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.

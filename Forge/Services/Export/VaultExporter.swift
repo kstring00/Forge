@@ -67,6 +67,7 @@ enum VaultExporter {
             nextStepText: e.nextStepText,
             aiFilledAt: e.aiFilledAt,
             projectionSuggestion: e.projectionSuggestion,
+            projectionEstimateLow: e.projectionEstimateLow, projectionEstimateHigh: e.projectionEstimateHigh, projectionEstimateBasis: e.projectionEstimateBasis,
             criteria: e.criteria.sorted { $0.key < $1.key }.map { c in
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,

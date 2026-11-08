@@ -60,7 +60,7 @@ struct RealityCheckButton: View {
                         }
                     }
                     Spacer()
-                    HStack(spacing: -6) { ForEach(Sphere.phase3Panel.prefix(3)) { OrbView(sphere: $0, size: 18) } }
+                    Image(systemName: "arrow.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
                 }
                 .padding(compact ? 14 : 18)
                 .frame(maxWidth: .infinity, alignment: .leading)

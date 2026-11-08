@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Query(sort: \RealityCheck.createdAt, order: .reverse) private var checks: [RealityCheck]
 
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
     @AppStorage(AISpend.ceilingKey) private var ceiling: Double = AISpend.defaultCeiling
     @AppStorage(AISpend.totalKey) private var spentThisMonth: Double = 0
@@ -59,7 +60,7 @@ struct SettingsView: View {
             } header: {
                 Text("Appearance")
             } footer: {
-                Text("Dark is the studio's default. Light inverts the same palette.")
+                Text("Dark is the studio's default. Light inverts the same palette. Showing \(colorScheme == .dark ? "dark" : "light") now.")
             }
 
             Section {

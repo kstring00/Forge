@@ -142,36 +142,28 @@ struct NextStepCard: View {
     }
 }
 
-/// "What's riding on it": Potential and Confidence at 56 pt, the Projection
-/// ("$X / mo if it works") with its verified-vs-estimate bar on Business
-/// ideas or the Impact line on Growth and Creative, and one line tying the
-/// step to the evidence it raises. Hidden when there is no evaluation.
+/// "What's riding on it": Potential and Confidence at 56 pt with their names,
+/// the Est. return row (the user's figure, or the Investor's range with its
+/// basis) with the verified-vs-estimate bar on Business ideas or the Impact
+/// row on Growth and Creative, and one line tying the step to the evidence it
+/// raises. Hidden when there is no evaluation.
 struct StakesPanel: View {
     let evaluation: Evaluation
     let project: Project
 
+    private var idea: Idea? { project.idea }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("What's riding on it").forgeLabelSmall()
-            HStack(alignment: .center, spacing: 14) {
-                smallRing(evaluation.potential, ForgeColor.ink)
-                smallRing(evaluation.confidence, ForgeColor.ember)
-                VStack(alignment: .leading, spacing: 4) {
-                    if evaluation.lensType == .business {
-                        Stake.projectionLine(evaluation).map { line in
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(line.figure).font(ForgeType.numeralMedium).foregroundStyle(ForgeColor.emberText)
-                                Text(line.suffix).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
-                            }
-                        }
-                        bar(verified: evaluation.projection.verifiedFraction)
-                        Text(["Potential", "Confidence", Stake.projectionLine(evaluation)?.kind ?? "No figures yet"].joined(separator: " · ")).forgeLabelSmall()
-                    } else {
-                        Text(Stake.impactLine(evaluation) ?? "Say who this helps and how you'd know.")
-                            .font(.system(size: 13)).foregroundStyle(ForgeColor.ink).lineLimit(3)
-                        Text("Potential · Confidence · Impact").forgeLabelSmall()
-                    }
+            HStack(alignment: .top, spacing: 14) {
+                smallRing(evaluation.potential, "Potential", ForgeColor.ink)
+                smallRing(evaluation.confidence, "Confidence", ForgeColor.ember)
+                VStack(alignment: .trailing, spacing: 6) {
+                    if let idea { EstimatedReturnRow(idea: idea, compact: false, alignment: .trailing) }
+                    if evaluation.lensType == .business { bar(verified: evaluation.projection.verifiedFraction) }
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.nextStepTarget, moves: project.nextStepMoves))
                 .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
@@ -182,16 +174,20 @@ struct StakesPanel: View {
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
-    private func smallRing(_ value: Int, _ tint: Color) -> some View {
-        ZStack {
-            Circle().stroke(ForgeColor.line, lineWidth: 4)
-            Circle().trim(from: 0, to: Double(min(max(value, 0), 100)) / 100)
-                .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            Text("\(value)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+    private func smallRing(_ value: Int, _ name: String, _ tint: Color) -> some View {
+        VStack(spacing: 4) {
+            ZStack {
+                Circle().stroke(ForgeColor.line, lineWidth: 4)
+                Circle().trim(from: 0, to: Double(min(max(value, 0), 100)) / 100)
+                    .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Text("\(value)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+            }
+            .frame(width: 56, height: 56)
+            Text(name).forgeLabelSmall()
         }
-        .frame(width: 56, height: 56)
-        .accessibilityLabel("\(tint == ForgeColor.ember ? "Confidence" : "Potential") \(value)")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name) \(value) out of 100")
     }
 
     private func bar(verified: Double) -> some View {
@@ -208,59 +204,6 @@ struct StakesPanel: View {
         .frame(height: 4)
         .accessibilityLabel("\(Int((verified * 100).rounded())) percent verified")
     }
-}
-
-/// What an idea has riding on it, in one figure or one line.
-enum Stake {
-    struct Line { let figure: String; let suffix: String; let kind: String }
-
-    /// The user's own projection first; the panel's estimate when there is none.
-    static func projectionLine(_ e: Evaluation) -> Line? {
-        if let recurring = e.projection.recurringPerMonth {
-            return Line(figure: Projection.compact(recurring), suffix: "/ mo if it works", kind: e.projection.verifiedUnits > 0 ? "Partly verified" : "Yours, unverified")
-        }
-        if let s = e.projectionSuggestion, let figure = estimateFigure(from: s) {
-            return Line(figure: figure, suffix: "/ mo est.", kind: "Estimate")
-        }
-        return nil
-    }
-
-    /// The impact in one line: who, or the signal.
-    static func impactLine(_ e: Evaluation) -> String? {
-        let who = e.impactWho?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let changes = e.impactWhatChanges?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !who.isEmpty && !changes.isEmpty { return "\(who): \(changes)" }
-        if !who.isEmpty { return who }
-        if !changes.isEmpty { return changes }
-        return e.impactSignal?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
-    }
-
-    /// "$99–$199 per unit · 8–15 units in year one. …" → the low end of price × units, monthly.
-    static func estimateFigure(from suggestion: String) -> String? {
-        let numbers = suggestion
-            .replacingOccurrences(of: ",", with: "")
-            .split(whereSeparator: { !$0.isNumber && $0 != "." })
-            .compactMap { Double($0) }
-        guard numbers.count >= 3 else { return nil }
-        let price = numbers[0], units = numbers[2]
-        guard price > 0, units > 0 else { return nil }
-        return Projection.compact(price * units)
-    }
-
-    /// For sorting "by stakes": the monthly figure, else nil.
-    static func monthly(_ e: Evaluation?) -> Double? {
-        guard let e else { return nil }
-        if let r = e.projection.recurringPerMonth { return r }
-        if let s = e.projectionSuggestion {
-            let numbers = s.replacingOccurrences(of: ",", with: "").split(whereSeparator: { !$0.isNumber && $0 != "." }).compactMap { Double($0) }
-            if numbers.count >= 3, numbers[0] > 0, numbers[2] > 0 { return numbers[0] * numbers[2] }
-        }
-        return nil
-    }
-}
-
-private extension String {
-    var nonEmpty: String? { isEmpty ? nil : self }
 }
 
 /// How many of what the drafted asset asks for, the one-line caveat, and the

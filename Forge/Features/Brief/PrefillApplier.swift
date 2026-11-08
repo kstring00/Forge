@@ -86,6 +86,16 @@ enum PrefillApplier {
         if let p = r.projection {
             evaluation.projectionSuggestion = clean("\(Projection.compact(p.pricePerUnitLow))–\(Projection.compact(p.pricePerUnitHigh)) per unit · \(p.unitsYearOneLow)–\(p.unitsYearOneHigh) units in year one. \(p.rationale)")
         }
+        if let low = r.projectionLow, let high = r.projectionHigh, high > 0 {
+            evaluation.projectionEstimateLow = min(low, high)
+            evaluation.projectionEstimateHigh = max(low, high)
+            evaluation.projectionEstimateBasis = cleanOpt(r.projectionBasis).flatMap { $0.isEmpty ? nil : $0 }
+        } else if let p = r.projection, p.pricePerUnitLow > 0, p.unitsYearOneLow > 0 {
+            // An older proxy: price × units, per month, from the range it did give.
+            evaluation.projectionEstimateLow = p.pricePerUnitLow * Double(p.unitsYearOneLow)
+            evaluation.projectionEstimateHigh = p.pricePerUnitHigh * Double(p.unitsYearOneHigh)
+            evaluation.projectionEstimateBasis = cleanOpt(p.rationale.isEmpty ? nil : p.rationale)
+        }
         evaluation.aiFilledAt = now
 
         // The panel, as a Round the user can rule on in 3c.

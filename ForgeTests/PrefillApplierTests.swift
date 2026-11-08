@@ -30,6 +30,7 @@ final class PrefillApplierTests: XCTestCase {
                 .init(key: c.key, score: c.key == "A2" ? 2 : 4, evidenceLevel: c.key == "A6" ? 1 : rung, note: "From the desk", sourceIDs: c.key == "A6" ? [] : [sourceID])
             },
             projection: .init(pricePerUnitLow: 99, pricePerUnitHigh: 199, unitsYearOneLow: 8, unitsYearOneHigh: 15, rationale: "Competitor pricing."),
+            projectionLow: 900, projectionHigh: 2400, projectionBasis: "three competitors' pricing pages",
             riskiestAssumption: .init(belief: "Owners will pay monthly for a site they don't check.", consequence: "Becomes one-off builds.", sourceIDs: []),
             nextMove: .init(recommendation: .testRiskiestAssumption, step: "Ask five park owners how they handle their website today", experiment: rc.experiment),
             draftedAssets: .init(kind: .interviewQuestions, title: "Five Mom Test questions", body: "1. When did you last change your website?"),
@@ -70,6 +71,10 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertEqual(e.nextStepText, "Ask five park owners how they handle their website today")
         XCTAssertEqual(e.experiment?.timeboxDays, 7)
         XCTAssertTrue(e.projectionSuggestion?.contains("$99–$199") ?? false)
+        XCTAssertEqual(e.projectionEstimateLow, 900)
+        XCTAssertEqual(e.projectionEstimateHigh, 2400)
+        XCTAssertEqual(e.projectionEstimateBasis, "three competitors' pricing pages")
+        XCTAssertNil(e.projectionPricePerUnit, "an estimate never becomes the user's figure")
         XCTAssertNil(e.projectionPricePerUnit, "a range is an estimate, never a projection the user did not type")
         XCTAssertEqual(idea.stage, .evaluate)
         XCTAssertEqual(idea.lensType, .business)

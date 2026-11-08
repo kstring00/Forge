@@ -48,7 +48,13 @@ struct ProjectionCard: View {
             Spacer()
             Text("\(p.assumedUnits) assumed").forgeLabelSmall()
         }
-        if p.isEmpty, let suggestion = evaluation.projectionSuggestion, !suggestion.isEmpty {
+        if p.isEmpty, let low = evaluation.projectionEstimateLow, let high = evaluation.projectionEstimateHigh, high > 0 {
+            HStack(alignment: .top, spacing: ForgeSpacing.xs) {
+                SparkGlyph()
+                Text("The Investor's estimate: \(EstimatedReturn.range(low, high)) a month, from \(evaluation.projectionEstimateBasis ?? "the desk research"). Tap to enter your own; nothing is a projection until you type it.")
+                    .font(ForgeType.aiText).foregroundStyle(ForgeColor.spark)
+            }
+        } else if p.isEmpty, let suggestion = evaluation.projectionSuggestion, !suggestion.isEmpty {
             HStack(alignment: .top, spacing: ForgeSpacing.xs) {
                 SparkGlyph()
                 Text("Estimate from the panel: \(suggestion) Tap to accept or edit; nothing is a projection until you type it.")

@@ -21,7 +21,7 @@ struct ExploreAnswerSheet: View {
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                 if let sphere = prompt.sphere {
                     HStack(spacing: ForgeSpacing.s) {
-                        OrbView(sphere: sphere, size: 18)
+                        Circle().fill(OrbView.palette(for: sphere).base).frame(width: 8, height: 8)
                         Text("Asked by the \(sphere.displayName)").forgeLabel()
                     }
                 }

@@ -1,9 +1,9 @@
 import SwiftUI
 import ForgeCore
 
-/// The Vault card (§7 v4.1 treatment). A thin sky band keyed to stage, a serif
-/// title, the lens in mono caps, and the path implied on every card: six dim
-/// Sphere dots and "Not yet checked", or the verdict word with a small
+/// The Vault card. A thin sky band keyed to stage, the idea's spark, a serif
+/// title, the lens in mono caps, the stage trail, and the path implied on
+/// every card: "Not yet checked", or the verdict word with a small
 /// Confidence ring.
 struct IdeaCard: View {
     let idea: Idea
@@ -17,20 +17,21 @@ struct IdeaCard: View {
             LinearGradient(colors: ForgeColor.sky(for: idea.stage), startPoint: .leading, endPoint: .trailing)
                 .frame(height: 6)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                Text(idea.title)
-                    .font(ForgeType.ideaTitle)
-                    .foregroundStyle(ForgeColor.ink)
-                    .lineLimit(compact ? 2 : 3)
-                HStack(spacing: ForgeSpacing.m) {
-                    Text(idea.lensType?.displayName ?? idea.track?.displayName ?? "Archived").forgeLabel()
-                    if idea.triage?.isComplete == true { Text("Screened").forgeLabel() }
-                    Spacer()
-                    Text(idea.createdAt, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(ForgeColor.inkSecondary)
+            HStack(alignment: .top, spacing: 12) {
+                IdeaSpark(idea: idea, size: 44)
+                VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                    HStack(spacing: ForgeSpacing.m) {
+                        Text(idea.lensType?.displayName ?? idea.track?.displayName ?? "Archived").forgeLabelSmall()
+                        if idea.triage?.isComplete == true { Text("Screened").forgeLabelSmall() }
+                        Spacer()
+                        StageTrail(track: idea.track)
+                    }
+                    Text(idea.title)
+                        .font(ForgeType.ideaTitle)
+                        .foregroundStyle(ForgeColor.ink)
+                        .lineLimit(compact ? 2 : 3)
+                    statusRow
                 }
-                statusRow
             }
             .padding(ForgeSpacing.cardPadding)
         }
@@ -46,12 +47,13 @@ struct IdeaCard: View {
         switch resolved {
         case .notChecked:
             HStack(spacing: ForgeSpacing.s) {
-                SphereDots(lit: [])
                 Text("Not yet checked").forgeLabel()
+                Spacer()
+                Text(idea.createdAt, style: .date).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .checking:
             HStack(spacing: ForgeSpacing.s) {
-                SphereDots(lit: Set(Sphere.phase3Panel))
+                ProgressView().controlSize(.mini)
                 Text("Checking").forgeLabel()
             }
         case .checkFailed:
@@ -85,24 +87,6 @@ struct IdeaCard: View {
         case .checked(let v, let c): parts.append("\(v.displayName), confidence \(c)")
         }
         return parts.joined(separator: ", ")
-    }
-}
-
-/// Six dots in the Sphere colours, dim until lit.
-struct SphereDots: View {
-    var lit: Set<Sphere>
-    private let order: [Sphere] = [.customer, .investor, .strategist, .builder, .skeptic, .steward]
-
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(order) { s in
-                Circle()
-                    .fill(OrbView.palette(for: s).base)
-                    .frame(width: 6, height: 6)
-                    .opacity(lit.contains(s) ? 1 : 0.3)
-            }
-        }
-        .accessibilityHidden(true)
     }
 }
 

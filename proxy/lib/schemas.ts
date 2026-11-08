@@ -138,6 +138,12 @@ export const PrefillResult = z.object({
     unitsYearOneLow: z.number().int(), unitsYearOneHigh: z.number().int(),
     rationale: z.string(),
   }).nullable(),
+  /// The Investor's estimated return: a monthly range in USD, and what it rests
+  /// on in a few words ("competitor pricing", "three pricing pages"). Null when
+  /// nothing in the Library supports a figure; the app then shows no number.
+  projectionLow: z.number().nullable(),
+  projectionHigh: z.number().nullable(),
+  projectionBasis: z.string(),
   riskiestAssumption: z.object({ belief: z.string(), consequence: z.string(), sourceIDs: z.array(sourceId) }),
   nextMove: z.object({ recommendation, step: z.string(), experiment: ExperimentCard.nullable() }),
   draftedAssets: z.object({ kind: z.enum(["interviewQuestions", "outreachScript", "landingCopy"]), title: z.string(), body: z.string() }),

@@ -150,6 +150,14 @@ on Home, one `Idea.track`, counts from the step text, id scrubbing, the arc layo
 window theme, and the new Home. Tests: ForgeCore `GuardsTests`; app `HomeLogicTests`,
 `WorkshopActionsTests`.
 
+**3c.4: Est. return and the sky** (decision 0017). The prefill returns the Investor's
+monthly range and its basis; every card carries a labelled Est. return or Impact row
+that opens the estimate with its sources; the Home sky is a mesh ending in the page
+colour.
+
+**3c.5: Idea sparks** (decision 0018). `IdeaSpark` and `StageTrail` on every card and
+the idea header; orbs only where the panel speaks.
+
 Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
 on "I know something you don't", and rungs above 2 from what the user reports.
 

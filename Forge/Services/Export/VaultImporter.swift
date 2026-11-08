@@ -260,6 +260,9 @@ enum VaultImporter {
         evaluation.nextStepText = e.nextStepText
         evaluation.aiFilledAt = e.aiFilledAt
         evaluation.projectionSuggestion = e.projectionSuggestion
+        evaluation.projectionEstimateLow = e.projectionEstimateLow
+        evaluation.projectionEstimateHigh = e.projectionEstimateHigh
+        evaluation.projectionEstimateBasis = e.projectionEstimateBasis
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id

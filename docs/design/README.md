@@ -27,3 +27,4 @@ ship. Swapping to the named faces is a one-line change per token in `ForgeType.s
 
 - `home-leveled-up.pdf` — the "Home · leveled up" artboard the current Home follows
   (decision 0016).
+- `idea-sparks.pdf` — the "Idea sparks" artboard `IdeaSpark` follows (decision 0018).

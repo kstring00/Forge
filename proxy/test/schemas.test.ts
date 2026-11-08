@@ -79,6 +79,7 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
       { key: "Z9", score: 3, evidenceLevel: 2, note: "n", sourceIDs: [] },
     ],
     projection: null,
+    projectionLow: 2400, projectionHigh: 900, projectionBasis: "three pricing pages",
     riskiestAssumption: { belief: "b", consequence: "c", sourceIDs: [UNKNOWN] },
     nextMove: { recommendation: "testRiskiestAssumption", step: "s", experiment: null },
     draftedAssets: { kind: "interviewQuestions", title: "t", body: "b" },
@@ -95,6 +96,9 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
   assert.equal(e.criteria[1].evidenceLevel, 1, "no source: at most rung 1");
   assert.deepEqual(e.riskiestAssumption.sourceIDs, []);
   assert.equal(e.panel[0].verdict, "cantTell");
+  // The range is put in order.
+  assert.equal(e.projectionLow, 900);
+  assert.equal(e.projectionHigh, 2400);
 });
 
 test("cost accounting", () => {

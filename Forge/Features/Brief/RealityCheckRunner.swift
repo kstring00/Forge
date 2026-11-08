@@ -58,7 +58,8 @@ final class RealityCheckRunner {
     func start(on idea: Idea, in context: ModelContext, advantages: [String] = [], constraints: [String] = []) async {
         guard !isRunning else { return }
         let task = Task { @MainActor [weak self] in
-            await self?.run(on: idea, in: context, advantages: advantages, constraints: constraints)
+            guard let self else { return }
+            await self.run(on: idea, in: context, advantages: advantages, constraints: constraints)
         }
         runTask = task
         await task.value

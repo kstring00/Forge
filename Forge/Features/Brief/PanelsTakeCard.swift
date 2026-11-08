@@ -133,7 +133,28 @@ struct PanelsTakeCard: View {
 
     // MARK: Compact row
 
+    /// The row to the Brief, and under it the same Check again / Stop the full card has,
+    /// so a project page never sends the user hunting for the idea page.
     private func row(_ check: RealityCheck) -> some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            briefRow(check)
+            HStack {
+                if isWorking {
+                    Text("The panel is on it").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    StopCheckButton(ideaID: idea.id)
+                } else if RealityCheckPolicy.isOffered(for: idea.lensType) && !idea.isArchived {
+                    RealityCheckButton(idea: idea, pill: true, pillTitle: "Check again")
+                }
+                Spacer()
+                NavigationLink(value: VaultRoute.idea(idea.id)) {
+                    Text("The idea").font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func briefRow(_ check: RealityCheck) -> some View {
         NavigationLink(value: LabRoute.brief(ideaID: idea.id)) {
             HStack(spacing: ForgeSpacing.m) {
                 orbs(size: 20, spacing: 5)

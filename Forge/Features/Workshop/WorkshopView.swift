@@ -58,3 +58,46 @@ struct WorkshopView: View {
         }
     }
 }
+
+/// A project on the Reality tab: name, the step, how far, when due.
+struct RealityRow: View {
+    let project: Project
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(project.name).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                Spacer()
+                Text(statusLabel).forgeLabelSmall()
+            }
+            if let step = project.nextStep {
+                Text(step).font(.system(size: 15)).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                Text(progressLine).forgeLabelSmall()
+            } else if project.status == .active {
+                Text("No next step set.").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+            }
+        }
+        .padding(ForgeSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var statusLabel: String {
+        switch project.status {
+        case .active: "Active"
+        case .paused: "Paused"
+        case .done: "Launched"
+        case .archived: "Archived"
+        }
+    }
+
+    private var progressLine: String {
+        var parts = ["\(min(project.nextStepCount, project.nextStepTarget)) of \(max(1, project.nextStepTarget))"]
+        if let due = project.nextStepDueAt {
+            parts.append((due < .now ? "was due " : "due ") + due.formatted(.dateTime.weekday(.abbreviated)))
+        }
+        return parts.joined(separator: " · ")
+    }
+}

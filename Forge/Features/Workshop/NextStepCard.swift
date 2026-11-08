@@ -4,7 +4,7 @@ import ForgeCore
 
 /// The next-step card, the same wherever it appears. The step in sans, never
 /// display serif; one 13 pt muted caveat; progress segments; the due date;
-/// Questions (the drafted asset) and Log a conversation.
+/// Questions (the interview sheet, decision 0030) and Log a conversation.
 ///
 /// On Home ("Home · leveled up") it is the next-move card: a 3 pt gradient top
 /// edge, the idea's title in serif, the step in 16 pt, full-width segments,
@@ -22,13 +22,11 @@ struct NextStepCard: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var logging = false
-    @State private var showingAsset = false
+    @State private var interviewing = false
+    @State private var reading: Interview?
 
     private var idea: Idea? { project.idea }
     private var evaluation: Evaluation? { idea?.latestEvaluation }
-    private var asset: Source? {
-        idea?.latestRealityCheck?.draftedAssetSourceID.flatMap { id in idea?.sources.first { $0.id == id } }
-    }
     private var target: Int { project.effectiveTarget }
     private var count: Int { min(project.nextStepCount, target) }
     private var overdue: Bool { project.nextStepDueAt.map { $0 < .now } ?? false }
@@ -66,6 +64,7 @@ struct NextStepCard: View {
                 progress
                 if style == .home, let evaluation { StakesPanel(evaluation: evaluation, project: project) }
                 buttons
+                if style == .page { pastInterviews }
             }
             .padding(ForgeSpacing.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,9 +87,39 @@ struct NextStepCard: View {
                     WorkshopActions.logConversation(project, whatHappened: report.text, rung: report.rung, audioFileName: report.audioFileName, in: modelContext)
                 }
             }
-            .sheet(isPresented: $showingAsset) {
-                if let asset { DraftedAssetSheet(source: asset) }
+            .sheet(isPresented: $interviewing) {
+                InterviewSheet(project: project)
             }
+            .sheet(item: $reading) { i in
+                InterviewSheet(project: project, readOnly: i)
+            }
+        }
+    }
+
+    /// Decision 0030: finished interviews, newest first, under the step.
+    @ViewBuilder
+    private var pastInterviews: some View {
+        let done = project.interviews.filter { !$0.isDraft }.sorted { $0.updatedAt > $1.updatedAt }
+        if !done.isEmpty {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                Text("Conversations · \(done.count)").forgeLabel()
+                ForEach(done) { i in
+                    Button { reading = i } label: {
+                        HStack(spacing: ForgeSpacing.s) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                                Text("\(i.answeredCount) of \(i.answers.count) answered · \(i.updatedAt.formatted(date: .abbreviated, time: .omitted))\(i.rung.map { " · \(RungInference.label($0))" } ?? "")")
+                                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.top, 4)
         }
     }
 
@@ -149,9 +178,9 @@ struct NextStepCard: View {
 
     private var buttons: some View {
         HStack(spacing: 10) {
-            if asset != nil {
-                Button { showingAsset = true } label: {
-                    Text("Questions")
+            if project.status == .active {
+                Button { interviewing = true } label: {
+                    Text(project.interviews.contains(where: \.isDraft) ? "Resume" : "Questions")
                         .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(ForgeColor.ink)
                         .padding(.horizontal, 18).frame(height: 48)
@@ -159,7 +188,7 @@ struct NextStepCard: View {
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("Opens the drafted questions or script")
+                .accessibilityHint("Opens the interview: who you talked to, then each question with room to answer")
             }
             Button { logging = true } label: {
                 Text("Log a conversation")

@@ -252,6 +252,9 @@ struct ProjectExport: Codable {
     var nextStepDueAt: Date?
     var nextStepMoves: String?
     var nextStepCriterionKey: String?
+    // Decision 0030. Optional so old exports import.
+    var interviewQuestions: [String]?
+    var interviews: [Interview]?
 }
 
 struct MilestoneExport: Codable {

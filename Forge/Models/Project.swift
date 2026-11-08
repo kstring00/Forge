@@ -21,6 +21,10 @@ public final class Project {
     public var nextStepDueAt: Date?
     /// What reaching the target moves, in a few words ("moves Demand to rung 3").
     public var nextStepMoves: String?
+    /// Decision 0030: the interview questions as the user edited them (nil until first opened).
+    public var interviewQuestions: [String]?
+    /// Decision 0030: drafts and finished interviews for this project's steps.
+    public var interviews: [Interview] = []
     /// The criterion the step is testing; what the user brings back attaches here.
     public var nextStepCriterionKey: String?
     public var launchDefinition: String = ""

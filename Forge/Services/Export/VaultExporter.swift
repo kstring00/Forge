@@ -144,7 +144,8 @@ enum VaultExporter {
                                 })
             },
             nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
-            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey,
+            interviewQuestions: p.interviewQuestions, interviews: p.interviews.isEmpty ? nil : p.interviews
         )
     }
 

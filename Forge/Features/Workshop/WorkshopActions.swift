@@ -77,6 +77,60 @@ enum WorkshopActions {
         return d
     }
 
+    // MARK: Interviews (decision 0030)
+
+    /// The project's question list, seeded once from the panel's drafted asset.
+    static func interviewQuestions(for project: Project) -> [String] {
+        if let q = project.interviewQuestions, !q.isEmpty { return q }
+        let idea = project.idea
+        let asset = idea?.latestRealityCheck?.draftedAssetSourceID.flatMap { id in idea?.sources.first { $0.id == id } }
+        let parsed = asset.map { InterviewQuestions.parse($0.fullText) } ?? InterviewQuestions.fallback
+        project.interviewQuestions = parsed
+        return parsed
+    }
+
+    static func setInterviewQuestions(_ project: Project, _ questions: [String]) {
+        let cleaned = questions.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        project.interviewQuestions = cleaned.isEmpty ? InterviewQuestions.fallback : cleaned
+    }
+
+    /// The open draft, or a new one on the current questions.
+    static func currentDraft(for project: Project) -> Interview {
+        if let d = project.interviews.last(where: { $0.isDraft }) { return d }
+        return Interview(questions: interviewQuestions(for: project))
+    }
+
+    /// Drafts save as you type. Empty drafts are not kept.
+    static func saveDraft(_ interview: Interview, on project: Project) {
+        var i = interview
+        i.updatedAt = .now
+        if let idx = project.interviews.firstIndex(where: { $0.id == i.id }) {
+            if i.hasContent { project.interviews[idx] = i } else { project.interviews.remove(at: idx) }
+        } else if i.hasContent {
+            project.interviews.append(i)
+        }
+    }
+
+    static func discardDraft(_ interview: Interview, on project: Project) {
+        project.interviews.removeAll { $0.id == interview.id && $0.isDraft }
+    }
+
+    /// Done: one logged conversation. The transcript becomes a user-verified
+    /// Source on the step's criterion at the confirmed rung, the count advances,
+    /// the Journal gets its entry, and the interview is kept under the step.
+    @discardableResult
+    static func finishInterview(_ interview: Interview, rung: Int, on project: Project, in context: ModelContext, now: Date = .now) -> Decision? {
+        var i = interview
+        guard i.hasContent, project.nextStep != nil else { return nil }
+        let decision = logConversation(project, whatHappened: i.transcript, rung: max(3, rung), in: context, now: now)
+        i.status = .done
+        i.rung = max(3, rung)
+        i.updatedAt = now
+        i.sourceID = project.idea?.sources.filter { $0.sourceClass == .userVerified }.max { $0.capturedAt < $1.capturedAt }?.id
+        if let idx = project.interviews.firstIndex(where: { $0.id == i.id }) { project.interviews[idx] = i } else { project.interviews.append(i) }
+        return decision
+    }
+
     static func targetReached(_ project: Project) -> Bool {
         project.nextStep != nil && project.nextStepCount >= project.effectiveTarget
     }

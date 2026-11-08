@@ -42,7 +42,7 @@ export function actionInstruction(action: Action): string {
     case "pitch":
       return "PITCH. Propose capture-ready ideas from what is working, the user's stated advantages and problems observed in the Library. Every demand claim must point at a source id or be labeled an assumption. Respect the constraints.";
     case "runRound":
-      return "RUN A ROUND. Each requested Sphere returns one verdict: onTrack, offTrack or cantTell, the criterion key it judges, a two-sentence reason, and the source ids it relies on. No source means cantTell with the evidence that would change it. Then at most one crossfire reply per pair of Spheres that disagree, one sentence each.";
+      return "RUN A ROUND. Each requested Sphere returns one verdict: onTrack, offTrack or cantTell, the criterion key it judges, a two-sentence reason, and the source ids it relies on. No source means cantTell with the evidence that would change it. Then crossfire only between Spheres whose verdicts conflict (one onTrack, the other offTrack): at most one reply per such pair, one sentence, answering the other Sphere's reason from your own framework.";
     case "realityCheck":
       return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: buildIt, compete, useTheirs, cantTell. 'Use theirs' is a legitimate outcome; never nudge toward building. Quote figures with the date fetched when the source has one.";
     case "prefill":
@@ -54,7 +54,7 @@ export function actionInstruction(action: Action): string {
 5. riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.
 6. nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.
 7. draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.
-8. panel: one verdict per Sphere (criterion key, two sentences, source ids; cantTell when no source). crossfire: one sentence per disagreeing pair, at most one exchange per pair.
+8. panel: one verdict per Sphere (criterion key, two sentences, source ids; cantTell when no source). crossfire: only between Spheres whose verdicts conflict (one onTrack, the other offTrack), one sentence per such pair, at most one exchange per pair. cantTell argues with nobody.
 Write the rationale as three sentences: what the Library supports, what it does not, and the one thing nobody can tell from a desk.`;
   }
 }

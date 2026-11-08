@@ -12,3 +12,10 @@ ship. Swapping to the named faces is a one-line change per token in `ForgeType.s
 - `source/` holds the original "FORGE Idea Detail" artifact and the two unpacked page
   templates (idea detail, Round) with their CSS and sample data. The fonts it bundled
   (Fraunces, Inter; OFL) are described in `docs/decisions/0009-fonts-from-the-design-bundle.md`.
+
+- `source/FORGE_Idea_Detail_v2.html` is the second version of the artifact, with six
+  artboards: Idea detail, Round · verdicts, Home A · the stage, Hear the panel, The panel,
+  up close, and Home B · today (set aside). `source/panel-up-close.template.html` is that
+  artboard unpacked (fonts stripped): the orb CSS and the four states, which
+  `Forge/Design/Components/OrbView.swift` follows (decision 0014). Home A, Hear the
+  panel and Home B are design input not yet built.

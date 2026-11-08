@@ -11,6 +11,7 @@ struct BriefSection: View {
     @Environment(AppEnvironment.self) private var env
 
     @State private var speaking: Sphere?
+    @State private var crossfirePair: SpherePair?
     @State private var showingAssets = false
     @State private var knowing = false
     @State private var confirmingLooksRight = false
@@ -26,7 +27,10 @@ struct BriefSection: View {
         if let check, let evaluation {
             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
                 verdictRow(check)
-                OrbRow(verdicts: round?.verdicts ?? [], crossfire: round?.crossfire ?? [], speaking: $speaking)
+                OrbRow(verdicts: round?.verdicts ?? [], crossfire: round?.crossfire ?? [], speaking: $speaking,
+                       onCrossfire: { crossfirePair = $0 },
+                       onRule: { v, choice in withAnimation(ForgeMotion.settle) { RulingActions.rule(v, choice, on: idea, in: context) } })
+                if let round { roundLine(round) }
                 whatWeFound(check)
                 rings(evaluation)
                 theOneThing(evaluation, check)
@@ -35,6 +39,9 @@ struct BriefSection: View {
                     Text("This check cost \(AISpend.format(cost)). \(AISpend.format(AISpend.spentUSD())) of \(AISpend.format(AISpend.ceilingUSD)) used this month.")
                         .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
                 }
+            }
+            .sheet(item: $crossfirePair) { pair in
+                if let round { CrossfireSheet(round: round, pair: pair, idea: idea) }
             }
             .sheet(isPresented: $showingAssets) {
                 if let assetSource { DraftedAssetSheet(source: assetSource) }
@@ -70,6 +77,24 @@ struct BriefSection: View {
                 .font(ForgeType.body)
                 .foregroundStyle(ForgeColor.ink.opacity(0.85))
         }
+    }
+
+    /// §6C: the Round behind the orbs, with how far the rulings have got.
+    private func roundLine(_ round: Round) -> some View {
+        let tally = RoundTally(round.verdicts.map { ($0.sphere, $0.kind, $0.ruling?.choice) })
+        return NavigationLink(value: LabRoute.round(roundID: round.id)) {
+            HStack(spacing: ForgeSpacing.s) {
+                Text(tally.ruled == 0 ? "Rule on the panel" : tally.isComplete ? "Round ruled · summary" : "Round · \(tally.ruled) of \(tally.total) ruled")
+                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                if !tally.splits.isEmpty && tally.ruled == 0 {
+                    Text("· \(tally.splits.count == 1 ? "one split" : "\(tally.splits.count) splits")").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open the Round to rule on each verdict")
     }
 
     private func whatWeFound(_ check: RealityCheck) -> some View {

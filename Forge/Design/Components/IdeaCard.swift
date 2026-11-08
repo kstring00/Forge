@@ -97,7 +97,7 @@ struct SphereDots: View {
         HStack(spacing: 4) {
             ForEach(order) { s in
                 Circle()
-                    .fill(SphereOrb.palette(for: s).base)
+                    .fill(OrbView.palette(for: s).base)
                     .frame(width: 6, height: 6)
                     .opacity(lit.contains(s) ? 1 : 0.3)
             }

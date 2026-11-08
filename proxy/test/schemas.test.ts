@@ -44,7 +44,28 @@ test("a verdict with no known source becomes cantTell; crossfire is one per pair
   assert.deepEqual(e.verdicts[0].sourceIDs, []);
   assert.ok(e.verdicts[0].evidenceNeeded);
   assert.equal(e.verdicts[1].verdict, "offTrack");
-  assert.equal(e.crossfire.length, 1);
+  // The investor fell to cantTell, so nobody conflicts and no crossfire survives.
+  assert.equal(e.crossfire.length, 0);
+});
+
+test("crossfire survives only between conflicting verdicts, once per pair", () => {
+  const r = RoundResult.parse({
+    verdicts: [
+      { sphere: "investor", verdict: "onTrack", criterionKey: "A5", reason: "r", sourceIDs: [A], evidenceNeeded: null },
+      { sphere: "customer", verdict: "offTrack", criterionKey: "A2", reason: "r", sourceIDs: [B], evidenceNeeded: null },
+      { sphere: "builder", verdict: "onTrack", criterionKey: "A6", reason: "r", sourceIDs: [A], evidenceNeeded: null },
+      { sphere: "skeptic", verdict: "cantTell", criterionKey: "A2", reason: "r", sourceIDs: [], evidenceNeeded: "x" },
+    ],
+    crossfire: [
+      { from: "investor", to: "customer", text: "a" },
+      { from: "customer", to: "investor", text: "b" },
+      { from: "investor", to: "builder", text: "agree, no fight" },
+      { from: "skeptic", to: "investor", text: "cantTell argues with nobody" },
+      { from: "customer", to: "builder", text: "c" },
+    ],
+  });
+  const e = enforceRound(r, new Set([A, B]));
+  assert.deepEqual(e.crossfire.map((c) => c.text), ["a", "c"]);
 });
 
 test("prefill is clamped to the desk ceiling and known keys", () => {

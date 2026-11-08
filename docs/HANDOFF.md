@@ -7,7 +7,7 @@ and `docs/phase-*.md`. This file holds only what those do not.
 
 3b is merged to `main` (PRs #6–#9) and one Reality Check has run end to end on
 the simulator. 3b is not fully verified; see "3b — Verified and unverified" in
-`docs/phase-3.md`. Next is **3c, Rounds and rulings** (brief §6C, §11).
+`docs/phase-3.md`. 3c is under way: 3c.1 (rulings and crossfire, decision 0013) is the first PR. Still to come: re-run diffs, voice on "I know something you don't", rungs above 2 from user reports.
 
 The brief's rule: do not start a phase until the previous one runs on device.
 The developer reports results and screenshots; wait for them.

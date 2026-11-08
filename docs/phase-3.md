@@ -125,7 +125,21 @@ run keeps its error on the card until dismissed. Tests: ForgeCore
 `RealityCheckPolicyTests`; app `HomeLogicTests` (lens rule, failed-check priority,
 failure persistence, failure messages); proxy cost and research-tool tests.
 
-**3c: Rounds and rulings** on top of the pre-fill. See `docs/HANDOFF.md`.
+## 3c — Rounds and rulings (brief §6C)
+
+**3c.1: rulings and crossfire** (decision 0013). The Round the prefill already writes
+becomes the user's to rule on. `Panel.conflicts` (ForgeCore) names a disagreement as on
+track against off track; hairlines on the Brief arc between exactly those orbs and open
+the crossfire; the proxy drops crossfire between non-conflicting Spheres. `RulingActions`
+writes each ruling to the Journal: Agree attaches the cited source as Evidence at the
+criterion's rung (capped by the source's class) and moves no score; Disagree records the
+user's belief as an assumption Source; Find out drafts an Experiment card from the
+playbook and dates the entry. `RoundView` follows the canvas (tally, cards, three
+buttons, crossfire, summary). Orbs at 56/96 pt. Tests: ForgeCore `PanelTests`; app
+`RulingActionsTests`; proxy crossfire filter.
+
+Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
+on "I know something you don't", and rungs above 2 from what the user reports.
 
 ## Original scope note (brief v3.1 §11)
 

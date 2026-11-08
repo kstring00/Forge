@@ -83,8 +83,9 @@ struct NextStepCard: View {
             .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
             .sheet(isPresented: $logging) {
                 OutcomeSheet(title: "Log a conversation", subject: step, prompt: "What did they say or do?",
-                             footnote: "One conversation. It counts toward \(target) and lands in the Journal next to what you expected.") { happened, _ in
-                    WorkshopActions.logConversation(project, whatHappened: happened, in: modelContext)
+                             footnote: "One conversation. It counts toward \(target), lands in the Journal, and is saved as verified by you on the criterion this step tests.",
+                             minimumRung: 3) { report, _ in
+                    WorkshopActions.logConversation(project, whatHappened: report.text, rung: report.rung, audioFileName: report.audioFileName, in: modelContext)
                 }
             }
             .sheet(isPresented: $showingAsset) {

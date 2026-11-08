@@ -323,6 +323,7 @@ enum VaultImporter {
         project.nextStepCount = p.nextStepCount ?? 0
         project.nextStepDueAt = p.nextStepDueAt
         project.nextStepMoves = p.nextStepMoves
+        project.nextStepCriterionKey = p.nextStepCriterionKey
         project.launchDefinition = p.launchDefinition
         project.retrospective = p.retrospective
         project.createdAt = p.createdAt

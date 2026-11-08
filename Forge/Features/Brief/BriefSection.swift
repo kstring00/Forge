@@ -235,7 +235,8 @@ struct BriefSection: View {
                                         caveat: NextStepPlan.caveat(step: evaluation.effectiveStep, experimentTest: evaluation.experiment?.test),
                                         target: NextStepPlan.target(assetTitle: assetSource?.title, step: evaluation.effectiveStep),
                                         dueAt: Calendar.current.date(byAdding: .day, value: evaluation.experiment?.timeboxDays ?? 7, to: .now),
-                                        moves: evaluation.experiment?.metric)
+                                        moves: evaluation.experiment?.metric,
+                                        criterionKey: evaluation.ladderKey)
             if let assetSource {
                 project.notes.append("\(assetSource.title)\n\n\(assetSource.fullText)")
             }

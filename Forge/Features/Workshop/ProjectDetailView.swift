@@ -63,24 +63,26 @@ struct ProjectDetailView: View {
         .sheet(item: $outcome) { request in
             switch request {
             case .step:
-                OutcomeSheet(title: "Step done", subject: project.nextStep ?? "", showsNextStep: true) { happened, next in
-                    WorkshopActions.completeNextStep(project, whatHappened: happened, nextStep: next, in: context)
-                    settleAfter(happened)
+                OutcomeSheet(title: "Step done", subject: project.nextStep ?? "", showsNextStep: true) { report, next in
+                    WorkshopActions.completeNextStep(project, whatHappened: report.text, nextStep: next, rung: report.rung, audioFileName: report.audioFileName, in: context)
+                    settleAfter(report.text)
                 }
             case .pause:
-                OutcomeSheet(title: "Pausing", subject: project.name) { happened, _ in
-                    WorkshopActions.pause(project, whatHappened: happened, in: context)
-                    settleAfter(happened)
+                OutcomeSheet(title: "Pausing", subject: project.name, asksRung: false) { report, _ in
+                    WorkshopActions.pause(project, whatHappened: report.text, in: context)
+                    settleAfter(report.text)
                 }
             case .launch:
-                OutcomeSheet(title: "Launched", subject: project.desiredOutcome.isEmpty ? project.name : project.desiredOutcome) { happened, _ in
-                    WorkshopActions.complete(project, whatHappened: happened, in: context)
-                    settleAfter(happened)
+                OutcomeSheet(title: "Launched", subject: project.desiredOutcome.isEmpty ? project.name : project.desiredOutcome) { report, _ in
+                    WorkshopActions.complete(project, whatHappened: report.text, in: context)
+                    if let idea = project.idea { FieldEvidence.record(report, kind: "Launched", on: idea, project: project) }
+                    settleAfter(report.text)
                 }
             case .decision(let d):
-                OutcomeSheet(title: "Outcome", subject: d.decision) { happened, _ in
-                    d.recordOutcome(happened)
-                    settleAfter(happened)
+                OutcomeSheet(title: "Outcome", subject: d.decision) { report, _ in
+                    d.recordOutcome(report.text)
+                    if let idea = project.idea { FieldEvidence.record(report, kind: "What happened", on: idea, project: project) }
+                    settleAfter(report.text)
                 }
             }
         }

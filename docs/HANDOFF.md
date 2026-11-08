@@ -1,5 +1,7 @@
 # Handoff — end of Phase 3b
 
+Public name: **Hunch**. The repo, the brief and the code keep FORGE.
+
 Read with `docs/FORGE_BRIEF.md` (v4.1, the source of truth), `docs/decisions/`
 and `docs/phase-*.md`. This file holds only what those do not.
 
@@ -25,7 +27,7 @@ Before 3c, these still need the developer:
 ## Open bugs and known gaps
 
 - **"I know something you don't" caps user-verified facts at rung 2.** It reuses `prefill`, whose server-side clamp is the desk ceiling. A user-verified source should be allowed above rung 2. It also re-runs the whole prefill, which is slow and costly, to re-score a few criteria.
-- **§0A step 6, "the return", is not built.** Recording "what happened" in the Workshop writes a Journal outcome but does not save it as a user-verified Source or re-score anything.
+- **§0A step 6, "the return": the source and the rung are built (decision 0020); the partial re-run of the touched Spheres, with its diff, is not yet.**
 - **Every Reality Check scores under the Business lens.** `PrefillApplier` calls `beginEvaluation(lens: .business)`. Fine until Phase 5; wrong after.
 - **A run survives navigation, not app suspension.** If iOS suspends the app mid-check, the run stops. Saved pages persist; the prefill does not resume.
 - **Re-running a Reality Check does not diff** the competitor set and verdict (§6D).

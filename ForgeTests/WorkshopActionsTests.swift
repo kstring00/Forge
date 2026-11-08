@@ -163,4 +163,63 @@ final class WorkshopActionsTests: XCTestCase {
         XCTAssertNil(NextStepPlan.caveat(step: "Ask five owners", experimentTest: "Ask five owners."))
         XCTAssertEqual(NextStepPlan.caveat(step: "Ask five owners", experimentTest: "Ask about the last time it failed. Don't pitch."), "Ask about the last time it failed. Don't pitch.")
     }
+
+    // MARK: §0A step 6: what comes back from the world is verified evidence
+
+    func testLoggingAConversationSavesAVerifiedSourceAndMovesTheLadderPastTheDeskCap() throws {
+        let context = try makeContext()
+        let idea = Idea(originalText: "A website retainer for Texas RV parks")
+        context.insert(idea)
+        let e = idea.beginEvaluation(lens: .business)
+        try e.set(key: "A2", score: 2, evidenceLevel: 2)
+        e.criterionScore(for: "A2")?.aiProposed = true
+        let project = WorkshopActions.convert(idea, with: .init(name: "P", desiredOutcome: "", nextStep: "Talk to five park owners"), in: context)
+        WorkshopActions.setNextStep(project, "Talk to five park owners", target: 5, criterionKey: "A2")
+        let confidenceBefore = e.confidence
+
+        WorkshopActions.logConversation(project, whatHappened: "Met the owner of Shady Oaks; she showed me her Facebook page and said she pays a nephew.", in: context)
+        let score = try XCTUnwrap(e.criterionScore(for: "A2"))
+        XCTAssertEqual(score.evidenceLevel, 3, "a conversation is time given: rung 3, past the desk cap of 2")
+        XCTAssertEqual(score.peopleAtRung, 1)
+        XCTAssertFalse(score.aiProposed)
+        XCTAssertEqual(score.evidence.count, 1)
+        let source = try XCTUnwrap(score.evidence.first?.source)
+        XCTAssertEqual(source.sourceClass, .userVerified)
+        XCTAssertTrue(source.reviewed)
+        XCTAssertTrue(source.title.hasPrefix("Conversation: "))
+        XCTAssertTrue(idea.sources.contains { $0.id == source.id })
+        XCTAssertGreaterThan(e.confidence, confidenceBefore)
+
+        // A payment reported: rung 4, one person there; A2's score waits for three.
+        WorkshopActions.logConversation(project, whatHappened: "Harbor View paid a $149 deposit for month one.", in: context)
+        XCTAssertEqual(score.evidenceLevel, 4)
+        XCTAssertEqual(score.peopleAtRung, 1)
+        XCTAssertEqual(score.score, 1, "A2's score is the highest rung three people reached")
+        XCTAssertEqual(project.nextStepCount, 2)
+        XCTAssertEqual(e.projection.verifiedUnits, 1, "a rung-4 verified payment counts toward the projection")
+    }
+
+    func testFinishingAStepRecordsTheReportAtTheRungTheUserConfirmed() throws {
+        let context = try makeContext()
+        let idea = Idea(originalText: "x")
+        context.insert(idea)
+        let e = idea.beginEvaluation(lens: .business)
+        try e.set(key: "A2", score: 1, evidenceLevel: 1)
+        let project = WorkshopActions.convert(idea, with: .init(name: "P", desiredOutcome: "", nextStep: "Ask five owners"), in: context)
+        WorkshopActions.completeNextStep(project, whatHappened: "Two of five came back for a second call.", nextStep: nil, rung: 5, in: context)
+        XCTAssertEqual(e.criterionScore(for: "A2")?.evidenceLevel, 5)
+        XCTAssertEqual(idea.sources.filter { $0.sourceClass == .userVerified }.count, 1)
+        XCTAssertNil(project.nextStep)
+
+        // Nothing claimed: the words are kept, the ladder does not move.
+        let quiet = Idea(originalText: "y")
+        context.insert(quiet)
+        let qe = quiet.beginEvaluation(lens: .business)
+        try qe.set(key: "A2", score: 1, evidenceLevel: 1)
+        let r = FieldEvidence.record(.init(text: "Thought about it.", rung: 0), kind: "What happened", on: quiet)
+        XCTAssertNil(r.evidence)
+        XCTAssertEqual(qe.criterionScore(for: "A2")?.evidenceLevel, 1)
+        XCTAssertEqual(quiet.sources.count, 1)
+        XCTAssertEqual(FieldEvidence.line(for: r, lens: Lenses.business), "Saved as verified by you.")
+    }
 }

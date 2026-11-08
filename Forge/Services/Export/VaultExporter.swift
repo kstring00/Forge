@@ -144,7 +144,7 @@ enum VaultExporter {
                                 })
             },
             nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
-            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey
         )
     }
 

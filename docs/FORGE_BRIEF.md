@@ -636,6 +636,9 @@ Home sections, reflective prompt, progressive disclosure pass (a first-time user
 
 > **Superseded on pricing by `docs/PRICING.md` (decision 0031):** memberships (Free / Plus / Pro) with a consumable top-up, the user-facing unit a **check**, never a credit. The Credits and Credit-moments boards still apply where they do not disagree (the four moments, the out-of-checks state, no paywall at launch or after a failed run). The "Membership · Free / Plus / Pro" artboard is `docs/design/membership-free-plus-pro.png`.
 
+
+> **Superseded on pricing by `docs/PRICING.md` (decision 0031):** memberships (Free / Plus / Pro) with a consumable top-up, the user-facing unit a **check**, never a credit. The Credits and Credit-moments boards still apply where they do not disagree (the four moments, the out-of-checks state, no paywall at launch or after a failed run). The "Membership · Free / Plus / Pro" artboard is `docs/design/membership-free-plus-pro.png`.
+
 Everything that stays on the phone is free: capture, the Vault, rulings, logging, the Workshop, the Journal. The AI is paid for with **credits** (the "Credits screen" and "Credit moments" artboards):
 - **Prices.** Reality Check 3 credits (research, five voices, their first argument, a verdict and the next step). *Argue it out* 1 credit (the user pushes back; the two Spheres answer the point). Agree, disagree, find out, and logging what happened: free. If a run fails partway, the credits come back.
 - **Packs.** One-time purchases, no subscription; purchased credits never expire. Three packs (try it out · most people pick this · for lots of ideas), each described in ideas and months at the user's pace, never in tokens. *Restore purchases* on the screen.

@@ -40,11 +40,15 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertEqual(HomeCard.choose(justCaptured: b.id, ideas: [b, a], projects: [], unseenBriefs: [a.id]), .afterCapture(ideaID: b.id))
     }
 
-    func testBriefWaitingBeatsNextStepAndUnchecked() throws {
+    func testARealWorldStepOutranksABriefWaiting() throws {
         let a = idea("checked, unruled", at: 1); check(a, at: 5)
         let b = idea("unchecked", at: 2)
         let c = idea("with project", at: 3)
         let p = WorkshopActions.convert(c, with: .init(name: "P", desiredOutcome: "", nextStep: "call"), in: store.context)
+        // The step owed in Reality comes first, even while a Brief waits unseen.
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, b, a], projects: [p], unseenBriefs: [a.id]), .nextStep(projectID: p.id))
+        // With the step done and no next one set, the Brief waits its turn.
+        WorkshopActions.completeNextStep(p, whatHappened: "done", nextStep: nil, in: store.context)
         XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, b, a], projects: [p], unseenBriefs: []), .briefReady(ideaID: a.id))
 
         // Ruling on it (Looks right) clears it, unless the center still marks it unseen.
@@ -53,8 +57,20 @@ final class HomeLogicTests: XCTestCase {
         d.date = Date(timeIntervalSince1970: 6)
         store.context.insert(d)
         XCTAssertTrue(a.hasRuling)
-        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, b, a], projects: [p], unseenBriefs: []), .nextStep(projectID: p.id))
+        XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, b, a], projects: [p], unseenBriefs: []), .unchecked(ideaID: b.id))
         XCTAssertEqual(HomeCard.choose(justCaptured: nil, ideas: [c, b, a], projects: [p], unseenBriefs: [a.id]), .briefReady(ideaID: a.id))
+    }
+
+    func testAProjectPutsAnIdeaInRealityWhateverTheStageSays() throws {
+        let a = idea("a", at: 1)
+        XCTAssertEqual(a.track, .idea)
+        a.stage = .evaluate
+        XCTAssertEqual(a.track, .formation)
+        _ = WorkshopActions.convert(a, with: .init(name: "P", desiredOutcome: "", nextStep: "call"), in: store.context)
+        a.stage = .evaluate   // a stale stage must not split the counts
+        XCTAssertEqual(a.track, .reality)
+        a.archive()
+        XCTAssertNil(a.track)
     }
 
     func testUncheckedIsTheLastResortAndNewestFirst() throws {
@@ -145,6 +161,11 @@ final class HomeLogicTests: XCTestCase {
         guard case .failed(let m2) = prefill else { return XCTFail("expected failed") }
         XCTAssertTrue(m2.hasPrefix("The panel stopped before the Brief: The model ran out of room."))
         XCTAssertTrue(m2.contains("6 sources it found are saved in the Library."))
-        XCTAssertTrue(m2.contains("$0.04"))
+        XCTAssertFalse(m2.contains("$"), "no prices outside Settings → Spend")
+        XCTAssertTrue(m2.contains("Settings → Spend"))
+
+        let stopped = RealityCheckRunner.stoppedLine(step: .research, spentUSD: 0)
+        XCTAssertEqual(stopped, "Stopped during the desk research. Nothing was saved. Nothing was charged.")
+        XCTAssertFalse(RealityCheckRunner.stoppedLine(step: .prefill, spentUSD: 0.03).contains("$"))
     }
 }

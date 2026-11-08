@@ -23,6 +23,9 @@ struct ForgeApp: App {
                 .environment(environment)
                 .tint(ForgeColor.ember)
                 .preferredColorScheme(appearance.colorScheme)
+                // Belt and braces: sheets and UIKit chrome follow the window's style too.
+                .onAppear { Appearance.applyToWindows(appearance) }
+                .onChange(of: appearance) { _, a in Appearance.applyToWindows(a) }
         }
         .modelContainer(container)
     }

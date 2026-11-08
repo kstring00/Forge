@@ -24,3 +24,6 @@ ship. Swapping to the named faces is a one-line change per token in `ForgeType.s
   detail, Round · verdicts, Home A · the stage, Hear the panel, Home B · today, Home
   overview, Credits screen, Credit moments). The app follows Home overview, Home A's
   arc and Hear the panel (decision 0015); the credits boards are Phase 8.
+
+- `home-leveled-up.pdf` — the "Home · leveled up" artboard the current Home follows
+  (decision 0016).

@@ -45,12 +45,9 @@ public enum RealityCheckCost {
         return lo == hi ? "\(lo)¢" : "\(lo)–\(hi)¢"
     }
 
-    /// The card's line: what runs, what it costs, what leaves the phone.
-    /// Uses the real average once a run has happened, the proxy's range before.
-    public static func disclosure(estimate: ClosedRange<Double>, average: Double?) -> String {
-        let cost = average.map(cents) ?? range(estimate)
-        return "Runs on AI · about \(cost) · your idea text is sent to the model."
-    }
+    /// The card's line: what runs and what leaves the phone. No price: until
+    /// credits (Phase 8), cost appears only in Settings → Spend.
+    public static let disclosure = "Runs on AI · your idea text is sent to the model."
 
     /// Checks started in the calendar month of `now`, and what they cost.
     public static func month(_ checks: [(date: Date, costUSD: Double?)], now: Date = .now, calendar: Calendar = .current) -> (count: Int, spentUSD: Double) {

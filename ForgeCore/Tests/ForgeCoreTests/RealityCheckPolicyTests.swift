@@ -27,11 +27,10 @@ final class RealityCheckPolicyTests: XCTestCase {
         XCTAssertEqual(RealityCheckCost.average(ofRecent: [0.1, 0.1, 0.1, 0.1, 0.1, 0.9, 0.9])!, 0.1, accuracy: 1e-9)
     }
 
-    func testDisclosureCopy() {
-        XCTAssertEqual(RealityCheckCost.disclosure(estimate: 0.10...0.25, average: nil),
-                       "Runs on AI · about 10–25¢ · your idea text is sent to the model.")
-        XCTAssertEqual(RealityCheckCost.disclosure(estimate: 0.10...0.25, average: 0.137),
-                       "Runs on AI · about 14¢ · your idea text is sent to the model.")
+    func testDisclosureNamesNoPrice() {
+        XCTAssertEqual(RealityCheckCost.disclosure, "Runs on AI · your idea text is sent to the model.")
+        XCTAssertFalse(RealityCheckCost.disclosure.contains("¢"))
+        XCTAssertFalse(RealityCheckCost.disclosure.contains("$"))
     }
 
     func testMonthCountsAndSpend() {

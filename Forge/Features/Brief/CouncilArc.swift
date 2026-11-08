@@ -66,10 +66,11 @@ struct CouncilArc: View {
                         .accessibilityLabel("\(s.displayName): \(verdict(for: s)?.kind.displayName ?? (s == .steward ? "arrives in Phase 5" : "no verdict"))")
                         .accessibilityAddTraits(speaking == s ? .isSelected : [])
                     }
-                    inside.position(x: geo.size.width / 2, y: radius + orbSize / 2 - 28)
+                    // Below the top orbs' name labels (which end near y = 115 at 390 pt), inside the arc's mouth.
+                    inside.position(x: geo.size.width / 2, y: radius + orbSize / 2 + 34)
                 }
             }
-            .frame(height: radius + orbSize + 36)
+            .frame(height: radius + orbSize + 96)
 
             if let speaking, let v = verdict(for: speaking) {
                 VerdictVoice(verdict: v, splits: splits.filter { $0.contains(speaking) }, onCrossfire: onCrossfire, onRule: onRule)
@@ -107,7 +108,7 @@ struct CouncilArc: View {
                 .padding(.top, 2)
             }
         }
-        .frame(width: 2 * radius - orbSize - 24)
+        .frame(width: 2 * radius - orbSize - 56)
     }
 
     /// A dashed ember line between two conflicting orbs; tapping it opens the crossfire.

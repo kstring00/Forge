@@ -7,7 +7,7 @@ struct IdeaHeader: View {
     let idea: Idea
 
     private var statusLine: String {
-        var parts = [idea.stage.track?.displayName ?? "Archived"]
+        var parts = [idea.track?.displayName ?? "Archived"]
         if let lens = idea.lensType { parts.append("\(lens.displayName) lens") }
         return parts.joined(separator: " · ")
     }

@@ -147,10 +147,10 @@ struct IdeaDetailView: View {
 
             Menu {
                 ForEach(Track.allCases) { track in
-                    Button(track.displayName) { if idea.stage.track != track { idea.stage = track.entryStage } }
+                    Button(track.displayName) { if idea.track != track { idea.stage = track.entryStage } }
                 }
             } label: {
-                pill(idea.stage.track?.displayName ?? "Archived", tint: ForgeColor.inkSecondary)
+                pill(idea.track?.displayName ?? "Archived", tint: ForgeColor.inkSecondary)
             }
             .accessibilityLabel("Track")
 

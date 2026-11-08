@@ -144,6 +144,12 @@ move, capture and three sections; `NextStepCard` with logging; `CouncilArc` on t
 Formation idea page; `HearThePanelView` replaces the Round screen. Tests: ForgeCore
 `TrackTests`; app `WorkshopActionsTests` (logging, the step plan).
 
+**3c.3: first-run fixes and Home · leveled up** (decision 0016). Confirm sheet before
+every proxy call, the on-device guard, Stop, no prices outside Settings, step over ruling
+on Home, one `Idea.track`, counts from the step text, id scrubbing, the arc layout, the
+window theme, and the new Home. Tests: ForgeCore `GuardsTests`; app `HomeLogicTests`,
+`WorkshopActionsTests`.
+
 Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
 on "I know something you don't", and rungs above 2 from what the user reports.
 

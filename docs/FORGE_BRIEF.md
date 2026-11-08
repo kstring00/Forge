@@ -22,7 +22,7 @@ The user has no shortage of ideas. The problem is that ideas pile up in notes an
 ### The path, end to end
 
 1. **Capture.** One sentence or a voice memo. Nothing else is asked. The idea lands in the Vault with a sky header and a single button: **Reality Check**.
-2. **Reality Check (one tap).** The app shows an estimated cost and a one-line "this sends your idea text to the AI through your proxy" note the first time, then runs. In the background, through the proxy: desk research (§6D) — competitors, pricing, complaints, demand signals, job postings — saved as `ai-found` Sources. Then the five Spheres each read the Library and **pre-fill the whole Lab**: a proposed answer to every Explore prompt, a proposed score and evidence rung for every criterion with the Source it leans on, a proposed Projection range, a proposed riskiest assumption, and a proposed next move. Progress is visible as the orbs light up one at a time. Typical wall time: one to three minutes. The user can leave and come back.
+2. **Reality Check (one tap, one confirm).** Tapping the button sends nothing. First a free on-device guard: an idea under about eight words, or one that names neither a problem nor a person, is blocked with one line ("Add a sentence about the problem and who has it, so the panel has something to look into") and no proxy call. Then a confirm sheet, the same for every action that calls the proxy (Reality Check, Expand, Summarize, re-score): what will happen, how long it takes, that the idea text goes to an AI model through the user's proxy, *Send* and *Cancel*. Only Send runs it. While it runs, the working card has *Stop*: remaining proxy calls are cancelled and nothing half-finished is kept. Then it runs. In the background, through the proxy: desk research (§6D) — competitors, pricing, complaints, demand signals, job postings — saved as `ai-found` Sources. Then the five Spheres each read the Library and **pre-fill the whole Lab**: a proposed answer to every Explore prompt, a proposed score and evidence rung for every criterion with the Source it leans on, a proposed Projection range, a proposed riskiest assumption, and a proposed next move. Progress is visible as the orbs light up one at a time. Typical wall time: one to three minutes. The user can leave and come back.
 3. **The Brief (one screen).** When the check finishes, the idea opens on a single screen, led by the orbs:
    - **The verdict row** — Build it / Compete / Use theirs / Can't tell from the desk, with one sentence.
    - **The panel** — six orbs in a row (the sixth, Steward, dim until Phase 5). Tap an orb to read only that voice. Where two Spheres disagree, a thin line connects them; tap it for the crossfire.
@@ -42,7 +42,7 @@ The user has no shortage of ideas. The problem is that ideas pile up in notes an
 - **Three taps to a task.** Reality Check → Looks right → Start. If the user does nothing else, that still yields a real next action in the world with drafted assets.
 - **Correction is one tap.** Any proposed score, rung, or answer can be overridden by choosing a different anchor; the user never types to disagree.
 - **Re-runs are partial.** New information re-scores only the criteria it touches; the user is never asked to re-review the whole idea.
-- **Cost is visible.** Each Reality Check shows an estimate before running and the actual after. Settings has a monthly ceiling.
+- **Cost is tracked, not shown.** No price appears anywhere in the UI until credits (§11, Phase 8). Settings → Spend holds the numbers: checks this month, what they cost, the average, and all AI spend against the monthly ceiling. The confirm sheet is the moment of consent; the ceiling is the guard.
 
 ### What this changes in the build
 
@@ -424,7 +424,7 @@ Desk research can reach rung 2 on the evidence ladder: it proves the problem and
 - Pricing and traction figures are quoted with the date fetched.
 - "Use theirs" is a legitimate, non-negative outcome. The app never nudges toward building.
 - A Reality Check can be re-run later; the app diffs the competitor set and verdict.
-- One Reality Check is the most expensive action in the app (many fetches plus synthesis). Show an estimated cost before running; cache results.
+- One Reality Check is the most expensive action in the app (many fetches plus synthesis). Confirm before running; never show a price (§0A); cache results.
 
 ### Data model additions
 
@@ -450,19 +450,19 @@ The six orbs are on screen, large, drifting slowly in a loose row, before any co
 
 Under that, the capture field, focused, with the mic. Nothing else. Tapping an orb shows its one-line job.
 
-### Home with content
+### Home with content ("Home · leveled up")
 
 Top to bottom:
 
-1. **The top row.** The date in mono caps on the left, the settings button on the right. No large title in the bar; the serif line *From idea to reality* opens the page.
-2. **The pipeline strip.** Idea (n) → Formation (n) → Reality (n), each count tappable to its tab.
-3. **Your next move.** One card, whichever is most urgent: the idea just captured (send it to the panel); a Brief waiting to be heard and ruled on (Formation); the step owed in Reality, as the next-step card; else the most recent unchecked idea with the panel button on the card. A failed check outranks a step owed, with its error on the card.
-4. **Capture.** The field, "Got an idea?", with the mic.
-5. **Three short sections**, Idea, Formation, Reality, each with its count, one tagline, up to three rows and *All*, which opens that tab. Idea rows carry the *To the panel* pill with its cost; Formation rows lead with the six orbs in their verdict states and say how many voices are ruled; Reality rows show the step and how far it has got.
+1. **The sky.** A grainy gradient header that fades into the ground, behind the date in mono caps, the settings button, *From idea to reality* in serif at 40 pt, and a live subline: "N ideas in motion · N out in the world".
+2. **The pipeline strip.** Idea → Formation → Reality as glowing 40 pt nodes in the stage colours (Idea lavender, Formation violet, Reality ember) on a gradient line, each with its count and a one-line status ("Waiting for the panel", "Waiting on your ruling", "Out in the world"). Tap a node for its tab.
+3. **Your next move.** One card, whichever is most urgent: the idea just captured (send it to the panel); a check that failed, with its error; the step owed in Reality; a Brief waiting to be heard; else the most recent unchecked idea. A real-world step always outranks a ruling. The Reality step is the next-move card: a 3 pt gradient top edge, the idea's title in serif, the step in 16 pt sans, full-width progress segments, then **What's riding on it**: Potential and Confidence as 56 pt rings, the Projection ("$X / mo if it works") with the verified-vs-estimate bar on Business ideas or the Impact line on Growth and Creative, and one generated line tying the step to the evidence it raises ("This step is how 33 becomes a real number. Five conversations move demand to rung 3."). Ideas with no evaluation hide the panel. *Questions* and *Log a conversation* beneath.
+4. **Capture.** The field, *What if…* in italic serif, with the ember mic button.
+5. **Your ideas, by stakes.** Cards with a stage-coloured side band, stage and verdict in mono, the serif title, five mini orbs in their states, and the stake: the projection, the impact, or "? · send to the panel". Sorted by projection, then Confidence. *All* opens the Idea tab.
 
-**The same idea never appears twice on the screen.** Whatever idea the next-move card is about is left out of the sections.
+**The same idea never appears twice on the screen.** Whatever idea the next-move card is about is left out of the list.
 
-No stats, no streaks, no charts.
+No stats, no streaks, no charts, no prices.
 
 ### After capture
 
@@ -470,7 +470,7 @@ Saving an idea never lands on a static card. Home turns toward it: the new idea'
 
 > Want us to look into this?
 
-with the ember **Reality Check** button, the cost line beneath, and a quiet *Later* link. Capture → one tap → working. The user never has to find the feature.
+with the ember **Reality Check** button and a quiet *Later* link. Capture → one tap → the confirm sheet → working. The user never has to find the feature.
 
 ### The working state
 

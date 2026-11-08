@@ -17,7 +17,7 @@ struct VaultView: View {
     @State private var allTracks = false
     @State private var pendingArchive: Idea?
 
-    private var base: [Idea] { allTracks ? ideas : ideas.filter { $0.isArchived || $0.stage.track == .idea } }
+    private var base: [Idea] { allTracks ? ideas : ideas.filter { $0.isArchived || $0.track == .idea } }
     private var shown: [Idea] { filter.apply(to: base) }
     private var tags: [String] { VaultFilter.allTags(in: ideas) }
 

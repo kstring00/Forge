@@ -149,11 +149,17 @@ final class WorkshopActionsTests: XCTestCase {
         XCTAssertNil(project.nextStepDueAt)
     }
 
-    func testNextStepPlanReadsTheAsset() {
+    func testNextStepPlanReadsTheStepThenTheAsset() {
         XCTAssertEqual(NextStepPlan.target(assetTitle: "Five Mom Test questions", step: "Ask five park owners"), 5)
+        XCTAssertEqual(NextStepPlan.target(assetTitle: nil, step: "Talk to five parents of non-verbal autistic kids about what they use now."), 5)
+        XCTAssertEqual(NextStepPlan.target(assetTitle: "Five Mom Test questions", step: "Have three conversations with park owners"), 3)
         XCTAssertEqual(NextStepPlan.target(assetTitle: "A twenty-message outreach script", step: "Message owners"), 20)
         XCTAssertEqual(NextStepPlan.target(assetTitle: "Landing page copy", step: "Put the page up"), 1)
         XCTAssertEqual(NextStepPlan.target(assetTitle: nil, step: "Call Shady Oaks"), 1)
+        XCTAssertEqual(NextStepPlan.ridingLine(confidence: 33, target: 5, moves: "Moves Demand to rung 3"),
+                       "This step is how 33 becomes a real number. Five conversations move demand to rung 3.")
+        XCTAssertEqual(NextStepPlan.ridingLine(confidence: 20, target: 1, moves: nil),
+                       "This step is how 20 becomes a real number. One conversation and Confidence can move.")
         XCTAssertNil(NextStepPlan.caveat(step: "Ask five owners", experimentTest: "Ask five owners."))
         XCTAssertEqual(NextStepPlan.caveat(step: "Ask five owners", experimentTest: "Ask about the last time it failed. Don't pitch."), "Ask about the last time it failed. Don't pitch.")
     }

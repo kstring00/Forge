@@ -8,7 +8,7 @@ struct FormationView: View {
     @Environment(AppEnvironment.self) private var env
     @Query(sort: \Idea.updatedAt, order: .reverse) private var ideas: [Idea]
 
-    private var inFormation: [Idea] { ideas.filter { !$0.isArchived && $0.stage.track == .formation } }
+    private var inFormation: [Idea] { ideas.filter { $0.track == .formation } }
 
     var body: some View {
         NavigationStack {
@@ -86,6 +86,8 @@ struct MiniPanel: View {
     let verdicts: [Verdict]
     var working = false
     var size: CGFloat = 18
+    /// Six by default; the stakes cards show the five that sit on the panel today.
+    var spheres: [Sphere] = Panel.order
 
     private func state(_ s: Sphere) -> OrbState {
         if s == .steward { return .dormant }
@@ -96,7 +98,7 @@ struct MiniPanel: View {
 
     var body: some View {
         HStack(spacing: -size * 0.3) {
-            ForEach(Panel.order) { s in
+            ForEach(spheres) { s in
                 OrbView(sphere: s, state: state(s), size: size)
             }
         }

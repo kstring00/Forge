@@ -23,7 +23,7 @@ struct IdeaCard: View {
                     .foregroundStyle(ForgeColor.ink)
                     .lineLimit(compact ? 2 : 3)
                 HStack(spacing: ForgeSpacing.m) {
-                    Text(idea.lensType?.displayName ?? idea.stage.track?.displayName ?? "Archived").forgeLabel()
+                    Text(idea.lensType?.displayName ?? idea.track?.displayName ?? "Archived").forgeLabel()
                     if idea.triage?.isComplete == true { Text("Screened").forgeLabel() }
                     Spacer()
                     Text(idea.createdAt, style: .date)
@@ -76,7 +76,7 @@ struct IdeaCard: View {
     }
 
     private var accessibilityText: String {
-        var parts = [idea.title, idea.lensType?.displayName ?? idea.stage.track?.displayName ?? "Archived"]
+        var parts = [idea.title, idea.lensType?.displayName ?? idea.track?.displayName ?? "Archived"]
         switch resolved {
         case .notChecked: parts.append("not yet checked")
         case .checking: parts.append("checking")

@@ -41,10 +41,6 @@ struct BriefSection: View {
                 rings(evaluation)
                 theOneThing(evaluation, check)
                 buttons
-                if let cost = check.actualCostUSD {
-                    Text("This check cost \(AISpend.format(cost)). \(AISpend.format(AISpend.spentUSD())) of \(AISpend.format(AISpend.ceilingUSD)) used this month.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                }
             }
             .sheet(item: $crossfirePair) { pair in
                 if let round { CrossfireSheet(round: round, pair: pair, idea: idea) }

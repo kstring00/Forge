@@ -20,28 +20,32 @@ enum PrefillApplier {
         let sources = Dictionary(uniqueKeysWithValues: idea.sources.map { ($0.id, $0) })
         func source(_ id: UUID?) -> Source? { id.flatMap { sources[$0] } }
         func sourcesFor(_ ids: [UUID]) -> [Source] { ids.compactMap { sources[$0] } }
+        // The model sometimes writes a source id into prose. Titles instead, never ids.
+        let titles = Dictionary(uniqueKeysWithValues: idea.sources.map { ($0.id, $0.title) })
+        func clean(_ text: String) -> String { IDScrub.scrub(text, titles: titles) }
+        func cleanOpt(_ text: String?) -> String? { text.map { IDScrub.scrub($0, titles: titles) } }
 
         // Drafted asset, saved as a Source so the task can carry it.
-        let asset = Source(kind: .note, title: r.draftedAssets.title, fullText: r.draftedAssets.body, sourceClass: .aiFound)
-        asset.chunks.append(SourceChunk(index: 0, text: r.draftedAssets.body))
+        let asset = Source(kind: .note, title: clean(r.draftedAssets.title), fullText: clean(r.draftedAssets.body), sourceClass: .aiFound)
+        asset.chunks.append(SourceChunk(index: 0, text: asset.fullText))
         idea.sources.append(asset)
 
         // Reality Check.
-        let check = RealityCheck(verdict: r.realityCheck.verdict, summary: r.realityCheck.summary, costEstimate: r.realityCheck.costEstimate)
+        let check = RealityCheck(verdict: r.realityCheck.verdict, summary: clean(r.realityCheck.summary), costEstimate: r.realityCheck.costEstimate)
         check.createdAt = now
-        check.rationale = rationale
+        check.rationale = clean(rationale)
         check.actualCostUSD = costUSD
-        check.gapMap = r.realityCheck.gapMap
-        check.fitNotes = r.realityCheck.fitNotes
+        check.gapMap = clean(r.realityCheck.gapMap)
+        check.fitNotes = clean(r.realityCheck.fitNotes)
         check.draftedAssetSourceID = asset.id
-        check.demandSignals = r.realityCheck.demandSignals.map { DemandSignal(text: $0.text, url: $0.url, rung: $0.rung, sourceID: $0.sourceID) }
+        check.demandSignals = r.realityCheck.demandSignals.map { DemandSignal(text: clean($0.text), url: $0.url, rung: $0.rung, sourceID: $0.sourceID) }
         for c in r.realityCheck.competitors {
-            check.competitors.append(Competitor(name: c.name, url: c.url, pricing: c.pricing, positioning: c.positioning,
-                                                praises: c.praises, complaints: c.complaints, tractionSignals: c.tractionSignals,
+            check.competitors.append(Competitor(name: clean(c.name), url: c.url, pricing: clean(c.pricing), positioning: clean(c.positioning),
+                                                praises: c.praises.map(clean), complaints: c.complaints.map(clean), tractionSignals: c.tractionSignals.map(clean),
                                                 fetchedAt: now, source: source(c.sourceID)))
         }
         if let x = r.realityCheck.experiment {
-            check.experiment = Experiment(hypothesis: x.hypothesis, test: x.test, metric: x.metric, cost: x.cost, timeboxDays: x.timeboxDays, decisionRule: x.decisionRule)
+            check.experiment = Experiment(hypothesis: clean(x.hypothesis), test: clean(x.test), metric: clean(x.metric), cost: x.cost, timeboxDays: x.timeboxDays, decisionRule: clean(x.decisionRule))
         }
         var cited = Set<UUID>()
         for id in r.realityCheck.competitors.compactMap(\.sourceID) + r.realityCheck.demandSignals.compactMap(\.sourceID) { cited.insert(id) }
@@ -53,7 +57,7 @@ enum PrefillApplier {
             let existing = ExploreActions.latest(for: e.promptKey, on: idea)
             if let existing, !existing.userText.isEmpty { continue }   // never overwrite the user's own answer
             let ex = existing ?? Exploration(promptKey: e.promptKey)
-            ex.aiText = e.answer
+            ex.aiText = clean(e.answer)
             ex.confirmed = false
             if existing == nil { idea.explorations.append(ex) }
         }
@@ -62,37 +66,38 @@ enum PrefillApplier {
         let evaluation = idea.beginEvaluation(lens: .business)
         for c in r.criteria {
             let rung = min(c.evidenceLevel, Scoring.deskResearchRungCeiling)
-            try? evaluation.set(key: c.key, score: c.score, evidenceLevel: rung, note: c.note)
+            let note = clean(c.note)
+            try? evaluation.set(key: c.key, score: c.score, evidenceLevel: rung, note: note)
             if let score = evaluation.criterionScore(for: c.key) {
                 score.aiProposed = true
                 for s in sourcesFor(c.sourceIDs) {
-                    score.evidence.append(Evidence(criterionKey: c.key, ladderRung: rung, text: c.note, source: s))
+                    score.evidence.append(Evidence(criterionKey: c.key, ladderRung: rung, text: note, source: s))
                 }
             }
         }
         evaluation.recompute()
-        evaluation.riskiestAssumption = r.riskiestAssumption.belief
-        evaluation.riskiestAssumptionConsequence = r.riskiestAssumption.consequence
+        evaluation.riskiestAssumption = clean(r.riskiestAssumption.belief)
+        evaluation.riskiestAssumptionConsequence = clean(r.riskiestAssumption.consequence)
         evaluation.recommendation = r.nextMove.recommendation
-        evaluation.nextStepText = r.nextMove.step
+        evaluation.nextStepText = clean(r.nextMove.step)
         if let x = r.nextMove.experiment {
-            evaluation.experiment = Experiment(hypothesis: x.hypothesis, test: x.test, metric: x.metric, cost: x.cost, timeboxDays: x.timeboxDays, decisionRule: x.decisionRule)
+            evaluation.experiment = Experiment(hypothesis: clean(x.hypothesis), test: clean(x.test), metric: clean(x.metric), cost: x.cost, timeboxDays: x.timeboxDays, decisionRule: clean(x.decisionRule))
         }
         if let p = r.projection {
-            evaluation.projectionSuggestion = "\(Projection.compact(p.pricePerUnitLow))–\(Projection.compact(p.pricePerUnitHigh)) per unit · \(p.unitsYearOneLow)–\(p.unitsYearOneHigh) units in year one. \(p.rationale)"
+            evaluation.projectionSuggestion = clean("\(Projection.compact(p.pricePerUnitLow))–\(Projection.compact(p.pricePerUnitHigh)) per unit · \(p.unitsYearOneLow)–\(p.unitsYearOneHigh) units in year one. \(p.rationale)")
         }
         evaluation.aiFilledAt = now
 
         // The panel, as a Round the user can rule on in 3c.
         let round = Round(pitchText: idea.originalText)
         round.createdAt = now
-        round.summary = rationale
+        round.summary = clean(rationale)
         for v in r.panel {
-            round.verdicts.append(Verdict(sphere: v.sphere, kind: v.verdict, criterionKey: v.criterionKey, reason: v.reason,
-                                          sources: sourcesFor(v.sourceIDs), evidenceNeeded: v.evidenceNeeded))
+            round.verdicts.append(Verdict(sphere: v.sphere, kind: v.verdict, criterionKey: v.criterionKey, reason: clean(v.reason),
+                                          sources: sourcesFor(v.sourceIDs), evidenceNeeded: cleanOpt(v.evidenceNeeded)))
         }
         for c in r.crossfire {
-            round.crossfire.append(Crossfire(from: c.from, to: c.to, text: c.text))
+            round.crossfire.append(Crossfire(from: c.from, to: c.to, text: clean(c.text)))
         }
         idea.rounds.append(round)
 

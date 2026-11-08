@@ -10,9 +10,9 @@ struct RingsRow: View {
             RingCard(value: evaluation.potential, label: "Potential", tint: ForgeColor.ink,
                      caption: Plain.potential + ". " + "Your structured assessment. Not a prediction.", captionColor: ForgeColor.inkSecondary)
             RingCard(value: evaluation.confidence, label: "Confidence", tint: ForgeColor.ember,
-                     caption: Plain.confidence + ". " + Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence)
+                     caption: Plain.confidence + ". " + (Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence)
                         ? "Mostly enthusiasm so far."
-                        : "Backed by what people did.",
+                        : "Backed by what people did."),
                      captionColor: Scoring.isMostlyEnthusiasm(confidence: evaluation.confidence) ? ForgeColor.emberText : ForgeColor.inkSecondary)
         }
     }

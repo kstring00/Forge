@@ -20,6 +20,9 @@ items 1 and 2 (proxy protection, beta allowance).
   usage (#16's store). Sign in with Apple so plans follow the person. The Membership screen
   carries the required disclosures and Restore. Paywall only on a check with none left, from
   the Home pill, and from Settings; never on launch, during capture or after a failed run.
-- **Open question for the beta allowance (TestFlight item 2).** That item was specified as
-  5 free checks a week shown as "3 checks left this week"; this doc gives testers Plus
-  (15 a month) as founding members. One of the two wins before item 2 is built.
+- **The beta allowance is the launch allowance.** Settled 2026-11-08: TestFlight testers get
+  Plus as founding members, 15 checks a month, unit a check, the same code and copy as
+  launch. The earlier "5 free checks a week" spec for TestFlight item 2 is retired.
+- **Built before enrollment** with a StoreKit configuration file (`Hunch.storekit`) so the
+  whole flow runs in the simulator; entitlements enforced locally behind
+  `EntitlementService` until the proxy ledger (#16) takes over (decision 0032).

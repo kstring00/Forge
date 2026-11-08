@@ -14,6 +14,8 @@ struct RealityCheckButton: View {
     /// A small capsule for list rows: "To the panel".
     var pill = false
     var pillTitle = "To the panel"
+    /// The one-line cost disclosure under the primary button; off on cards (decision 0036).
+    var showsDisclosure = true
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var confirming = false
@@ -32,9 +34,10 @@ struct RealityCheckButton: View {
             Button { tap() } label: {
                 Text(failure == nil ? pillTitle : "Try again")
                     .font(.system(.footnote, weight: .medium))
-                    .foregroundStyle(ForgeColor.emberText)
-                    .padding(.horizontal, 12).frame(height: 32)
-                    .overlay(Capsule().strokeBorder(ForgeColor.emberText))
+                    .foregroundStyle(ForgeColor.ink)
+                    .padding(.horizontal, 14).frame(minHeight: 36)
+                    .overlay(Capsule().strokeBorder(ForgeColor.line))
+                    .contentShape(Capsule())
             }
             .buttonStyle(.plain)
             .disabled(runner.isRunning)
@@ -48,29 +51,15 @@ struct RealityCheckButton: View {
         .sheet(isPresented: $confirming) { confirmSheet }
     }
 
+    /// Decision 0036: the primary action, full width, 44 pt, verb first.
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Button { tap() } label: {
-                HStack(alignment: .center, spacing: ForgeSpacing.m) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(failure == nil ? "Reality check" : "Try the reality check again")
-                            .font(ForgeType.label).textCase(.uppercase).kerning(1.3)
-                            .foregroundStyle(Color(red: 1.0, green: 0.886, blue: 0.839))
-                        if !compact {
-                            Text("Who already does this, what they charge, what people complain about, and what the panel (five perspectives) makes of it.")
-                                .font(.system(.subheadline)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.right").font(.system(.subheadline, weight: .semibold)).foregroundStyle(.white)
-                }
-                .padding(compact ? 14 : 18)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                PrimaryButtonLabel(title: failure == nil ? "Get the panel's take" : "Try again")
             }
             .buttonStyle(.plain)
             .disabled(runner.isRunning)
-            .accessibilityLabel(failure == nil ? "Run a Reality Check. Opens a confirmation first." : "Run the Reality Check again. Opens a confirmation first.")
+            .accessibilityLabel(failure == nil ? "Get the panel's take. Opens a confirmation first." : "Run the check again. Opens a confirmation first.")
 
             if let failure {
                 noticeBox(title: "The last check didn't finish", message: failure, detail: env.realityChecks.failureDetails[idea.id]) { env.realityChecks.dismissFailure(idea.id) }
@@ -83,9 +72,11 @@ struct RealityCheckButton: View {
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
 
-            Text(RealityCheckCost.disclosure + " Nothing is sent until you confirm.")
-                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if showsDisclosure {
+                Text(RealityCheckCost.disclosure + " Nothing is sent until you confirm.")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .sheet(isPresented: $confirming) { confirmSheet }
     }

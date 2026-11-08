@@ -54,7 +54,7 @@ struct PanelsTakeCard: View {
             NavigationLink(value: LabRoute.brief(ideaID: idea.id)) {
                 VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                     HStack {
-                        Text("The panel's take").forgeLabel().foregroundStyle(ForgeColor.emberText)
+                        Text("The panel's take").forgeLabel()
                         Spacer()
                         Text(check.createdAt.formatted(date: .abbreviated, time: .omitted)).forgeLabel()
                     }
@@ -80,7 +80,7 @@ struct PanelsTakeCard: View {
         .padding(ForgeSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
     private func confidence(_ e: Evaluation) -> some View {
@@ -159,7 +159,7 @@ struct PanelsTakeCard: View {
             HStack(spacing: ForgeSpacing.m) {
                 orbs(size: 20, spacing: 5)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("The panel's take").forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
+                    Text("The panel's take").forgeLabelSmall()
                     Text(check.verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 }
                 Spacer(minLength: ForgeSpacing.s)
@@ -174,7 +174,7 @@ struct PanelsTakeCard: View {
             .padding(ForgeSpacing.m)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

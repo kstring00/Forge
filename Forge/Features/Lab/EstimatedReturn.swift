@@ -86,7 +86,7 @@ struct EstimatedReturnRow: View {
             VStack(alignment: alignment, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(value.label).forgeLabelSmall()
-                    if let prefix { Text("\(prefix) ·").font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText) }
+                    if let prefix { Text("\(prefix) ·").forgeLabelSmall() }
                     if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
                     if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
                     figure
@@ -111,12 +111,12 @@ struct EstimatedReturnRow: View {
         switch value {
         case .yours(let monthly, _):
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(Projection.compact(monthly)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.emberText)
+                Text(Projection.compact(monthly)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink)
                 Text("/ mo").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .estimate(let low, let high, _):
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(EstimatedReturn.range(low, high)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.emberText)
+                Text(EstimatedReturn.range(low, high)).font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink)
                 Text("/ mo").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             }
         case .impact(let lead, let rest):
@@ -127,15 +127,15 @@ struct EstimatedReturnRow: View {
         case .impactMissing:
             placeholder("Add who it helps")
         case .unchecked:
-            placeholder("Send to the panel to estimate.")
+            placeholder("Get the panel's take to estimate")
         case .none:
-            placeholder("The desk found no price to go on.")
+            placeholder("No price found yet")
         }
     }
 
     /// Placeholders are 13 pt muted sans, never display serif or colour.
     private func placeholder(_ text: String) -> some View {
-        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
+        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
     }
 
     private var basis: String? {
@@ -152,8 +152,8 @@ struct EstimatedReturnRow: View {
         case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "the desk research")"
         case .impact(let lead, let rest): "Impact: \(lead) \(rest ?? "")"
         case .impactMissing: "Impact: add who it helps"
-        case .unchecked: "No estimate yet. Send to the panel to estimate."
-        case .none: "No estimate. The desk found no price to go on."
+        case .unchecked: "No estimate yet. Get the panel's take to estimate."
+        case .none: "No price found yet."
         }
     }
 }
@@ -176,13 +176,13 @@ struct ProjectionEstimateSheet: View {
                         Text("Est. return").forgeLabel()
                         switch EstimatedReturn.value(for: idea) {
                         case .yours(let m, let verified):
-                            Text("\(Projection.compact(m)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
+                            Text("\(Projection.compact(m)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink)
                             Text(verified ? "Your numbers, partly verified by a real payment." : "Your numbers. Drawn as an assumption until a payment is attached as evidence at proof level 4 (a real payment).")
                                 .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         case .estimate(let low, let high, let basis):
                             HStack(spacing: 8) {
                                 EvidenceChip(pattern: .stripes, size: 12)
-                                Text("\(EstimatedReturn.range(low, high)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.emberText)
+                                Text("\(EstimatedReturn.range(low, high)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink)
                             }
                             Text("The Investor's estimate, from \(basis ?? "the desk research"). It is AI-found: a range the desk supports, not a projection you made. Nothing is yours until you type it.")
                                 .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)

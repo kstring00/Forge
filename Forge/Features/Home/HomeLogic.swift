@@ -150,3 +150,52 @@ extension Idea {
         return stage.track
     }
 }
+
+/// Decision 0036: the one primary action a card (or the idea page) offers,
+/// from the idea's state. Verb first. Orange is reserved for this button.
+enum CardAction: Equatable {
+    /// No panel yet: "Get the panel's take".
+    case getTake
+    /// The panel has spoken and no deal is taken (no project): "Hear the panel".
+    case hearPanel
+    /// A step in progress: "Log a conversation · N of M".
+    case log(count: Int, target: Int)
+    /// A test page is live: "See signups · N so far". Arrives with the launch kit (engine step 6).
+    case seeSignups(Int)
+    /// The step reached its target, or a commitment has no outcome yet: "What happened?".
+    case whatHappened
+    /// In Reality with no step set: "Set your next step".
+    case setStep
+    /// A Growth or Creative idea, judged by impact, not checked: "Make it real".
+    case makeItReal
+    /// Launched, paused or archived: no button.
+    case none
+
+    var title: String {
+        switch self {
+        case .getTake: "Get the panel's take"
+        case .hearPanel: "Hear the panel"
+        case .log(let n, let m): "Log a conversation · \(n) of \(m)"
+        case .seeSignups(let n): "See signups · \(n) so far"
+        case .whatHappened: "What happened?"
+        case .setStep: "Set your next step"
+        case .makeItReal: "Make it real"
+        case .none: ""
+        }
+    }
+
+    static func of(_ idea: Idea) -> CardAction {
+        if idea.isArchived { return .none }
+        if let project = idea.project {
+            guard project.status == .active else { return .none }
+            if project.nextStep != nil {
+                if WorkshopActions.targetReached(project) { return .whatHappened }
+                return .log(count: min(project.nextStepCount, project.effectiveTarget), target: project.effectiveTarget)
+            }
+            if WorkshopActions.openCommitment(project) != nil { return .whatHappened }
+            return .setStep
+        }
+        if idea.latestRealityCheck != nil { return .hearPanel }
+        return RealityCheckPolicy.isOffered(for: idea.lensType) ? .getTake : .makeItReal
+    }
+}

@@ -13,11 +13,9 @@ struct CaptureStateSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            // The button carries the cost line and any failure, the same on every surface.
+            // Decision 0036: the button is the journey bar's primary; this shows the run while it works.
             if runner.isRunning {
                 progress
-            } else {
-                RealityCheckButton(idea: idea)
             }
         }
     }

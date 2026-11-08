@@ -9,6 +9,9 @@ struct IdeaCard: View {
     let idea: Idea
     var status: IdeaStatus? = nil
     var compact = false
+    /// The header opens the idea (or its step); the primary action sits under it.
+    var linked = true
+    var showsAction = true
 
     private var resolved: IdeaStatus { status ?? IdeaStatus.of(idea) }
     private var track: Track? { idea.track }
@@ -18,27 +21,47 @@ struct IdeaCard: View {
             LinearGradient(colors: ForgeColor.sky(for: idea.stage), startPoint: .leading, endPoint: .trailing)
                 .frame(height: 6)
                 .accessibilityHidden(true)
-            HStack(alignment: .top, spacing: 12) {
-                IdeaSpark(idea: idea, size: 44)
-                VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                    HStack(spacing: ForgeSpacing.m) {
-                        Text(topLine).forgeLabelSmall().foregroundStyle(track.map(StakeCard.color) ?? ForgeColor.inkSecondary).lineLimit(1)
-                        Spacer()
-                        StageTrail(track: track)
+            VStack(alignment: .leading, spacing: 14) {
+                if linked {
+                    Group {
+                        if let project = idea.project {
+                            NavigationLink(value: WorkshopRoute.project(project.id)) { header }
+                        } else {
+                            NavigationLink(value: VaultRoute.idea(idea.id)) { header }
+                        }
                     }
-                    Text(idea.title)
-                        .font(ForgeType.ideaTitle)
-                        .foregroundStyle(ForgeColor.ink)
-                        .lineLimit(2)
-                    IdeaSubtitle(idea: idea)
-                    statusBlock
+                    .buttonStyle(.plain)
+                } else {
+                    header
                 }
+                if showsAction { CardPrimaryAction(idea: idea) }
             }
             .padding(ForgeSpacing.cardPadding)
         }
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line, lineWidth: 1))
+    }
+
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            IdeaSpark(idea: idea, size: 44)
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                HStack(spacing: ForgeSpacing.m) {
+                    Text(topLine).forgeLabelSmall().lineLimit(1)
+                    Spacer()
+                    StageTrail(track: track)
+                }
+                Text(idea.title)
+                    .font(ForgeType.ideaTitle)
+                    .foregroundStyle(ForgeColor.ink)
+                    .lineLimit(2)
+                IdeaSubtitle(idea: idea)
+                statusBlock
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -77,17 +100,18 @@ struct IdeaCard: View {
             }
         case .checkFailed:
             HStack(spacing: ForgeSpacing.s) {
-                Image(systemName: "exclamationmark.circle").font(.footnote).foregroundStyle(ForgeColor.emberText)
-                Text("Check failed · open to see why").font(ForgeType.caption.weight(.medium)).foregroundStyle(ForgeColor.emberText)
+                Image(systemName: "exclamationmark.circle").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Check failed · open to see why").forgeLabel()
             }
         case .impact:
             EstimatedReturnRow(idea: idea)
         case .checked(let verdict, let confidence):
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: ForgeSpacing.m) {
-                    Text(verdict.displayName).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText).lineLimit(1)
+                    // Decision 0036: the verdict is a neutral label on cards; its colour lives on the Brief and the Deal.
+                    Text(verdict.displayName).forgeLabel().lineLimit(1)
                     Spacer()
-                    MiniRing(value: confidence, tint: ForgeColor.ember)
+                    MiniRing(value: confidence, tint: ForgeColor.ink)
                 }
                 EstimatedReturnRow(idea: idea)
             }

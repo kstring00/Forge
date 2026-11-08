@@ -19,9 +19,12 @@ struct NextStepCard: View {
     var label = "Your next step"
     /// Shown in the top right beside the due date: "Reality".
     var context: String? = nil
+    /// The project page records "What happened?" itself (it settles rulings after); elsewhere the card does.
+    var onStepDone: (() -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
     @State private var logging = false
+    @State private var reporting = false
     /// One sheet for interviews: the current draft, or a past one to read.
     @State private var interview: InterviewRoute?
 
@@ -46,9 +49,9 @@ struct NextStepCard: View {
         if let step = project.nextStep {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(label).forgeLabel().foregroundStyle(ForgeColor.emberText)
+                    Text(label).forgeLabel()
                     Spacer()
-                    Text(topRight).forgeLabel().foregroundStyle(overdue ? ForgeColor.emberText : ForgeColor.inkSecondary)
+                    Text(topRight).forgeLabel().foregroundStyle(overdue ? ForgeColor.ink : ForgeColor.inkSecondary)
                 }
                 if style == .home, let idea {
                     // Decision 0025: the card opens what the panel said. The Brief when there is one, else the step.
@@ -80,7 +83,7 @@ struct NextStepCard: View {
             .padding(ForgeSpacing.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
             .overlay(alignment: .top) {
                 if style == .home {
                     // The 3 pt gradient top edge.
@@ -93,6 +96,9 @@ struct NextStepCard: View {
             .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
             .sheet(isPresented: $logging) {
                 QuickLogSheet(project: project)
+            }
+            .sheet(isPresented: $reporting) {
+                WhatHappenedSheet(project: project)
             }
             .sheet(item: $interview) { route in
                 switch route {
@@ -143,8 +149,8 @@ struct NextStepCard: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 4) {
                 Text(idea.latestRealityCheck.map { "See the panel's take · \($0.verdict.displayName)" } ?? "Open the step")
-                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText)
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -168,7 +174,7 @@ struct NextStepCard: View {
                 HStack(spacing: 4) {
                     ForEach(0..<min(target, 12), id: \.self) { i in
                         Capsule()
-                            .fill(i < count ? ForgeColor.ember : ForgeColor.line)
+                            .fill(i < count ? ForgeColor.ink : ForgeColor.line)
                             .frame(maxWidth: style == .home ? .infinity : nil)
                             .frame(width: style == .home ? nil : (target > 6 ? 10 : 22), height: 5)
                     }
@@ -186,30 +192,36 @@ struct NextStepCard: View {
         .accessibilityLabel("\(count) of \(target) logged" + (style == .page ? project.nextStepMoves.map { ". Counts: \($0)" } ?? "" : ""))
     }
 
+    /// Decision 0036: one primary (orange, full width, 44 pt) from the step's state; the rest outlined and neutral.
+    @ViewBuilder
     private var buttons: some View {
-        HStack(spacing: 10) {
-            if project.status == .active {
-                Button { interview = .current } label: {
-                    Text(project.interviews.contains(where: \.isDraft) ? "Resume" : "Questions")
-                        .font(.system(.subheadline, weight: .medium))
-                        .foregroundStyle(ForgeColor.ink)
-                        .padding(.horizontal, 18).frame(height: 48)
-                        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
+        if project.status == .active {
+            let reached = WorkshopActions.targetReached(project)
+            VStack(spacing: 8) {
+                if reached {
+                    Button { stepDone() } label: { PrimaryButtonLabel(title: CardAction.whatHappened.title) }
+                        .buttonStyle(.plain)
+                } else {
+                    Button { logging = true } label: { PrimaryButtonLabel(title: CardAction.log(count: count, target: target).title) }
+                        .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Opens the interview: who you talked to, then each question with room to answer")
+                HStack(spacing: 8) {
+                    Button { interview = .current } label: {
+                        SecondaryButtonLabel(title: project.interviews.contains(where: \.isDraft) ? "Resume the interview" : "Questions")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the interview: who you talked to, then each question with room to answer")
+                    if reached {
+                        Button { logging = true } label: { SecondaryButtonLabel(title: "Log another") }
+                            .buttonStyle(.plain)
+                    }
+                }
             }
-            Button { logging = true } label: {
-                Text("Log a conversation")
-                    .font(.system(.subheadline, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).frame(height: 48)
-                    .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(project.status != .active)
         }
+    }
+
+    private func stepDone() {
+        if let onStepDone { onStepDone() } else { reporting = true }
     }
 }
 

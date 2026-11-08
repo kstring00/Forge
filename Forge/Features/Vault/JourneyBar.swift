@@ -7,7 +7,6 @@ import ForgeCore
 struct JourneyBar: View {
     let idea: Idea
     @Environment(AppEnvironment.self) private var env
-    @State private var converting = false
 
     private var current: Track? { idea.track }
     private var offersCheck: Bool { RealityCheckPolicy.isOffered(for: idea.lensType) }
@@ -32,7 +31,6 @@ struct JourneyBar: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
-        .sheet(isPresented: $converting) { ConvertToProjectSheet(idea: idea) }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(current.map { "You are here: \($0.displayName). \($0.tagline)" } ?? "Archived")
     }
@@ -57,52 +55,16 @@ struct JourneyBar: View {
         .frame(width: 84)
     }
 
-    /// The one thing that moves the idea on from where it is.
+    /// Decision 0036: the idea page's one primary action, the same as its card's.
     @ViewBuilder
     private var action: some View {
         if idea.isArchived {
             Text("Archived. Bring it back from the menu to pick up where it was.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-        } else if let project = idea.project {
-            NavigationLink(value: WorkshopRoute.project(project.id)) {
-                forwardRow("Open your step", detail: project.nextStep ?? "Set the next step")
-            }
-            .buttonStyle(.plain)
-        } else if current == .idea {
-            if offersCheck {
-                HStack(alignment: .center, spacing: ForgeSpacing.m) {
-                    Text(env.realityChecks.isRunning(idea.id) ? "The panel is on it." : "Next: send it to the panel.").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
-                    Spacer()
-                    if env.realityChecks.isRunning(idea.id) { StopCheckButton(ideaID: idea.id) } else { RealityCheckButton(idea: idea, pill: true) }
-                }
-            } else {
-                Button { converting = true } label: { forwardRow("Make it real", detail: "This kind of idea is judged by impact; commit to a first step.") }
-                    .buttonStyle(.plain)
-            }
-        } else if current == .formation {
-            if idea.latestRealityCheck != nil {
-                NavigationLink(value: LabRoute.brief(ideaID: idea.id)) {
-                    forwardRow("Open the Brief", detail: "Rule on the panel, then Looks right starts your first step.")
-                }
+        } else if CardAction.of(idea) == .none, let project = idea.project {
+            NavigationLink(value: WorkshopRoute.project(project.id)) { SecondaryButtonLabel(title: "Open the project") }
                 .buttonStyle(.plain)
-            } else {
-                Button { converting = true } label: { forwardRow("Make it real", detail: "Commit to one next step and say what launched means.") }
-                    .buttonStyle(.plain)
-            }
         } else {
-            Button { converting = true } label: { forwardRow("Make it real", detail: "In Reality without a step yet. Commit to one.") }
-                .buttonStyle(.plain)
+            CardPrimaryAction(idea: idea, showsDisclosure: true)
         }
-    }
-
-    private func forwardRow(_ title: String, detail: String) -> some View {
-        HStack(spacing: ForgeSpacing.s) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                Text(detail).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
-            }
-            Spacer()
-            Image(systemName: "arrow.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
-        }
-        .contentShape(Rectangle())
     }
 }

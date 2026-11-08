@@ -211,6 +211,7 @@ enum VaultImporter {
         idea.tags = x.tags
         idea.notes = x.notes
         idea.pivotTypeRaw = x.pivotType
+        idea.titleEdited = x.titleEdited ?? false
         idea.archivedAt = x.archivedAt
         idea.createdAt = x.createdAt
         idea.updatedAt = x.updatedAt
@@ -324,6 +325,8 @@ enum VaultImporter {
         project.nextStepDueAt = p.nextStepDueAt
         project.nextStepMoves = p.nextStepMoves
         project.nextStepCriterionKey = p.nextStepCriterionKey
+        project.interviewQuestions = p.interviewQuestions
+        project.interviews = p.interviews ?? []
         project.launchDefinition = p.launchDefinition
         project.retrospective = p.retrospective
         project.createdAt = p.createdAt

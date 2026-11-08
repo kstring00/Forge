@@ -295,6 +295,7 @@ struct StakeCard: View {
             }
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            IdeaSubtitle(idea: idea)
         }
         .contentShape(Rectangle())
     }
@@ -383,7 +384,8 @@ struct AfterCaptureCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.m) {
             Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
-            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+            IdeaSubtitle(idea: idea)
             if runner.isRunning {
                 HStack(spacing: ForgeSpacing.s) {
                     ProgressView().controlSize(.small)
@@ -425,8 +427,8 @@ struct UncheckedCard: View {
                         Spacer()
                         Text(env.realityChecks.failure(for: idea.id) == nil ? Track.idea.displayName : "Last check didn't finish").forgeLabel()
                     }
-                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                    OriginalText(text: idea.originalText).lineLimit(3)
+                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                    IdeaSubtitle(idea: idea)
                 }
             }
             .buttonStyle(.plain)

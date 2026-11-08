@@ -47,7 +47,8 @@ enum VaultExporter {
             },
             rounds: idea.rounds.sorted { $0.createdAt < $1.createdAt }.map(export),
             realityChecks: idea.realityChecks.sorted { $0.createdAt < $1.createdAt }.map(export),
-            project: idea.project.map(export)
+            project: idea.project.map(export),
+            titleEdited: idea.titleEdited
         )
     }
 
@@ -144,7 +145,8 @@ enum VaultExporter {
                                 })
             },
             nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
-            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey,
+            interviewQuestions: p.interviewQuestions, interviews: p.interviews.isEmpty ? nil : p.interviews
         )
     }
 

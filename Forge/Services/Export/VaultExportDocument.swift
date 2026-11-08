@@ -48,6 +48,8 @@ struct IdeaExport: Codable {
     var rounds: [RoundExport]
     var realityChecks: [RealityCheckExport]
     var project: ProjectExport?
+    /// Optional so old exports import.
+    var titleEdited: Bool? = nil
 }
 
 struct TriageExport: Codable {
@@ -252,6 +254,9 @@ struct ProjectExport: Codable {
     var nextStepDueAt: Date?
     var nextStepMoves: String?
     var nextStepCriterionKey: String?
+    // Decision 0030. Optional so old exports import.
+    var interviewQuestions: [String]?
+    var interviews: [Interview]?
 }
 
 struct MilestoneExport: Codable {

@@ -175,6 +175,8 @@ public struct PrefillResult: Codable, Sendable {
         public var title: String
         public var body: String
     }
+    /// The idea's name in 2 to 5 words. Optional so an older proxy's answer still decodes.
+    public var title: String?
     public var realityCheck: RealityCheckResult
     public var explorations: [ExplorationDraft]
     public var criteria: [CriterionDraft]

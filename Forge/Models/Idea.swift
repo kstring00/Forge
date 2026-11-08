@@ -8,6 +8,8 @@ import ForgeCore
 public final class Idea {
     public var id: UUID = UUID()
     public var title: String = ""
+    /// The person renamed it; the panel's proposed title never overwrites theirs.
+    public var titleEdited: Bool = false
     public private(set) var originalText: String = ""
     public var aiSummary: String?
     public var aiSummaryConfirmed: Bool = false
@@ -126,16 +128,8 @@ public final class Idea {
     }
 
     /// First line of the raw text, trimmed, at most 60 characters.
+    /// 2 to 5 words from the first clause of the person's words (ShortTitle).
     public static func suggestedTitle(from text: String) -> String {
-        let firstLine = text
-            .split(whereSeparator: \.isNewline)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .first { !$0.isEmpty } ?? "Untitled idea"
-        if firstLine.count <= 60 { return firstLine }
-        let cut = firstLine.prefix(60)
-        if let lastSpace = cut.lastIndex(of: " ") {
-            return String(cut[..<lastSpace]) + "…"
-        }
-        return String(cut) + "…"
+        ShortTitle.make(from: text)
     }
 }

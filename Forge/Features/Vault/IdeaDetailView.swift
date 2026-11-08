@@ -28,7 +28,7 @@ struct IdeaDetailView: View {
                     .ignoresSafeArea(edges: .top)
 
                 VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                    TextField("Title", text: $idea.title, axis: .vertical)
+                    TextField("A short name", text: Binding(get: { idea.title }, set: { idea.title = $0; idea.titleEdited = true }), axis: .vertical)
                         .font(ForgeType.ideaTitleHero)
                         .foregroundStyle(ForgeColor.ink)
                         .textFieldStyle(.plain)

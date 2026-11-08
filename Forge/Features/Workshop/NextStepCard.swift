@@ -4,7 +4,7 @@ import ForgeCore
 
 /// The next-step card, the same wherever it appears. The step in sans, never
 /// display serif; one 13 pt muted caveat; progress segments; the due date;
-/// Questions (the drafted asset) and Log a conversation.
+/// Questions (the interview sheet, decision 0030) and Log a conversation.
 ///
 /// On Home ("Home · leveled up") it is the next-move card: a 3 pt gradient top
 /// edge, the idea's title in serif, the step in 16 pt, full-width segments,
@@ -22,13 +22,22 @@ struct NextStepCard: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var logging = false
-    @State private var showingAsset = false
+    /// One sheet for interviews: the current draft, or a past one to read.
+    @State private var interview: InterviewRoute?
+
+    enum InterviewRoute: Identifiable {
+        case current
+        case read(Interview)
+        var id: String {
+            switch self {
+            case .current: "current"
+            case .read(let i): i.id.uuidString
+            }
+        }
+    }
 
     private var idea: Idea? { project.idea }
     private var evaluation: Evaluation? { idea?.latestEvaluation }
-    private var asset: Source? {
-        idea?.latestRealityCheck?.draftedAssetSourceID.flatMap { id in idea?.sources.first { $0.id == id } }
-    }
     private var target: Int { project.effectiveTarget }
     private var count: Int { min(project.nextStepCount, target) }
     private var overdue: Bool { project.nextStepDueAt.map { $0 < .now } ?? false }
@@ -66,6 +75,7 @@ struct NextStepCard: View {
                 progress
                 if style == .home, let evaluation { StakesPanel(evaluation: evaluation, project: project) }
                 buttons
+                if style == .page { pastInterviews }
             }
             .padding(ForgeSpacing.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -82,15 +92,43 @@ struct NextStepCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
             .sheet(isPresented: $logging) {
-                OutcomeSheet(title: "Log a conversation", subject: step, prompt: "What did they say or do?",
-                             footnote: "One conversation. It counts toward \(target), lands in the Journal, and is saved as verified by you on the criterion this step tests.",
-                             minimumRung: 3) { report, _ in
-                    WorkshopActions.logConversation(project, whatHappened: report.text, rung: report.rung, audioFileName: report.audioFileName, in: modelContext)
+                QuickLogSheet(project: project)
+            }
+            .sheet(item: $interview) { route in
+                switch route {
+                case .current: InterviewSheet(project: project)
+                case .read(let i): InterviewSheet(project: project, readOnly: i)
                 }
             }
-            .sheet(isPresented: $showingAsset) {
-                if let asset { DraftedAssetSheet(source: asset) }
+        }
+    }
+
+    /// Decision 0030: finished interviews, newest first, under the step.
+    @ViewBuilder
+    private var pastInterviews: some View {
+        let done = project.interviews.filter { !$0.isDraft }.sorted { $0.updatedAt > $1.updatedAt }
+        if !done.isEmpty {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                Text("Conversations · \(done.count)").forgeLabel()
+                ForEach(done) { i in
+                    Button { interview = .read(i) } label: {
+                        HStack(spacing: ForgeSpacing.s) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                                Text("\(i.answeredCount) of \(i.answers.count) answered · \(i.updatedAt.formatted(date: .abbreviated, time: .omitted))\(i.rung.map { " · \(RungInference.label($0))" } ?? "")")
+                                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                        }
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the conversation")
+                }
             }
+            .padding(.top, 4)
         }
     }
 
@@ -98,6 +136,7 @@ struct NextStepCard: View {
     private func homeHeading(_ idea: Idea, _ step: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+            IdeaSubtitle(idea: idea)
             Text(step)
                 .font(.system(.body, weight: .medium))
                 .foregroundStyle(ForgeColor.ink)
@@ -149,9 +188,9 @@ struct NextStepCard: View {
 
     private var buttons: some View {
         HStack(spacing: 10) {
-            if asset != nil {
-                Button { showingAsset = true } label: {
-                    Text("Questions")
+            if project.status == .active {
+                Button { interview = .current } label: {
+                    Text(project.interviews.contains(where: \.isDraft) ? "Resume" : "Questions")
                         .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(ForgeColor.ink)
                         .padding(.horizontal, 18).frame(height: 48)
@@ -159,7 +198,7 @@ struct NextStepCard: View {
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("Opens the drafted questions or script")
+                .accessibilityHint("Opens the interview: who you talked to, then each question with room to answer")
             }
             Button { logging = true } label: {
                 Text("Log a conversation")

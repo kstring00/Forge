@@ -1,5 +1,6 @@
 import XCTest
 import SwiftData
+import ForgeCore
 @testable import Forge
 
 /// Brief §12: original idea text can never be edited or lost.
@@ -47,12 +48,13 @@ final class IdeaImmutabilityTests: XCTestCase {
         XCTAssertEqual(idea.originalText, "First line is the title\nSecond line is detail")
     }
 
-    func testSuggestedTitleTruncatesOnWordBoundary() {
+    func testSuggestedTitleIsTwoToFiveWords() {
         let long = String(repeating: "word ", count: 30)
-        let title = Idea.suggestedTitle(from: long)
-        XCTAssertLessThanOrEqual(title.count, 61)
-        XCTAssertTrue(title.hasSuffix("…"))
+        XCTAssertLessThanOrEqual(ShortTitle.wordCount(Idea.suggestedTitle(from: long)), 5)
         XCTAssertEqual(Idea.suggestedTitle(from: "\n\n   \n"), "Untitled idea")
+        let idea = Idea(originalText: "What if there was an app that tracked lost ID cards for clinics")
+        XCTAssertEqual(idea.title, "App that tracked lost ID")
+        XCTAssertFalse(idea.titleEdited)
     }
 
     func testPivotKeepsOriginalUntouched() throws {

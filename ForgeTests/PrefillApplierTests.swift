@@ -106,6 +106,28 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertTrue(applied.evaluation.criteria.allSatisfy { $0.evidenceLevel <= Scoring.deskResearchRungCeiling })
     }
 
+    func testThePanelNamesTheIdeaUnlessThePersonDid() throws {
+        let idea = Idea(originalText: "If what if there was a website care service for RV parks along one corridor")
+        store.context.insert(idea)
+        let page = Source(kind: .web, title: "p", fullText: "$149/mo", sourceClass: .aiFound, url: "https://example.com")
+        idea.sources.append(page)
+        var r = canned(sourceID: page.id)
+        r.title = "\"Weekend RV park site care.\""
+        PrefillApplier.apply(r, rationale: "", costUSD: nil, to: idea, in: store.context)
+        XCTAssertEqual(idea.title, "Weekend RV park site care", "2 to 5 words, unquoted")
+
+        let named = Idea(originalText: "Another idea about RV parks and their websites")
+        named.title = "My RV thing"
+        named.titleEdited = true
+        store.context.insert(named)
+        let page2 = Source(kind: .web, title: "p", fullText: "$149/mo", sourceClass: .aiFound, url: "https://example.com/2")
+        named.sources.append(page2)
+        var r2 = canned(sourceID: page2.id)
+        r2.title = "Something the panel prefers"
+        PrefillApplier.apply(r2, rationale: "", costUSD: nil, to: named, in: store.context)
+        XCTAssertEqual(named.title, "My RV thing", "the person's name for it stays")
+    }
+
     func testUserScoringClearsTheProposalFlag() throws {
         let idea = Idea(originalText: "x")
         store.context.insert(idea)

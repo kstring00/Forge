@@ -15,7 +15,7 @@ struct NextStepCard: View {
     /// Home's card is denser: no Questions button, the idea name in the progress line.
     var compact = false
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.modelContext) private var modelContext
     @State private var logging = false
     @State private var showingAsset = false
 
@@ -55,7 +55,7 @@ struct NextStepCard: View {
             .sheet(isPresented: $logging) {
                 OutcomeSheet(title: "Log a conversation", subject: step, prompt: "What did they say or do?",
                              footnote: "One conversation. It counts toward \(target) and lands in the Journal next to what you expected.") { happened, _ in
-                    WorkshopActions.logConversation(project, whatHappened: happened, in: context)
+                    WorkshopActions.logConversation(project, whatHappened: happened, in: modelContext)
                 }
             }
             .sheet(isPresented: $showingAsset) {

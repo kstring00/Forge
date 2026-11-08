@@ -295,6 +295,8 @@ This is what separates FORGE from a scoring app. Every idea has its own **Librar
 
 ## 6B. Pivots and Pitches (the app proposes, the user disposes)
 
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
+
 FORGE is not only a filter. It should actively reshape weak ideas and pitch new ones, using what the Vault and Workshop reveal about what is working.
 
 ### Pivots — reshape an idea that isn't working
@@ -334,6 +336,8 @@ Pitches cluster by: fastest cash · recurring revenue · product/asset · creati
 ---
 
 ## 6C. Spheres — the panel (replaces the single "Challenge" action)
+
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
 
 The AI partner is not one voice. It is a panel of **Spheres**: distinct perspectives, each bound to named frameworks, each *required* to argue from its own angle so they cannot all agree. Think Shark Tank, except the sharks must cite sources and are allowed to say "I can't tell yet."
 
@@ -395,6 +399,8 @@ See §11. Spheres land with the Evaluation Lab (verdicts need criteria keys). Th
 ---
 
 ## 6D. Reality Check (the AI goes and looks)
+
+> **Superseded by `docs/ENGINE.md` (decision 0033) wherever they disagree.** The engine spec replaces this section's voices, pipeline and pivots with research → source verification → blind verdicts → the Tank → the Deal → the Test → the Loop. §0A and §6A's honesty rules still bind it. Screens: `docs/design/engine-tank-and-deal.pdf`.
 
 The user's core ask: "Is this worth pursuing, based on what already exists — and if there are competitors, do I compete, or should I just use their product?"
 
@@ -633,6 +639,12 @@ Milestones/tasks, decisions log, AI Plan / Next step, pause/complete/archive, la
 Home sections, reflective prompt, progressive disclosure pass (a first-time user never needs to learn "Lens," "Sphere," or "Ladder" before capturing), motion, accessibility, performance on older devices, TestFlight build. Trademark/App Store name check before any public name is committed.
 
 **Phase 8 — Monetization & launch** *(recorded, not built)*
+
+> **Superseded on pricing by `docs/PRICING.md` (decision 0031):** memberships (Free / Plus / Pro) with a consumable top-up, the user-facing unit a **check**, never a credit. The Credits and Credit-moments boards still apply where they do not disagree (the four moments, the out-of-checks state, no paywall at launch or after a failed run). The "Membership · Free / Plus / Pro" artboard is `docs/design/membership-free-plus-pro.png`.
+
+
+> **Superseded on pricing by `docs/PRICING.md` (decision 0031):** memberships (Free / Plus / Pro) with a consumable top-up, the user-facing unit a **check**, never a credit. The Credits and Credit-moments boards still apply where they do not disagree (the four moments, the out-of-checks state, no paywall at launch or after a failed run). The "Membership · Free / Plus / Pro" artboard is `docs/design/membership-free-plus-pro.png`.
+
 Everything that stays on the phone is free: capture, the Vault, rulings, logging, the Workshop, the Journal. The AI is paid for with **credits** (the "Credits screen" and "Credit moments" artboards):
 - **Prices.** Reality Check 3 credits (research, five voices, their first argument, a verdict and the next step). *Argue it out* 1 credit (the user pushes back; the two Spheres answer the point). Agree, disagree, find out, and logging what happened: free. If a run fails partway, the credits come back.
 - **Packs.** One-time purchases, no subscription; purchased credits never expire. Three packs (try it out · most people pick this · for lots of ideas), each described in ideas and months at the user's pace, never in tokens. *Restore purchases* on the screen.

@@ -6,6 +6,7 @@ import ForgeCore
 /// Settings. Phase 1b: export and import of the whole Vault. Later phases add
 /// the AI-sharing disclosure, Advantages, Constraints and the Steward charter.
 struct SettingsView: View {
+    @Environment(AppEnvironment.self) private var env
     @Environment(\.modelContext) private var context
     @Query private var ideas: [Idea]
     @Query private var projects: [Project]

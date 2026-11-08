@@ -138,6 +138,12 @@ playbook and dates the entry. `RoundView` follows the canvas (tally, cards, thre
 buttons, crossfire, summary). Orbs at 56/96 pt. Tests: ForgeCore `PanelTests`; app
 `RulingActionsTests`; proxy crossfire filter.
 
+**3c.2: the v4.2 restructure** (decision 0015). Tabs Home · Idea · Formation · Reality;
+`Track` maps the stored stages; Home is the overview with the pipeline strip, one next
+move, capture and three sections; `NextStepCard` with logging; `CouncilArc` on the
+Formation idea page; `HearThePanelView` replaces the Round screen. Tests: ForgeCore
+`TrackTests`; app `WorkshopActionsTests` (logging, the step plan).
+
 Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
 on "I know something you don't", and rungs above 2 from what the user reports.
 

@@ -234,6 +234,12 @@ struct ProjectExport: Codable {
     var pausedAt: Date?
     var completedAt: Date?
     var milestones: [MilestoneExport]
+    // v4.2: the next step's caveat, count and due date. Optional so old exports import.
+    var nextStepCaveat: String?
+    var nextStepTarget: Int?
+    var nextStepCount: Int?
+    var nextStepDueAt: Date?
+    var nextStepMoves: String?
 }
 
 struct MilestoneExport: Codable {

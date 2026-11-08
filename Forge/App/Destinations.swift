@@ -105,7 +105,7 @@ struct RoundDestination: View {
 
     var body: some View {
         if let round = rounds.first {
-            RoundView(round: round)
+            HearThePanelView(round: round)
         } else {
             EmptyState(symbol: "questionmark", title: "Round not found", message: "It may have been removed.")
                 .background(ForgeColor.canvas)

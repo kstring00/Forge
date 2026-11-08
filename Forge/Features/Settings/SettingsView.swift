@@ -104,7 +104,7 @@ struct SettingsView: View {
                 Text("Checks count the ones that finished, at the cost the proxy reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
             }
 
-            Section("Vault") {
+            Section("Ideas") {
                 LabeledContent("Ideas", value: "\(liveCount)")
                 LabeledContent("Archived", value: "\(archivedCount)")
             }

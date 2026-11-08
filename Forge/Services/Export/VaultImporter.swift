@@ -312,6 +312,11 @@ enum VaultImporter {
         project.notes = p.notes
         project.resources = p.resources
         project.nextStep = p.nextStep
+        project.nextStepCaveat = p.nextStepCaveat
+        project.nextStepTarget = max(1, p.nextStepTarget ?? 1)
+        project.nextStepCount = p.nextStepCount ?? 0
+        project.nextStepDueAt = p.nextStepDueAt
+        project.nextStepMoves = p.nextStepMoves
         project.launchDefinition = p.launchDefinition
         project.retrospective = p.retrospective
         project.createdAt = p.createdAt

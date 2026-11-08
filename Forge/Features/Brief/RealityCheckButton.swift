@@ -10,6 +10,8 @@ import ForgeCore
 struct RealityCheckButton: View {
     let idea: Idea
     var compact = false
+    /// A small capsule for list rows: "To the panel · 15¢". The cost stays visible.
+    var pill = false
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @Query(sort: \RealityCheck.createdAt, order: .reverse) private var checks: [RealityCheck]
@@ -25,6 +27,38 @@ struct RealityCheckButton: View {
     }
 
     var body: some View {
+        if pill { pillBody } else { fullBody }
+    }
+
+    private var pillBody: some View {
+        Button { tap() } label: {
+            Text(failure == nil ? "To the panel · \(RealityCheckCost.cents(averageCost ?? runner.estimate.upperBound))" : "Try again")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(ForgeColor.emberText)
+                .padding(.horizontal, 12).frame(height: 32)
+                .overlay(Capsule().strokeBorder(ForgeColor.emberText))
+        }
+        .buttonStyle(.plain)
+        .disabled(runner.isRunning)
+        .opacity(runner.isRunning ? 0.5 : 1)
+        .accessibilityLabel("Send to the panel. Runs on AI, your idea text is sent to the model.")
+        .task { await runner.loadEstimate() }
+        .sheet(isPresented: $showingConsent) { consentSheet }
+    }
+
+    private var consentSheet: some View {
+        AIConsentSheet { agreed in
+            showingConsent = false
+            if agreed {
+                AIConsent.grant()
+                if pending { pending = false; start() }
+            } else {
+                pending = false
+            }
+        }
+    }
+
+    private var fullBody: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Button { tap() } label: {
                 HStack(alignment: .center, spacing: ForgeSpacing.m) {
@@ -60,17 +94,7 @@ struct RealityCheckButton: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .task { await runner.loadEstimate() }
-        .sheet(isPresented: $showingConsent) {
-            AIConsentSheet { agreed in
-                showingConsent = false
-                if agreed {
-                    AIConsent.grant()
-                    if pending { pending = false; start() }
-                } else {
-                    pending = false
-                }
-            }
-        }
+        .sheet(isPresented: $showingConsent) { consentSheet }
     }
 
     private func failureBox(_ message: String) -> some View {

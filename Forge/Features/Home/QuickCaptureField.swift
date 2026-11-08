@@ -6,6 +6,7 @@ import SwiftData
 /// turns the orbs toward the new idea.
 struct QuickCaptureField: View {
     var focusOnAppear = false
+    var placeholder = "Got an idea?"
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var text = ""
@@ -16,7 +17,7 @@ struct QuickCaptureField: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: ForgeSpacing.s) {
-            TextField("What's on your mind?", text: $text, axis: .vertical)
+            TextField(placeholder, text: $text, axis: .vertical)
                 .lineLimit(1...4)
                 .font(ForgeType.body)
                 .focused($focused)

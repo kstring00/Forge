@@ -120,20 +120,18 @@ struct ProjectDetailView: View {
     private var nextStepCard: some View {
         if project.status == .done {
             EmptyView()
-        } else if let step = project.nextStep {
-            VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-                Text("Next step").forgeLabel()
-                Text(step)
-                    .font(ForgeType.ideaTitle)
-                    .foregroundStyle(ForgeColor.ink)
+        } else if project.nextStep != nil {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                NextStepCard(project: project, context: Track.reality.displayName)
                 if project.status == .active {
-                    EmberButton(title: "Done", symbol: "checkmark") { outcome = .step }
+                    Button { outcome = .step } label: {
+                        Text(WorkshopActions.targetReached(project) ? "Step done · set the next one" : "Mark the step done")
+                            .frame(maxWidth: .infinity)
+                            .modifier(SecondaryButtonChrome())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding(ForgeSpacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6), lineWidth: 1))
         } else {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 Text("Next step").forgeLabel()

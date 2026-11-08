@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import ForgeCore
 
-/// Where a chosen idea becomes a project. Phase 2: list, next step, Journal.
+/// The Reality tab: ideas out in the world. Steps, logging, launch, the Journal.
 struct WorkshopView: View {
     @Query(sort: \Project.createdAt, order: .reverse) private var projects: [Project]
 
@@ -14,12 +14,13 @@ struct WorkshopView: View {
         NavigationStack {
             Group {
                 if projects.isEmpty {
-                    EmptyState(symbol: "hammer",
-                               title: "No project yet",
+                    EmptyState(symbol: ForgeTab.reality.symbol,
+                               title: "Nothing in reality yet",
                                message: "When the panel checks an idea and you say it looks right, the first step lands here.")
                 } else {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                            Text(Track.reality.tagline).font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
                             group("Active", active)
                             group("Paused", paused)
                             group("Launched", done)
@@ -30,7 +31,7 @@ struct WorkshopView: View {
                 }
             }
             .background(ForgeColor.canvas)
-            .navigationTitle("Workshop")
+            .navigationTitle(Track.reality.displayName)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: WorkshopRoute.journal) {
@@ -49,40 +50,11 @@ struct WorkshopView: View {
                 Text(title).forgeLabel()
                 ForEach(items) { project in
                     NavigationLink(value: WorkshopRoute.project(project.id)) {
-                        ProjectCard(project: project)
+                        RealityRow(project: project)
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-    }
-}
-
-struct ProjectCard: View {
-    let project: Project
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text(project.name)
-                .font(ForgeType.ideaTitle)
-                .foregroundStyle(ForgeColor.ink)
-            if project.status == .active {
-                Text("Next step").forgeLabel()
-                Text(project.nextStep ?? "Not set yet.")
-                    .font(ForgeType.body)
-                    .foregroundStyle(project.nextStep == nil ? ForgeColor.inkSecondary : ForgeColor.ink)
-                    .lineLimit(2)
-            } else if !project.desiredOutcome.isEmpty {
-                Text(project.desiredOutcome)
-                    .font(ForgeType.secondary)
-                    .foregroundStyle(ForgeColor.inkSecondary)
-                    .lineLimit(2)
-            }
-        }
-        .padding(ForgeSpacing.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
-        .accessibilityElement(children: .combine)
     }
 }

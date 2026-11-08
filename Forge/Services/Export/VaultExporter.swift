@@ -140,7 +140,9 @@ enum VaultExporter {
                                 tasks: m.tasks.sorted { $0.createdAt < $1.createdAt }.map {
                                     TaskExport(id: $0.id, title: $0.title, done: $0.done, createdAt: $0.createdAt, completedAt: $0.completedAt)
                                 })
-            }
+            },
+            nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves
         )
     }
 

@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 import ForgeCore
 
-/// Every idea, as cards. Search, filter by lens, stage and tag, sort, archive.
+/// The Idea tab: the Vault. Captured ideas not yet checked, as cards; every
+/// track with one toggle. Search, filter by lens and tag, sort, archive.
 struct VaultView: View {
     var onCapture: () -> Void = {}
     @Environment(\.modelContext) private var context
@@ -13,9 +14,11 @@ struct VaultView: View {
     @State private var restTask: Task<Void, Never>?
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @State private var filter = VaultFilter()
+    @State private var allTracks = false
     @State private var pendingArchive: Idea?
 
-    private var shown: [Idea] { filter.apply(to: ideas) }
+    private var base: [Idea] { allTracks ? ideas : ideas.filter { $0.isArchived || $0.stage.track == .idea } }
+    private var shown: [Idea] { filter.apply(to: base) }
     private var tags: [String] { VaultFilter.allTags(in: ideas) }
 
     var body: some View {
@@ -23,21 +26,21 @@ struct VaultView: View {
             Group {
                 if ideas.isEmpty {
                     EmptyState(symbol: "archivebox",
-                               title: "Nothing in the Vault yet",
+                               title: "No ideas yet",
                                message: "Every idea you capture lands here, with its original wording kept exactly as you wrote it.")
                 } else {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: ForgeSpacing.m) {
-                            if filter.hasActiveFilter { activeFilters }
+                            if filter.hasActiveFilter || allTracks { activeFilters }
                             if shown.isEmpty {
                                 EmptyState(symbol: "magnifyingglass",
-                                           title: filter.showArchived ? "Nothing archived" : "No matches",
+                                           title: filter.showArchived ? "Nothing archived" : (filter.hasActiveFilter || !filter.searchText.isEmpty ? "No matches" : "Nothing waiting"),
                                            message: filter.showArchived
                                                 ? "Archived ideas will show here. They are history, not failure."
-                                                : "Try fewer words, or clear a filter.")
+                                                : (filter.hasActiveFilter || !filter.searchText.isEmpty ? "Try fewer words, or clear a filter." : "Every idea here has gone to the panel. Catch another, or show every track from the filter menu."))
                                     .padding(.top, ForgeSpacing.xl)
                             } else {
-                                Text("\(shown.count) \(shown.count == 1 ? "idea" : "ideas")").forgeLabel()
+                                Text("\(shown.count) \(shown.count == 1 ? "idea" : "ideas")\(allTracks ? " · every track" : "")").forgeLabel()
                                 ForEach(shown) { idea in
                                     NavigationLink(value: VaultRoute.idea(idea.id)) {
                                         IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
@@ -71,7 +74,7 @@ struct VaultView: View {
             }
             .forgeAnimation(ForgeMotion.fade, value: fabHidden)
             .background(ForgeColor.canvas)
-            .navigationTitle(filter.showArchived ? "Archived" : "Vault")
+            .navigationTitle(filter.showArchived ? "Archived" : Track.idea.displayName)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) { filterMenu }
             }
@@ -132,16 +135,7 @@ struct VaultView: View {
                     }
                 }
             }
-            Menu("Stage") {
-                Button("Any stage") { filter.stage = nil }
-                ForEach(Stage.allCases.filter { $0 != .archived }, id: \.self) { stage in
-                    Button {
-                        filter.stage = stage
-                    } label: {
-                        if filter.stage == stage { Label(stage.displayName, systemImage: "checkmark") } else { Text(stage.displayName) }
-                    }
-                }
-            }
+            Toggle("Every track", isOn: $allTracks)
             if !tags.isEmpty {
                 Menu("Tag") {
                     Button("Any tag") { filter.tag = nil }
@@ -166,7 +160,7 @@ struct VaultView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: ForgeSpacing.s) {
                 if let lens = filter.lens { chip(lens.displayName) { filter.lens = nil } }
-                if let stage = filter.stage { chip(stage.displayName) { filter.stage = nil } }
+                if allTracks { chip("Every track") { allTracks = false } }
                 if let tag = filter.tag { chip("#\(tag)") { filter.tag = nil } }
                 if filter.showArchived { chip("Archived") { filter.showArchived = false } }
             }

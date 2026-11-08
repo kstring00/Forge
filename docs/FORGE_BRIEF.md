@@ -65,17 +65,19 @@ The user has no shortage of ideas. The problem is that ideas pile up in notes an
 
 ---
 
-## 2. The five-stage pipeline
+## 2. Three stages (v4.2)
 
-Stages are flexible, not gated. An idea can move backward, skip, or sit.
+Every idea is on one of three stages, and the app is laid out as **Home · Idea · Formation · Reality**, one tab per stage after Home. Stages are flexible, not gated; an idea can move back, or sit.
 
-| Stage | What happens | Output |
+| Stage | What it holds | What happens there |
 |---|---|---|
-| **Capture** | Raw idea saved. Original text preserved forever. AI may propose a title and one-line summary (user confirms). | `Idea` record |
-| **Explore** | Guided thinking with AI: what problem, who, what they do today, why it interests you, what a tiny version looks like, what kills it. | Exploration notes, open questions |
-| **Evaluate** | User picks a **Lens** (framework set). Scores each criterion 1–5 with rubric anchors. Attaches evidence. App computes Potential + Confidence and names the riskiest assumption. | `Evaluation` (versioned) |
-| **Build** | Idea becomes a `Project` in the Workshop: outcome, milestones, tasks, decisions, next step. | `Project` |
-| **Launch** | User defines what "done" means for *this* idea (first customer, finished chapter, shared prototype) and closes it. | Launch record + retrospective |
+| **Idea** | Captured, not yet checked. The Vault. | Capture (text, voice, paste); the original text is kept forever. One button: send it to the panel. |
+| **Formation** | Checked. | The panel weighs in and the user rules: the Brief, Hear the panel, the Lab one tap deeper, pivots. |
+| **Reality** | Out in the world, being tested. | Today's Workshop: the one next step, logging what happened, launch, and the Journal. |
+
+The finer stored stages from earlier briefs map onto these and are not migrated: `capture` and `explore` → Idea; `evaluate` → Formation; `build` and `launch` → Reality. Archived ideas sit on no stage. Moving an idea by hand sets the entry stage of the new track (`capture`, `evaluate`, `build`).
+
+**The next-step card** is the same wherever it appears (Home, the Formation idea page, the Reality project page): the step in 17 pt sans, never display serif; one 13 pt muted caveat line; progress segments ("1 of 5"); the due date; *Questions*, which opens the drafted asset; and *Log a conversation*, which records one and advances the count. Logging never closes the step; the user marks it done.
 
 ---
 
@@ -347,8 +349,8 @@ The Steward's charter is written by the user in Settings (a few sentences on wha
 ### A Round
 
 1. **Pitch.** The user pitches an idea (text or voice), or a §6B Pitch is put in front of the user.
-2. **Verdicts.** Each Sphere returns a structured verdict: `onTrack | offTrack | cantTell`, the criterion key it is judging, a two-sentence reason, and the Source IDs it relies on. A verdict with no sources must be `cantTell` and must name what evidence would change it. On-screen, verdicts are six cards; `cantTell` cards show a "go find out" button that creates an Experiment card.
-3. **Crossfire.** Each Sphere may reply once to one other Sphere. Limited to one exchange per pair; this is not a chat.
+2. **Verdicts.** Each Sphere returns a structured verdict: `onTrack | offTrack | cantTell`, the criterion key it is judging, a two-sentence reason, and the Source IDs it relies on. A verdict with no sources must be `cantTell` and must name what evidence would change it. On-screen (*Hear the panel*, §7), verdicts are one card per Sphere, each with Agree · Disagree · Find out.
+3. **Crossfire.** Only between two Spheres whose verdicts conflict (one `onTrack`, the other `offTrack`; `cantTell` argues with nobody). Each may reply once to the other. One exchange per pair; this is not a chat. On screen the pair sits together under a *Split* bracket, and a dashed line joins their orbs on the arc; either opens the crossfire.
 4. **Rulings.** The user goes through each point and marks *Agree* / *Disagree* / *Find out*. Agree → logged as a Decision or, if the Sphere cited a source, promoted to Evidence on that criterion. Disagree → logged as a user Assumption (the user's belief against the panel's). Find out → Experiment card.
 5. **Summary.** One screen: where the panel agreed, where it split, the user's rulings, and what changed in the evaluation (criteria scores the user chose to update, never auto-updated).
 
@@ -436,36 +438,39 @@ Competitor     id, name, url, pricing, positioning, praises[], complaints[],
 
 ---
 
-## 7. Home — the panel's desk (v4.1)
+## 7. Home — the overview (v4.2)
 
-Home is not a list of notes. It is where the six Spheres sit, and it must make the app's purpose obvious with no tutorial: *you give the panel an idea; the panel goes and finds out whether it's real; you decide.*
+Home is the overview of the three stages (the "Home overview" artboard). It must make the app's purpose obvious with no tutorial: *you give the panel an idea; the panel goes and finds out whether it's real; you decide; you go and do it.*
 
 ### First launch (empty Vault)
 
-The six orbs are already on screen, large (64 pt), drifting slowly in a loose row, before any content exists. Under them, one line in serif:
+The six orbs are on screen, large, drifting slowly in a loose row, before any content exists. Under them, one line in serif:
 
 > Six perspectives. Give them an idea and they'll go find out if it's real.
 
-Under that, the capture field, focused, with the mic. Nothing else. No slides, no "skip," no feature tour. The orbs are the introduction. Tapping an orb while the Vault is empty shows its one-line job ("I only speak for customers who've actually said something") so a curious user can learn the panel by touch.
+Under that, the capture field, focused, with the mic. Nothing else. Tapping an orb shows its one-line job.
 
 ### Home with content
 
 Top to bottom:
 
-1. **The panel.** The orbs, permanent, at 48 pt, reflecting the state of the most recent idea: *idle* (no idea in progress), *working* (a Reality Check is running — the orbs light in sequence, and a line under them names what each is doing: "The Customer is reading what people complain about." "The Investor is checking what competitors charge."), or *holding a verdict* (the check finished — the verdict word and the idea's title sit under the orbs; tap to open the Brief).
-2. **One card.** Whichever is most urgent: the Brief waiting for review; the next step the user owes in the Workshop; or, if nothing is in flight, the most recent unchecked idea with the ember Reality Check button on the card itself.
-3. **Quick Capture.** The field and mic.
-4. **Recently captured.** Smaller cards. Every card that has not been checked carries a tiny row of six dim dots in the Sphere colors and the mono label *Not yet checked*; a checked card shows its verdict word instead. The path is implied on every card.
+1. **The top row.** The date in mono caps on the left, the settings button on the right. No large title in the bar; the serif line *From idea to reality* opens the page.
+2. **The pipeline strip.** Idea (n) → Formation (n) → Reality (n), each count tappable to its tab.
+3. **Your next move.** One card, whichever is most urgent: the idea just captured (send it to the panel); a Brief waiting to be heard and ruled on (Formation); the step owed in Reality, as the next-step card; else the most recent unchecked idea with the panel button on the card. A failed check outranks a step owed, with its error on the card.
+4. **Capture.** The field, "Got an idea?", with the mic.
+5. **Three short sections**, Idea, Formation, Reality, each with its count, one tagline, up to three rows and *All*, which opens that tab. Idea rows carry the *To the panel* pill with its cost; Formation rows lead with the six orbs in their verdict states and say how many voices are ruled; Reality rows show the step and how far it has got.
+
+**The same idea never appears twice on the screen.** Whatever idea the next-move card is about is left out of the sections.
 
 No stats, no streaks, no charts.
 
 ### After capture
 
-Saving an idea never lands on a static card. The orbs turn toward it: the new idea's title in serif, then
+Saving an idea never lands on a static card. Home turns toward it: the new idea's title in serif, then
 
 > Want us to look into this?
 
-with the ember **Reality Check** button, the cost estimate beneath, and a quiet *Later* link. Capture → one tap → working. The user never has to find the feature.
+with the ember **Reality Check** button, the cost line beneath, and a quiet *Later* link. Capture → one tap → working. The user never has to find the feature.
 
 ### The working state
 
@@ -477,7 +482,15 @@ While a Reality Check runs, the app narrates in the Spheres' voices, one line at
 - Builder — "Working out the smallest version."
 - Skeptic — "Looking for the belief that kills it."
 
-This is the only place the Spheres' jobs are ever explained, and it happens every time, in nine words each. The user can leave Home; the orbs keep working in the background and a small ember dot on the Home tab shows when the Brief is ready.
+This is the only place the Spheres' jobs are ever explained, and it happens every time, in nine words each. The user can leave; the check keeps running, and the idea sits in Formation when it is back.
+
+### The Formation idea page
+
+A checked idea opens on **the council arc** ("Home A · the stage"): the six orbs on a half-circle of 150 pt radius with their names beneath, dashed ember lines between the pairs whose verdicts conflict, the verdict inside the arc, and *Hear the panel →*. Tap an orb to read that voice under the arc and rule on it; tap a line for the crossfire. Below the arc: the Brief (§0A step 3), and, once a step exists, the next-step card.
+
+### Hear the panel
+
+*Hear the panel* replaces the Round screen: one card per Sphere (orb at 40 pt in its verdict state, name, verdict, reason, source line, Agree · Disagree · Find out), with conflicting pairs sat next to each other under an ember *Split* bracket that opens the crossfire. The Steward is a dashed placeholder at the bottom until Phase 5. *Argue it out*, where the user pushes back and the two Spheres answer the point, arrives with credits (§11, Monetization & launch).
 
 ### Copy voice
 
@@ -574,7 +587,7 @@ Lens definitions (criteria, rubrics, ladders, playbooks) live in `Lenses.swift` 
 Work phase by phase. Do not start a phase until the previous one runs on device. After each phase, list what was built, what was deliberately skipped, and any decision that needs the developer.
 
 **Phase 0 — Scaffold**
-Project setup, SwiftData models, tab structure (Home · Vault · Workshop), design tokens (colors, type, spacing), dark mode, empty states. Done when: app launches with empty states on all three tabs.
+Project setup, SwiftData models, tab structure (now Home · Idea · Formation · Reality, §2), design tokens (colors, type, spacing), dark mode, empty states. Done when: app launches with empty states on all three tabs.
 
 **Phase 1 — Capture & Vault**
 Floating capture (text + voice + paste), Idea cards, search, filter, sort, archive, idea detail view with immutable original text. Done when: ten ideas can be captured by voice and text and found again.
@@ -611,6 +624,14 @@ Milestones/tasks, decisions log, AI Plan / Next step, pause/complete/archive, la
 
 **Phase 7 — Home & polish**
 Home sections, reflective prompt, progressive disclosure pass (a first-time user never needs to learn "Lens," "Sphere," or "Ladder" before capturing), motion, accessibility, performance on older devices, TestFlight build. Trademark/App Store name check before any public name is committed.
+
+**Phase 8 — Monetization & launch** *(recorded, not built)*
+Everything that stays on the phone is free: capture, the Vault, rulings, logging, the Workshop, the Journal. The AI is paid for with **credits** (the "Credits screen" and "Credit moments" artboards):
+- **Prices.** Reality Check 3 credits (research, five voices, their first argument, a verdict and the next step). *Argue it out* 1 credit (the user pushes back; the two Spheres answer the point). Agree, disagree, find out, and logging what happened: free. If a run fails partway, the credits come back.
+- **Packs.** One-time purchases, no subscription; purchased credits never expire. Three packs (try it out · most people pick this · for lots of ideas), each described in ideas and months at the user's pace, never in tokens. *Restore purchases* on the screen.
+- **The four credit moments.** A credits pill, always visible on Home, opens the Credits screen. Before anything is spent, a confirm sheet: what it does, *Uses 3 · 4 left after*, the refund line, the "your idea text is sent to an AI model through FORGE's server" line, one ember button with the cost on it, *Not now*, and *Don't ask again for Reality Checks*. A low-balance card ("Running low: 4 credits left. Enough for one more Reality Check and a debate.") with *See credits* and *Dismiss*. An out-of-credits state on the idea: "You're out of credits, so the panel can't research this one yet", *Add credits*, and the list of what still works for free: score it yourself in the Lab, write down what you know, take it straight to the Workshop, rule and log on other ideas. Running out only pauses the AI; nothing is locked.
+- **Accounts and the ledger.** Sign in with Apple; a server-side credit ledger that the proxy debits per action and refunds on failure; App Attest on every proxy call so only the app can spend. The monthly ceiling in Settings stays as a personal guard.
+- **Reviews.** The system review prompt only after a win (a step logged to its target, or a launch), never on first run or after a failure. A *Rate FORGE* row in Settings. A *Tell us what's broken* link shown to everyone. No review gating, no rewards for reviews.
 
 ---
 

@@ -8,7 +8,6 @@ import ForgeCore
 /// was testing, at the rung the report earns: 3 gave time, 4 gave money,
 /// 5 came back. User-verified evidence is not bound by the desk ceiling, so
 /// Confidence can rise above 2 here and nowhere else.
-@MainActor
 enum FieldEvidence {
     struct Report: Equatable {
         var text: String

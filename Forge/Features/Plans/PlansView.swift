@@ -125,6 +125,7 @@ struct MakePlanButton: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.modelContext) private var context
     @State private var confirming = false
+    @State private var notEnough = false
 
     private var refreshing: Bool { idea.launchPlanData != nil }
     private var title: String {
@@ -150,11 +151,22 @@ struct MakePlanButton: View {
                 Text(failure).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
+        .alert(shortTitle, isPresented: $notEnough) {
+            Button("See the options") { env.showingMembership = true }
+            Button("Not now", role: .cancel) {}
+        } message: {
+            Text("You have \(env.entitlements.balance.total) of the \(env.plans.cost(for: idea)) this needs. Plans are included in Pro, Plus gives 15 checks a month, or 5 extra checks are $2.99 once. Your checks for panel takes are untouched.")
+        }
         .sheet(isPresented: $confirming) {
             AIConfirmSheet(content: .launchPlan(ideaTitle: idea.title, refreshing: refreshing, allowance: allowance)) { send in
                 if send { env.plans.build(idea, in: context) }
             }
         }
+    }
+
+    private var shortTitle: String {
+        let cost = env.plans.cost(for: idea)
+        return "\(refreshing ? "Updating a plan" : "A launch plan") is \(cost) \(cost == 1 ? "check" : "checks")"
     }
 
     private var allowance: String {
@@ -167,7 +179,7 @@ struct MakePlanButton: View {
     private func start() {
         env.plans.dismissFailure(idea.id)
         if !env.plans.canAfford(idea) {
-            env.showingMembership = true
+            notEnough = true
             return
         }
         confirming = true

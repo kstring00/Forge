@@ -42,3 +42,9 @@ Caching saves most when checks run within five minutes of each other (many users
 - **Pro is leaning to 50 checks** (60 until the bench gives real cost per check). Open question: who Pro is for. The likeliest buyers are people who evaluate other people's ideas: coaches, consultants, accelerators.
 - **Working name: Hunch.** Not committed yet; the name collides with dating apps.
 - **Under the Hood** (See the Work, the Library, pinned facts, panelist weights, build-your-own panel, export) is the next feature after this PR merges.
+
+## Decided ahead for Under the Hood (Nov 9, late)
+Built on its own branch after this PR merges and then #30 merges, in that order.
+- **No dollar figures in the App Store app, ever.** The cost meter and the AI cost cap stay in Settings → Developer, test builds only.
+- **Pro may run panelists on Sonnet** with no extra checks; fair-use limits cap it. The Developer cost meter shows the extra cost per check so it can be watched in the beta.
+- **Reddit is paste-only**, never fetched by the server. The Library offers a one-tap Paste button and a friendly line: "Reddit doesn't let apps read posts directly. Copy the post and paste it here." Other sites are fetched through the proxy, with paste as the fallback when a site blocks it.

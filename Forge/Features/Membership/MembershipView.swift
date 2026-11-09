@@ -254,8 +254,6 @@ struct MembershipView: View {
             bigButton(subscribeTitle(plan), id: id, emphasised: plan == .plus) { Task { await store.purchase(id) } }
         case .upgradeNow:
             bigButton("Upgrade now", id: id, emphasised: true) { ask(id, option) }
-        case .switchNow:
-            bigButton("Switch now", id: id, emphasised: false) { ask(id, option) }
         case .switchesOn(let d):
             bigButton("Switch on \(d.map(day) ?? "renewal")", id: id, emphasised: false) { ask(id, option) }
         }
@@ -302,7 +300,6 @@ struct MembershipView: View {
         let current = state.plan.displayName
         let (title, confirm): (String, String) = switch option {
         case .upgradeNow: ("Upgrade to \(name)?", "Upgrade now")
-        case .switchNow: ("Switch to \(name)?", "Switch now")
         case .switchesOn(let d): ("Switch to \(name) on \(d.map(day) ?? "renewal")?", "Book the switch")
         case .currentSwitching: ("Keep \(current)?", "Keep \(current)")
         case .currentEnding: ("Keep \(current)?", "Resubscribe")

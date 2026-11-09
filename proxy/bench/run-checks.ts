@@ -6,7 +6,8 @@
 //   npm run bench:compare -- before after
 //
 // Options: --only rv-park-sites (one idea), --no-follow-ups (skip the launch
-// plan and re-score). Results land in bench/results/<label>/.
+// plan and re-score), --mock (a stand-in API, wiring only). Results land in
+// bench/results/<label>/.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +20,13 @@ const label = flag("label") ?? "run";
 const only = flag("only");
 const followUps = !args.includes("--no-follow-ups");
 
+// --mock: a stand-in Claude API (bench/mock-anthropic.ts) to check the wiring
+// without a key. Its numbers say nothing about real cost or quality.
+const mock = args.includes("--mock") ? await (await import("./mock-anthropic.js")).startMock() : null;
+if (mock) {
+  process.env.ANTHROPIC_BASE_URL = mock.url;
+  process.env.ANTHROPIC_API_KEY = "mock";
+}
 prepareEnv();
 // Imported after the environment is ready: the handlers read it on use.
 const { runCheck, flowVersion } = await import("./flow.js");
@@ -46,3 +54,4 @@ for (const idea of ideas) {
 }
 writeFileSync(join(out, "summary.json"), JSON.stringify({ label, flowVersion, at: new Date().toISOString(), ideas: summary }, null, 2));
 console.log(`\nSaved to bench/results/${label}/`);
+mock?.server.close();

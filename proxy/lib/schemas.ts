@@ -6,7 +6,7 @@ import { packetSections } from "./packet.js";
 
 export const actions = [
   "expand", "summarize", "explainCriterion", "designExperiment", "nextStep", "plan",
-  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan",
+  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan", "rescore",
 ] as const;
 export type Action = (typeof actions)[number];
 
@@ -185,6 +185,17 @@ export const PrefillResult = z.object({
   pivots: z.array(PivotDraft),
 });
 
+/// Decision 0042: a check runs in two calls. The five panelists score on the
+/// scoring model; the strongest model writes the Brief from the packet and
+/// those scores. The proxy merges them into one PrefillResult for the app.
+export const ScoreResult = PrefillResult.pick({
+  criteria: true, projection: true, projectionLow: true, projectionHigh: true, projectionBasis: true,
+  estimate: true, panel: true, crossfire: true,
+});
+export const BriefResult = PrefillResult.pick({
+  title: true, realityCheck: true, explorations: true, riskiestAssumption: true, nextMove: true, draftedAssets: true, pivots: true,
+});
+
 /// Decision 0041: a launch plan, two pages, built only from what Hunch knows.
 /// A "proven" line must point at a Library source; one that doesn't is moved
 /// to "unproven" by `enforceLaunchPlan`.
@@ -218,6 +229,8 @@ export const payloadSchemas = {
   realityCheck: RealityCheckResult,
   prefill: PrefillResult,
   launchPlan: LaunchPlanResult,
+  /// After a logged conversation: the panelists score again from the saved packet. No research, no Brief.
+  rescore: ScoreResult,
 } satisfies Record<Action, z.ZodTypeAny>;
 
 /// What goes back to the app: the payload, a short rationale, and accounting.

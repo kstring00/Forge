@@ -6,7 +6,7 @@ import researchHandler from "../api/research.js";
 import actionHandler from "../api/action.js";
 import { call, source, type BenchSource, type StageCost } from "./harness.js";
 
-export const flowVersion = "A: one research pass → packet; the prefill reads the packet, pages by title";
+export const flowVersion = "B: packet → scoring model scores, brief model writes the Brief; re-score is scoring only";
 
 export interface Idea { slug: string; id: string; title: string; text: string }
 
@@ -90,7 +90,12 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
   const t0 = Date.now();
   const p = await call(actionHandler as never, { action: "prefill", context: context(idea, library, rec.research.packet, researchedAt) });
   if (p.status !== 200) { rec.errors.push(`prefill ${p.status}: ${JSON.stringify(p.body).slice(0, 300)}`); return rec; }
-  rec.stages.push(stageFrom("prefill", p.body, Date.now() - t0));
+  const ms = Date.now() - t0;
+  if (Array.isArray(p.body.stages)) {
+    for (const st of p.body.stages) rec.stages.push(stageFrom(st.stage, st, ms / p.body.stages.length));
+  } else {
+    rec.stages.push(stageFrom("prefill", p.body, ms));
+  }
   rec.prefill = p.body.payload;
   rec.rationale = p.body.rationale;
   rec.dropped = p.body.dropped;
@@ -106,7 +111,7 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
   const talk = source("Conversation · bench", "A potential customer said this is a real weekly problem and asked what it would cost. They agreed to a follow-up call next week.", null, "note", "userVerified");
   talk.reviewed = true;
   const t2 = Date.now();
-  const re = await call(actionHandler as never, { action: "prefill", context: context(idea, [...library, talk]) });
+  const re = await call(actionHandler as never, { action: "rescore", context: context(idea, [...library, talk]) });
   if (re.status === 200) rec.followUps.push({ kind: "rescore", payload: { criteria: re.body.payload.criteria }, stage: stageFrom("followUp", re.body, Date.now() - t2) });
   else rec.errors.push(`rescore ${re.status}: ${JSON.stringify(re.body).slice(0, 300)}`);
   return rec;

@@ -81,7 +81,8 @@ struct KnowSomethingSheet: View {
         running = true
         defer { running = false }
         do {
-            let envelope = try await env.ai.perform(.prefill, context: AIContext.make(for: idea), expecting: PrefillResult.self)
+            // Decision 0042: the panelists score again on the scoring model; no new research, no Brief.
+            let envelope = try await env.ai.perform(.rescore, context: AIContext.make(for: idea), expecting: RescoreResult.self)
             if let cost = envelope.costUSD { AISpend.record(cost) }
             let touched = envelope.payload.criteria.filter { $0.sourceIDs.contains(source.id) }
             guard !touched.isEmpty else {

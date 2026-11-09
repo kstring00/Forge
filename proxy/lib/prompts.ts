@@ -23,6 +23,43 @@ function explorePromptsText(): string {
   return ["EXPLORE PROMPTS (keys in brackets):", ...content.explorePrompts.map((p) => `- [${p.key}] ${p.question} ${p.hint}${p.sphere ? ` (asked by the ${p.sphere})` : ""}`)].join("\n");
 }
 
+// The prefill's parts (decision 0042). The full PREFILL is still one call for
+// older apps that ask for it; a check now runs SCORE on the scoring model and
+// then BRIEF on the brief model, each with its own parts.
+const part = {
+  title: `title: the idea's name in 2 to 5 plain words, a noun phrase a person would say ("Clinic-issued ID tags", "Weekend RV park sites"). No "app that", no "what if", no punctuation.`,
+  realityCheck: `realityCheck: as in REALITY CHECK.`,
+  explorations: `explorations: one proposed answer per Explore prompt key, with source ids. Where the Library says nothing, answer honestly that it is unknown and say what would answer it.`,
+  criteria: `criteria: for every criterion of the lens, a proposed score 1-5 from the rubric anchors and an evidence rung that never exceeds the desk ceiling, a one-line note, and source ids. For A2 the score is the highest rung at least three independent people reached; from a desk that is at most 2.`,
+  projection: `projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow, projectionHigh: null (the app computes the return from estimate). projectionBasis: empty.
+   estimate: the Investor builds the return bottom-up for THIS idea, three inputs, each with low, high, basis (at most eight words) and the sourceID it rests on, or null when it is an assumption:
+   - price: what one paying customer pays per month for this idea. Only from a source that prices this kind of offer for this kind of customer. Never a competitor's one-time report price, a different product's price, or a price you would like; if no source prices this offer, sourceID null.
+   - reachable: how many such customers the person could actually reach in year one, given their advantages and constraints.
+   - conversion: the share of those who would pay, as a fraction from 0 to 1.
+   Keep each range honest and as narrow as the sources allow. Null estimate only if the idea gives nothing to price.`,
+  riskiest: `riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.`,
+  nextMove: `nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.`,
+  draftedAssets: `draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.`,
+  panel: `panel: one verdict per Sphere (criterion key, two sentences, source ids; cantTell when no source). crossfire: only between Spheres whose verdicts conflict (one onTrack, the other offTrack), one sentence per such pair, at most one exchange per pair. cantTell argues with nobody.`,
+  pivots: `pivots: on every check, the Strategist offers two or three "What if…" changes that would make the idea stronger, however strong it already is. Each: whatIf (one sentence starting "What if", a concrete change to the idea, not advice), pivotType (zoomIn, zoomOut, customerSegment, customerNeed, channel, businessModel or technology), fixes (the key of the criterion this change raises most), why (one sentence, grounded in what the Library shows about competitors, pricing or complaints), firstTest (one sentence: the first thing a person could do this week to test it), and the source ids it rests on. Never a pivot the Library gives no reason for.`,
+  citing: `CITING: every web page in the Library is its own source. Cite the page a fact came from by that source's id. The source titled "Research notes" is the researcher's own summary: cite it only for a claim no page source carries. A criterion backed by two pages from different sites cites both.`,
+};
+
+const numbered = (items: string[]) => items.map((t, i) => `${i}. ${t}`).join("\n");
+
+/// The five panelists score from the packet. Nobody searches; a gap is said, never guessed.
+export const scoreInstruction = `SCORE. Five panelists (investor, customer, builder, strategist, skeptic) read the research packet and the Library and score this idea. Nobody searches again.
+${numbered([part.criteria, part.projection, part.panel])}
+When the packet and the Library do not cover what a panelist needs, that panelist's verdict is cantTell and evidenceNeeded says exactly what is missing. Never guess a figure or a source.
+${part.citing}
+Write the rationale as one sentence: what the scores rest on most.`;
+
+/// The strongest model writes the panel's take from the packet and the scores.
+export const briefInstruction = `BRIEF. Write the panel's take from the research packet, the Library and the PANEL SCORES below (the five panelists already scored; do not re-score or contradict their numbers without saying why).
+${numbered([part.title, part.realityCheck, part.explorations, part.riskiest, part.nextMove, part.draftedAssets, part.pivots])}
+${part.citing}
+Write the rationale as three sentences: what the Library supports, what it does not, and the one thing nobody can tell from a desk.`;
+
 export function actionInstruction(action: Action): string {
   switch (action) {
     case "expand":
@@ -61,23 +98,11 @@ export function actionInstruction(action: Action): string {
 Use the proof stage, the verdict and the estimate in the options as given; never invent a figure. Write the rationale as one sentence on what the plan rests on most.`;
     case "prefill":
       return `PREFILL. Five Spheres (investor, customer, builder, strategist, skeptic) read the Library and pre-fill the whole Lab for the user to review by exception.
-0. title: the idea's name in 2 to 5 plain words, a noun phrase a person would say ("Clinic-issued ID tags", "Weekend RV park sites"). No "app that", no "what if", no punctuation.
-1. realityCheck: as in REALITY CHECK.
-2. explorations: one proposed answer per Explore prompt key, with source ids. Where the Library says nothing, answer honestly that it is unknown and say what would answer it.
-3. criteria: for every criterion of the lens, a proposed score 1-5 from the rubric anchors and an evidence rung that never exceeds the desk ceiling, a one-line note, and source ids. For A2 the score is the highest rung at least three independent people reached; from a desk that is at most 2.
-4. projection: a price and units range with a one-line rationale, labeled as an estimate; null if nothing in the Library supports any figure. projectionLow, projectionHigh: null (the app computes the return from estimate). projectionBasis: empty.
-   estimate: the Investor builds the return bottom-up for THIS idea, three inputs, each with low, high, basis (at most eight words) and the sourceID it rests on, or null when it is an assumption:
-   - price: what one paying customer pays per month for this idea. Only from a source that prices this kind of offer for this kind of customer. Never a competitor's one-time report price, a different product's price, or a price you would like; if no source prices this offer, sourceID null.
-   - reachable: how many such customers the person could actually reach in year one, given their advantages and constraints.
-   - conversion: the share of those who would pay, as a fraction from 0 to 1.
-   Keep each range honest and as narrow as the sources allow. Null estimate only if the idea gives nothing to price.
-5. riskiestAssumption: the one belief that, if wrong, kills it, and what happens if it is wrong.
-6. nextMove: a recommendation and one concrete human action for this week; an Experiment card when the move is testRiskiestAssumption.
-7. draftedAssets: the asset that action needs, drafted in full: five Mom Test interview questions about past behaviour, or a twenty-message outreach script, or landing-page copy.
-8. panel: one verdict per Sphere (criterion key, two sentences, source ids; cantTell when no source). crossfire: only between Spheres whose verdicts conflict (one onTrack, the other offTrack), one sentence per such pair, at most one exchange per pair. cantTell argues with nobody.
-9. pivots: on every check, the Strategist offers two or three "What if…" changes that would make the idea stronger, however strong it already is. Each: whatIf (one sentence starting "What if", a concrete change to the idea, not advice), pivotType (zoomIn, zoomOut, customerSegment, customerNeed, channel, businessModel or technology), fixes (the key of the criterion this change raises most), why (one sentence, grounded in what the Library shows about competitors, pricing or complaints), firstTest (one sentence: the first thing a person could do this week to test it), and the source ids it rests on. Never a pivot the Library gives no reason for.
-CITING: every web page in the Library is its own source. Cite the page a fact came from by that source's id. The source titled "Research notes" is the researcher's own summary: cite it only for a claim no page source carries. A criterion backed by two pages from different sites cites both.
+${numbered([part.title, part.realityCheck, part.explorations, part.criteria, part.projection, part.riskiest, part.nextMove, part.draftedAssets, part.panel, part.pivots])}
+${part.citing}
 Write the rationale as three sentences: what the Library supports, what it does not, and the one thing nobody can tell from a desk.`;
+    case "rescore":
+      return scoreInstruction;
   }
 }
 

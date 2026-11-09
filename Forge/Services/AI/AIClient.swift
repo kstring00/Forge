@@ -17,6 +17,7 @@ public enum AIAction: String, Codable, CaseIterable, Sendable {
     case realityCheck      // §6D: desk research with four verdicts; the costliest action
     case prefill           // §0A: five Spheres pre-fill the whole Lab from the Library
     case launchPlan        // decision 0041: a short launch plan from what Hunch knows
+    case rescore           // decision 0042: the panelists score again from the saved packet; no research, no Brief
 }
 
 public enum AIError: Error, Equatable, Sendable {

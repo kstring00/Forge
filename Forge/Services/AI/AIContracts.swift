@@ -245,6 +245,12 @@ public struct LaunchPlanResult: Codable, Sendable {
     public var stewardNote: String?
 }
 
+/// Decision 0042: what a re-score returns that the app uses: the criteria.
+/// (The proxy also sends the panel's verdicts and the estimate.)
+public struct RescoreResult: Codable, Sendable {
+    public var criteria: [PrefillResult.CriterionDraft]
+}
+
 /// Sugar so each action names its payload type in one place.
 public extension AIAction {
     var payloadDescription: String {
@@ -262,6 +268,7 @@ public extension AIAction {
         case .realityCheck: "RealityCheckResult"
         case .prefill: "PrefillResult"
         case .launchPlan: "LaunchPlanResult"
+        case .rescore: "RescoreResult"
         }
     }
 }

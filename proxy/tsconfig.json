@@ -16,6 +16,7 @@
     "api/**/*.ts",
     "lib/**/*.ts",
     "test/**/*.ts",
-    "bench/**/*.ts"
+    "bench/**/*.ts",
+    "config/**/*.ts"
   ]
 }

@@ -61,15 +61,17 @@ struct CardMeters: View {
                 .foregroundStyle(ForgeColor.ink)
                 .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
             ProofLadder(reached: stage.ladderIndex)
-        } caption: {
             if let move = idea.proofMoves.last, move.isRecent() {
-                Text("Up today · \(move.from)").foregroundStyle(ForgeColor.ink)
-            } else {
-                Text(stage.cardCaption)
+                Text("Up today · \(move.from)").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink).lineLimit(1)
             }
+        } caption: {
+            // The dots say where it is; this says what moves it.
+            (Text("Next: ").fontWeight(.semibold) + Text(stage.nextStep(for: idea)))
+                .foregroundStyle(ForgeColor.ink)
+                .lineLimit(3)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Proof: \(stage.label), \(stage.cardCaption). Opens the four steps.")
+        .accessibilityLabel("Proof: \(stage.label), \(stage.stepOfFour). Next: \(stage.nextStep(for: idea)). Opens the four steps.")
     }
 
     private func tile<V: View, C: View>(label: String, @ViewBuilder value: () -> V, @ViewBuilder caption: () -> C) -> some View {
@@ -136,15 +138,32 @@ extension ProofStage {
         }
     }
 
-    var cardCaption: String {
-        switch self {
-        case .none: "nothing yet"
-        case .deskOnly: "step 1 of 4 · next: talk to people"
-        case .talked: "step 2 of 4 · next: a payment"
-        case .signups: "step 2 of 4 · next: a payment"
-        case .paid: "step 3 of 4 · next: they come back"
-        case .cameBack: "step 4 of 4 · the strongest proof"
+    /// "step 2 of 4", for VoiceOver and the explainer.
+    var stepOfFour: String {
+        ladderIndex < 0 ? "not started" : "step \(ladderIndex + 1) of 4"
+    }
+
+    /// What moves the proof one step: the idea's own step when one is set,
+    /// otherwise the move the next rung needs. Short, verb first.
+    func nextStep(for idea: Idea) -> String {
+        if let project = idea.project, project.status == .active,
+           let step = project.nextStep?.trimmingCharacters(in: .whitespacesAndNewlines), !step.isEmpty {
+            return step
         }
+        switch self {
+        case .none: return "get the panel's take"
+        case .deskOnly: return "talk to 3 people who'd buy it"
+        case .talked, .signups: return "ask one of them to pay"
+        case .paid: return "get them to come back"
+        case .cameBack: return "find five more like them"
+        }
+    }
+
+    /// "talk to 3 people" → "Talk to 3 people."
+    static func sentence(_ s: String) -> String {
+        guard let first = s.first else { return s }
+        let t = first.uppercased() + s.dropFirst()
+        return t.hasSuffix(".") || t.hasSuffix("?") ? t : t + "."
     }
 }
 
@@ -278,6 +297,15 @@ struct MeterExplainerSheet: View {
                     .padding(.bottom, 8)
                 }
             }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Next step").forgeLabelSmall()
+                Text(ProofStage.sentence(stage.nextStep(for: idea)))
+                    .forgeSubhead().fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
             if let e = evaluation, stage.showsNumber {
                 Text("How sure the panel is now: \(e.confidence) of 100. The Brief shows what each part rests on.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)

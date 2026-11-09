@@ -54,3 +54,5 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   cap, the dollar figures and data counts moved under Developer, Debug only. The $10 cost cap
   no longer stops a check in App Store builds; the check allowance and the server's daily
   ceiling do. "FORGE" no longer appears anywhere a user reads; it says Hunch.
+
+**Follow-up (Nov 9): the Proof tile names the next step.** The four dots say where proof is; on their own they don't say what to do. Under the dots the tile now says "Next: …": the idea's own step when one is set ("Next: Call Shady Oaks"), otherwise the move the next rung needs (talk to 3 people who'd buy it → ask one of them to pay → get them to come back → find five more like them). The Proof explainer sheet repeats it as its own "Next step" box. "step 2 of 4" moves to VoiceOver only.

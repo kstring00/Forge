@@ -11,7 +11,7 @@ Goal: people get more checks and more for what they pay, without a check getting
 
 ## What changed
 - **A. One shared research pass.** The research notes come back in fixed sections (competitors, prices, complaints, demand, other), one finding per line ending with its URL. The proxy turns them into a **research packet** with no extra model call: every finding carries its page; a line without a page is kept apart and never shown as a fact; what the research could not find is listed. The panel reads the packet; Library pages go by title only (still citable); the person's own evidence goes in full. Panelists never search; a panelist who needs something the packet lacks says so (`cantTell` with `evidenceNeeded`).
-- **B. Model tiering.** `proxy/config/hunch.ts` names a model and effort per role: research and scoring on Haiku, the Brief on Opus 5.5, plans and the Tank on Sonnet. A check is now two calls: SCORE (the five panelists) on the scoring model, then BRIEF on the brief model, reading the packet and the scores. The proxy merges them into the `PrefillResult` the app already reads, so older apps keep working. Re-score is its own action: the panelists only. The app has no model picker.
+- **B. Model tiering.** `proxy/config/hunch.ts` names a model and effort per role: research and scoring on Haiku 5.5; the Brief (with the next step and What-ifs), launch plans and the Tank on Sonnet 5.5, on every plan and every check, the first one included. A check is now two calls: SCORE (the five panelists) on the scoring model, then BRIEF on the brief model, reading the packet and the scores. The proxy merges them into the `PrefillResult` the app already reads, so older apps keep working. Re-score is its own action: the panelists only. The app has no model picker.
 - **C. Prompt caching.** Every panel call puts the stable parts first with cache breakpoints (house rules, lens, panel, Explore prompts; then the action's instruction and output format) and the idea last. Research continuation turns cache the earlier turns. Every call logs read, written and fresh tokens and whether it hit.
 - **D. The packet is saved with the idea**, with its date. Launch plans, plan updates, re-scores and the Tank read it and never search; only a fresh re-check replaces it. Kept on the device, not the server: it is part of the idea like its sources (backed up, exported, offline), the app already sends it with each call, and the server needs no database. When checks move to the server (#22) the server counts checks; a forged packet could only buy a follow-up, which never searches and sits under fair use.
 - **E. Check rules.** Only researching costs a check: the first look (1) and a fresh re-check (1). A launch plan (new or updated), a re-score and the Tank are included on every plan, under a quiet daily limit per idea (3 plans, 10 re-scores, 3 Tank runs) that shows a friendly line, never the paywall. Free users can make a launch plan on the idea they checked. Buttons say "1 check" or "Included". Paywall moments are unchanged.
@@ -20,15 +20,17 @@ Goal: people get more checks and more for what they pay, without a check getting
 - **H. Cost meter** in Settings → Developer (test builds): average per check by research, scoring and Brief; cache hit rate; average included follow-up.
 
 ## Expected cost (estimates until the bench runs)
-| | Before | After, Brief on Opus 5.5 | After, Brief on Sonnet 5.5 |
-|---|---|---|---|
-| Research | ~$0.06 | ~$0.06 | ~$0.06 |
-| Scoring | (in prefill) | ~$0.003 | ~$0.003 |
-| Brief | ~$0.12 | ~$0.17 | ~$0.09 |
-| **Per check** | **~$0.18** | **~$0.23** | **~$0.15** |
-| Re-score | ~$0.12 | ~$0.003 | ~$0.003 |
-| Launch plan | ~$0.05 | ~$0.04 | ~$0.04 |
+| | Before | After |
+|---|---|---|
+| Research (Haiku, web search) | ~$0.06 | ~$0.06 |
+| Scoring (Haiku) | in the prefill | ~$0.003 |
+| Brief, next step, What-ifs (Sonnet) | ~$0.12 (all in one call) | ~$0.09 |
+| **Per check** | **~$0.18** | **~$0.15** (about 15% less) |
+| Re-score | ~$0.12 | ~$0.003 |
+| Launch plan, new or updated | ~$0.05 | ~$0.04 |
 
-With the Brief on the strongest model a check costs about the same or more; the savings are in everything after a check, which is what makes "included" affordable. Moving the Brief to Sonnet (one line in the config) makes the check itself cheaper too. The bench decides: `proxy/bench/` runs the five sample ideas on both.
+The check itself gets a little cheaper; everything after it gets much cheaper, which is what makes "included" affordable. `proxy/bench/` measures the real numbers on five sample ideas.
+
+**Decided by the developer (Nov 9):** the Brief runs on Sonnet everywhere (no Opus); scoring stays on Haiku; research is unchanged. Rollover on plan changes, the fair-use limits (3 plans, 10 re-scores, 3 Tank runs per idea per day) and keeping the packet on the phone are approved as built. Check allowances per plan stay as they are until the bench gives real numbers.
 
 Caching saves most when checks run within five minutes of each other (many users). At a handful of checks a day the stable prefix is mostly written, not read, which costs 25% more on those tokens; the log shows which.

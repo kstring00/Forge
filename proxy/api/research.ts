@@ -20,7 +20,7 @@ const ResearchRequest = z.object({
   messages: z.array(z.any()).optional(),
 });
 
-/// Dynamic filtering (the _20260209 tools) is documented for Opus and Sonnet;
+/// Dynamic filtering (the _20260209 tools) is documented for the larger models, not Haiku;
 /// Haiku gets the basic tools. Either way searches and fetches are capped, and
 /// each fetched page is cut to a token budget before the model reads it.
 export function researchTools(model: string): Anthropic.ToolUnion[] {

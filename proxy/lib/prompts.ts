@@ -66,7 +66,7 @@ When the packet and the Library do not cover what a panelist needs, that panelis
 ${part.citing}
 Write the rationale as one sentence: what the scores rest on most.`;
 
-/// The strongest model writes the panel's take from the packet and the scores.
+/// The brief model (config/hunch.ts) writes the panel's take from the packet and the scores.
 export const briefInstruction = `BRIEF. Write the panel's take from the research packet, the Library and the PANEL SCORES below (the five panelists already scored; do not re-score or contradict their numbers without saying why).
 ${numbered([part.title, part.realityCheck, part.explorations, part.riskiest, part.nextMove, part.draftedAssets, part.pivots])}
 ${part.citing}

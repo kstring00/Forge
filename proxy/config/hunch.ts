@@ -9,8 +9,8 @@ export default {
     research: "claude-haiku-5-5",
     /// The five panelists' scores and verdicts, from the packet.
     scoring: "claude-haiku-5-5",
-    /// The Brief, the next step and the What-ifs: where quality shows.
-    brief: "claude-opus-5-5",
+    /// The Brief, the next step and the What-ifs, on every plan and every check.
+    brief: "claude-sonnet-5-5",
     /// Launch plans (new and brought up to date).
     plan: "claude-sonnet-5-5",
     /// The Tank, when it is built (ENGINE.md §3.4).

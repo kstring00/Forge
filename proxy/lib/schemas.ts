@@ -186,7 +186,7 @@ export const PrefillResult = z.object({
 });
 
 /// Decision 0042: a check runs in two calls. The five panelists score on the
-/// scoring model; the strongest model writes the Brief from the packet and
+/// scoring model; the brief model writes the Brief from the packet and
 /// those scores. The proxy merges them into one PrefillResult for the app.
 export const ScoreResult = PrefillResult.pick({
   criteria: true, projection: true, projectionLow: true, projectionHigh: true, projectionBasis: true,

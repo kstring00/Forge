@@ -35,8 +35,9 @@ struct OutcomeSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                     Text(subject)
-                        .font(ForgeType.ideaTitle)
+                        .font(ForgeType.statement)
                         .foregroundStyle(ForgeColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                     VoiceNoteField(label: prompt, text: $whatHappened, focused: $focused, minHeight: 120)
                     if asksRung { rungPicker }
                     if showsNextStep {
@@ -72,7 +73,11 @@ struct OutcomeSheet: View {
                     .fontWeight(.semibold)
                 }
             }
-            .onAppear { focused = true }
+            // Decision 0039: focus after the sheet has settled; focusing in onAppear can leave a cursor that takes no typing.
+            .task {
+                try? await Task.sleep(for: .milliseconds(450))
+                focused = true
+            }
             .onDisappear { if speech.isRecording { speech.discardRecording() } }
             .interactiveDismissDisabled(speech.isRecording)
         }
@@ -82,32 +87,15 @@ struct OutcomeSheet: View {
     /// Time · Money · Came back · Nothing yet. Preselected from the words; the user confirms.
     private var rungPicker: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            HStack {
-                Text("What did they give?").forgeSubhead()
-                Spacer()
-                if !touchedRung, let guess, rung == nil {
-                    Text("Sounds like \(guess.because)").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-                }
+            Text("What did they give?").forgeSubhead()
+            if !touchedRung, let guess, rung == nil {
+                Text("Sounds like \(guess.because), so it's picked. Change it if not.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
-            HStack(spacing: 8) {
-                ForEach(options, id: \.self) { r in
-                    let on = effectiveRung == r
-                    Button { rung = r; touchedRung = true } label: {
-                        Text(RungInference.label(r))
-                            .font(.system(.footnote, weight: .medium))
-                            .foregroundStyle(on ? .white : ForgeColor.ink)
-                            .padding(.horizontal, 12).frame(height: 32)
-                            .background(on ? ForgeColor.ember : ForgeColor.surface, in: Capsule())
-                            .overlay(Capsule().strokeBorder(on ? Color.clear : ForgeColor.line))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(on ? .isSelected : [])
-                }
-            }
+            RungChoices(options: options, selected: effectiveRung) { rung = $0; touchedRung = true }
             Text(effectiveRung >= 3
-                 ? "\(Plain.rung(effectiveRung).prefix(1).uppercased() + Plain.rung(effectiveRung).dropFirst()) (rung \(effectiveRung)). Verified by you, so Confidence, how sure we are, can rise past what the desk could prove."
-                 : "Saved as verified. Nothing claimed on the ladder until a real person gives time, money, or comes back.")
-                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                 ? "Saved as verified by you. Proof moves to \(RungInference.label(effectiveRung).lowercased())."
+                 : "Saved as verified by you. Proof doesn't move until a real person gives time, money, or comes back.")
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 

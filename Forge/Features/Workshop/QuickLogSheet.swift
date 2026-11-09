@@ -37,7 +37,10 @@ struct QuickLogSheet: View {
                     }
                 }
             }
-            .onAppear { focused = true }
+            .task {
+                try? await Task.sleep(for: .milliseconds(450))
+                focused = true
+            }
             .onDisappear { if speech.isRecording { speech.discardRecording() } }
             .interactiveDismissDisabled(speech.isRecording)
         }

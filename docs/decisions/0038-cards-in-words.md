@@ -17,3 +17,17 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   `docs/PRICING.md`.
 - **Fixed:** during "Replay first run", leaving the welcome brought it straight back, so
   neither button could get past it. The replay now keeps its own "welcome seen".
+
+## Follow-ups (decision 0039, same PR)
+
+- **Proof has the same four steps as "What did they give?"**: desk research · gave time
+  (talked, or signed up) · paid · came back. The tile's caption says "step 2 of 4 · next: a
+  payment". Tapping either tile opens what it means: Proof shows the four steps with "You are
+  here"; Potential shows the six criteria the word comes from, as the panel scored them.
+- **"What did they give?" is full-width rows** with the word and a line of what it means
+  ("Gave money · Paid, or put money down"), on the outcome sheet and the interview's Done,
+  never truncated chips.
+- **Text fields in sheets take focus after the sheet settles** (450 ms), not in onAppear,
+  which could leave a cursor that took no typing. The outcome sheet's step reads as a
+  statement, not a title.
+- **Home's title is "Have a hunch?"**

@@ -10,9 +10,12 @@ enum ProofStage: Equatable {
     case talked(Int)
     case signups(Int)
     case paid
+    /// Someone used it again or asked for more (proof level 5).
+    case cameBack
 
     static func of(_ idea: Idea) -> ProofStage {
         let lived = idea.latestEvaluation?.allEvidence.filter { $0.source?.sourceClass == .userVerified } ?? []
+        if lived.contains(where: { $0.ladderRung >= 5 }) { return .cameBack }
         if lived.contains(where: { $0.ladderRung >= 4 }) || (idea.latestEvaluation?.projection.verifiedUnits ?? 0) > 0 { return .paid }
         let talked = idea.sources.filter { $0.sourceClass == .userVerified && $0.title.hasPrefix(FieldEvidence.conversationKind) }.count
         if talked > 0 { return .talked(talked) }
@@ -27,13 +30,14 @@ enum ProofStage: Equatable {
         case .talked(let n): "Talked to people · \(n)"
         case .signups(let n): "Signups · \(n)"
         case .paid: "Someone paid"
+        case .cameBack: "Someone came back"
         }
     }
 
     /// The proof number appears only once a person has brought something back.
     var showsNumber: Bool {
         switch self {
-        case .talked, .signups, .paid: true
+        case .talked, .signups, .paid, .cameBack: true
         case .none, .deskOnly: false
         }
     }

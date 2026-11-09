@@ -85,7 +85,7 @@ struct HomeView: View {
                     .accessibilityLabel("Settings")
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("From idea\nto reality")
+                    Text("Have a hunch?")
                         .font(Font.custom("Fraunces-SemiBold", size: 40, relativeTo: .largeTitle))
                         .foregroundStyle(ForgeColor.ink)
                         .lineSpacing(-2)

@@ -18,6 +18,7 @@ Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
 - **The engine spec is `docs/ENGINE.md` (decision 0033).** It supersedes brief §6B/6C/6D where they disagree. Build order starts with `bench/`; no engine code ships without bench numbers.
+- Since decision 0037 cards show Potential (the panel's view) and proof as a stage, not Confidence; desk levels are graded by source rank (`DeskGrade`); `ProofMove` records each change; the estimate is bottom-up (`ReturnInputs`).
 - Since decision 0032 memberships run against `Hunch.storekit` in the simulator: `MembershipStore` (StoreKit 2), `EntitlementService` / `LocalEntitlements` (swap for the proxy ledger later), `MembershipView`, the checks pill, What-if gated to Plus. App Store Connect steps: `docs/RELEASE.md`.
 - Since decision 0030 the drafted questions are fillable: `InterviewSheet`, `Project.interviews` / `interviewQuestions`, `WorkshopActions.finishInterview` → `logConversation`.
 - Since decision 0029 text sizes have floors and scale with Dynamic Type (`ForgeType.caption/supporting/subhead`, `forgeSubhead()`, `forgeCaption()`), muted ink is lifted, and `Plain` carries the plain-language vocabulary shown beside every brand term.

@@ -8,7 +8,7 @@ import ForgeCore
 /// a long title becomes a short one (2 to 5 words).
 enum LegacyCleanup {
     static let versionKey = "legacyCleanup.version"
-    static let version = 3
+    static let version = 4
 
     @MainActor
     static func runIfNeeded(in context: ModelContext, defaults: UserDefaults = .standard) {
@@ -55,6 +55,15 @@ enum LegacyCleanup {
                     for ev in s.evidence { ev.text = clean(ev.text) }
                 }
                 if let x = e.experiment { scrub(x, clean) }
+            }
+            // v4 (decision 0037): grade the panel's desk levels by their sources, then recompute.
+            if let e = idea.latestEvaluation, !e.isFinal {
+                for s in e.criteria where s.aiProposed && s.deskLevel == nil && s.evidenceLevel <= Scoring.deskResearchRungCeiling {
+                    let grade = DeskGrade.level(sources: s.evidence.compactMap(\.source).map { ($0.url, $0.evidenceRank) }, proposedLevel: s.evidenceLevel)
+                    s.deskLevel = grade.level
+                    s.deskSourceCount = grade.independentSources
+                }
+                e.recompute()
             }
             for ex in idea.explorations { ex.aiText = cleanOpt(ex.aiText) }
             for s in idea.sources where s.kind == .note {

@@ -186,6 +186,20 @@ public struct PrefillResult: Codable, Sendable {
     public var projectionLow: Double?
     public var projectionHigh: Double?
     public var projectionBasis: String?
+    /// Decision 0037: the Investor's bottom-up inputs. Optional so an older proxy's answer still decodes.
+    public var estimate: EstimateDraft?
+
+    public struct EstimateDraft: Codable, Sendable {
+        public struct Input: Codable, Sendable {
+            public var low: Double
+            public var high: Double
+            public var basis: String
+            public var sourceID: UUID?
+        }
+        public var price: Input
+        public var reachable: Input
+        public var conversion: Input
+    }
     public var riskiestAssumption: RiskiestAssumptionDraft
     public var nextMove: NextMoveDraft
     public var draftedAssets: DraftedAssets

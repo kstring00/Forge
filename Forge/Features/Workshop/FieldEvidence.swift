@@ -9,6 +9,9 @@ import ForgeCore
 /// 5 came back. User-verified evidence is not bound by the desk ceiling, so
 /// Confidence can rise above 2 here and nowhere else.
 enum FieldEvidence {
+    /// A logged conversation's source title starts with this (proof stage "Talked to people").
+    static let conversationKind = "Conversation"
+
     struct Report: Equatable {
         var text: String
         /// 0 to 5. Below 3 the words are saved but no rung is claimed.
@@ -36,7 +39,7 @@ enum FieldEvidence {
     /// Saves the report on the idea and, when it earns a rung, attaches it to
     /// the step's criterion on the latest working version. Returns what moved.
     @discardableResult
-    static func record(_ report: Report, kind: String, on idea: Idea, project: Project? = nil, now: Date = .now) -> Recorded {
+    static func record(_ report: Report, kind: String, on idea: Idea, project: Project? = nil, from: String? = nil, now: Date = .now) -> Recorded {
         let text = report.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let source = Source(kind: report.audioFileName == nil ? .note : .voice,
                             title: "\(kind): " + String(text.prefix(56)) + (text.count > 56 ? "…" : ""),
@@ -80,6 +83,13 @@ enum FieldEvidence {
         // The user brought this; it is no longer the panel's proposal.
         score.aiProposed = false
         evaluation.recompute()
+        // Decision 0037: the move, for the card (a day) and the Brief (for good).
+        let delta = evaluation.confidence - confidenceBefore
+        if delta != 0 || score.evidenceLevel > before {
+            let who = from?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+                ?? (report.rung >= 5 ? "someone coming back" : report.rung == 4 ? "a payment" : kind == "Conversation" ? "a conversation" : kind.lowercased())
+            idea.proofMoves.append(ProofMove(at: now, delta: delta, from: who, criterionTitle: criterion.title, levelAfter: score.evidenceLevel))
+        }
         idea.touch()
         return Recorded(source: source, evidence: evidence, criterionKey: key, levelBefore: before, levelAfter: score.evidenceLevel,
                         confidenceBefore: confidenceBefore, confidenceAfter: evaluation.confidence)
@@ -94,4 +104,8 @@ enum FieldEvidence {
         }
         return "Saved as verified on \(title) at \(Plain.rung(r.levelAfter))."
     }
+}
+
+extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

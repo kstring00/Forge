@@ -73,9 +73,14 @@ enum PrefillApplier {
             try? evaluation.set(key: c.key, score: c.score, evidenceLevel: rung, note: note)
             if let score = evaluation.criterionScore(for: c.key) {
                 score.aiProposed = true
-                for s in sourcesFor(c.sourceIDs) {
+                let cited = sourcesFor(c.sourceIDs)
+                for s in cited {
                     score.evidence.append(Evidence(criterionKey: c.key, ladderRung: rung, text: note, source: s))
                 }
+                // Decision 0037: graded by how many independent sources, and of what rank.
+                let grade = DeskGrade.level(sources: cited.map { ($0.url, $0.evidenceRank) }, proposedLevel: rung)
+                score.deskLevel = grade.level
+                score.deskSourceCount = grade.independentSources
             }
         }
         evaluation.recompute()
@@ -88,6 +93,13 @@ enum PrefillApplier {
         }
         if let p = r.projection {
             evaluation.projectionSuggestion = clean("\(Projection.compact(p.pricePerUnitLow))–\(Projection.compact(p.pricePerUnitHigh)) per unit · \(p.unitsYearOneLow)–\(p.unitsYearOneHigh) units in year one. \(p.rationale)")
+        }
+        if let x = r.estimate {
+            func input(_ i: PrefillResult.EstimateDraft.Input) -> ReturnInputs.Input {
+                let s = source(i.sourceID)
+                return ReturnInputs.Input(low: i.low, high: i.high, basis: clean(i.basis), sourceID: s?.id, sourceTitle: s?.title)
+            }
+            evaluation.estimateInputs = ReturnInputs(price: input(x.price), reachable: input(x.reachable), conversion: input(x.conversion))
         }
         if let low = r.projectionLow, let high = r.projectionHigh, high > 0 {
             evaluation.projectionEstimateLow = min(low, high)

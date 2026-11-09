@@ -81,6 +81,11 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
     ],
     projection: null,
     projectionLow: 2400, projectionHigh: 900, projectionBasis: "three pricing pages",
+    estimate: {
+      price: { low: 49, high: 29, basis: "two clinic pricing pages", sourceID: A },
+      reachable: { low: 10, high: 30, basis: "clinics nearby", sourceID: UNKNOWN },
+      conversion: { low: 0.1, high: 1.4, basis: "assumed", sourceID: null },
+    },
     riskiestAssumption: { belief: "b", consequence: "c", sourceIDs: [UNKNOWN] },
     nextMove: { recommendation: "testRiskiestAssumption", step: "s", experiment: null },
     draftedAssets: { kind: "interviewQuestions", title: "t", body: "b" },
@@ -106,6 +111,9 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
   assert.equal(e.criteria[1].evidenceLevel, 1, "no source: at most rung 1");
   assert.deepEqual(e.riskiestAssumption.sourceIDs, []);
   assert.equal(e.panel[0].verdict, "cantTell");
+  assert.deepEqual(e.estimate?.price, { low: 29, high: 49, basis: "two clinic pricing pages", sourceID: A }, "low before high, known source kept");
+  assert.equal(e.estimate?.reachable.sourceID, null, "an unknown source is an assumption");
+  assert.equal(e.estimate?.conversion.high, 1, "conversion is a fraction");
   assert.equal(e.title, "Weekend site care for RV", "a title is at most five words, unquoted");
   assert.equal(e.pivots.length, 3, "at most three pivots, and never one that raises a criterion the lens does not have");
   assert.equal(e.pivots[0].whatIf, "What if you sold to the park owners' association instead of parks one by one?", "phrased as a what-if");

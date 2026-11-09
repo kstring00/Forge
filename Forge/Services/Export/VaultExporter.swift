@@ -48,7 +48,8 @@ enum VaultExporter {
             rounds: idea.rounds.sorted { $0.createdAt < $1.createdAt }.map(export),
             realityChecks: idea.realityChecks.sorted { $0.createdAt < $1.createdAt }.map(export),
             project: idea.project.map(export),
-            titleEdited: idea.titleEdited
+            titleEdited: idea.titleEdited,
+            proofMoves: idea.proofMoves.isEmpty ? nil : idea.proofMoves
         )
     }
 
@@ -73,8 +74,10 @@ enum VaultExporter {
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,
                     note: c.note, peopleAtRung: c.peopleAtRung, aiProposed: c.aiProposed,
-                    evidence: c.evidence.sorted { $0.createdAt < $1.createdAt }.map(export))
+                    evidence: c.evidence.sorted { $0.createdAt < $1.createdAt }.map(export),
+                    deskLevel: c.deskLevel, deskSourceCount: c.deskSourceCount)
             },
+            estimateInputs: e.estimateInputs,
             experiment: e.experiment.map(export)
         )
     }

@@ -58,7 +58,7 @@ enum WorkshopActions {
     /// the user marks it done; reaching the target is a nudge, not a close.
     @discardableResult
     static func logConversation(_ project: Project, whatHappened: String, rung: Int? = nil, audioFileName: String? = nil,
-                                in context: ModelContext, now: Date = .now) -> Decision? {
+                                from: String? = nil, in context: ModelContext, now: Date = .now) -> Decision? {
         guard let step = project.nextStep else { return nil }
         let text = whatHappened.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
@@ -71,7 +71,7 @@ enum WorkshopActions {
         context.insert(d)
         if let idea = project.idea {
             let earned = max(RungInference.rungForConversation(text), rung ?? 0)
-            FieldEvidence.record(.init(text: text, rung: earned, audioFileName: audioFileName), kind: "Conversation", on: idea, project: project, now: now)
+            FieldEvidence.record(.init(text: text, rung: earned, audioFileName: audioFileName), kind: "Conversation", on: idea, project: project, from: from, now: now)
         }
         project.idea?.touch()
         return d
@@ -122,7 +122,8 @@ enum WorkshopActions {
     static func finishInterview(_ interview: Interview, rung: Int, on project: Project, in context: ModelContext, now: Date = .now) -> Decision? {
         var i = interview
         guard i.hasContent, project.nextStep != nil else { return nil }
-        let decision = logConversation(project, whatHappened: i.transcript, rung: max(3, rung), in: context, now: now)
+        let who = i.who.trimmingCharacters(in: .whitespacesAndNewlines)
+        let decision = logConversation(project, whatHappened: i.transcript, rung: max(3, rung), from: who.isEmpty ? nil : who, in: context, now: now)
         i.status = .done
         i.rung = max(3, rung)
         i.updatedAt = now

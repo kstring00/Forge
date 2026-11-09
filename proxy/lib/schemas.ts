@@ -139,6 +139,9 @@ export const PivotDraft = z.object({
   sourceIDs: z.array(sourceId),
 });
 
+/// Decision 0037: one input to the Investor's bottom-up return. sourceID null is an assumption.
+export const EstimateInput = z.object({ low: z.number(), high: z.number(), basis: z.string(), sourceID: sourceId.nullable() });
+
 /// §0A. One typed object that pre-fills the whole Lab, every field carrying source IDs.
 export const PrefillResult = z.object({
   /// The idea's name, 2 to 5 plain words. Null only if the idea gives nothing to name.
@@ -157,6 +160,8 @@ export const PrefillResult = z.object({
   projectionLow: z.number().nullable(),
   projectionHigh: z.number().nullable(),
   projectionBasis: z.string(),
+  /// Decision 0037: price per month × reachable customers in year one × conversion. Null when nothing can be said.
+  estimate: z.object({ price: EstimateInput, reachable: EstimateInput, conversion: EstimateInput }).nullable(),
   riskiestAssumption: z.object({ belief: z.string(), consequence: z.string(), sourceIDs: z.array(sourceId) }),
   nextMove: z.object({ recommendation, step: z.string(), experiment: ExperimentCard.nullable() }),
   draftedAssets: z.object({ kind: z.enum(["interviewQuestions", "outreachScript", "landingCopy"]), title: z.string(), body: z.string() }),

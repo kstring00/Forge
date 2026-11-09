@@ -44,13 +44,8 @@ struct BriefSection: View {
                 theOneThing(evaluation, check)
                 FirstRunCallout(step: .nextStep, text: "Your next step: the one thing nobody can tell from a desk. Looks right makes it your task; Not quite opens the Lab.")
                 if WhatIfPolicy.shows(confidence: evaluation.confidence, verdict: check.verdict) && !check.pivots.isEmpty {
-                    if env.entitlements.has(.whatIf) {
-                        WhatIfCards(idea: idea, check: check, evaluation: evaluation)
-                    } else {
-                        // Decision 0038: Free sees the panel's first What-if; the rest are Plus.
-                        WhatIfCards(idea: idea, check: check, evaluation: evaluation, limit: 1)
-                        if check.pivots.count > 1 { WhatIfLocked(count: check.pivots.count - 1) }
-                    }
+                    // Decision 0040: every What-if, on every plan.
+                    WhatIfCards(idea: idea, check: check, evaluation: evaluation)
                 }
                 buttons
             }

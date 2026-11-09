@@ -18,6 +18,9 @@ struct RootTabView: View {
             IdeasView()
                 .tabItem { Label(ForgeTab.ideas.title, systemImage: ForgeTab.ideas.symbol) }
                 .tag(ForgeTab.ideas)
+            SparksView()
+                .tabItem { Label(ForgeTab.sparks.title, systemImage: ForgeTab.sparks.symbol) }
+                .tag(ForgeTab.sparks)
             NavigationStack {
                 JournalView(asTab: true)
                     .captureDock()

@@ -11,7 +11,7 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 | Plan | Monthly | Yearly | Checks / month | Includes |
 |---|---|---|---|---|
 | Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel |
-| Plus | $9.99 | $59.99 | 15 | Argue it out (fair use 30/mo), every "What if…" pivot (Free sees the first on each Brief), Your patterns, the Library |
+| Plus | $9.99 | $59.99 | 15 | Argue it out (fair use 30/mo), Your patterns, the Library |
 | Pro | $24.99 | $179.99 | 60 | Everything in Plus, faster answers (priority), deep research, exportable reports |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
@@ -19,6 +19,8 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 - Plus has a 7-day free trial (introductory offer), capped at 5 checks during the trial.
 - "Within the hour" checks (Batch API, if built) count as half a check.
 - A failed or stopped check never counts.
+
+**Sparks are free on every plan** (decision 0040). Every check comes back with two or three "What if…" ideas, strong idea or weak. They ride in the same call as the rest of the panel's take, roughly half a cent each check, paid from margin. Running the panel on an idea made from a Spark costs a check, like any idea.
 
 ## Checks, not credits
 

@@ -18,6 +18,7 @@ Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
 - **The engine spec is `docs/ENGINE.md` (decision 0033).** It supersedes brief §6B/6C/6D where they disagree. Build order starts with `bench/`; no engine code ships without bench numbers.
+- Since decision 0040 the bottom bar is Home · Ideas · Sparks · Journal; every check asks for What-ifs and they are free on every plan (`SparksView`).
 - Since decision 0038 cards show Potential and Proof as words and shapes (`CardMeters`), the panel's best What-if (`WhatIfTeaser`), and one card design on Home and Ideas; Free sees the first What-if on each Brief.
 - Since decision 0037 cards show Potential (the panel's view) and proof as a stage, not Confidence; desk levels are graded by source rank (`DeskGrade`); `ProofMove` records each change; the estimate is bottom-up (`ReturnInputs`).
 - Since decision 0032 memberships run against `Hunch.storekit` in the simulator: `MembershipStore` (StoreKit 2), `EntitlementService` / `LocalEntitlements` (swap for the proxy ledger later), `MembershipView`, the checks pill, What-if gated to Plus. App Store Connect steps: `docs/RELEASE.md`.

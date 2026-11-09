@@ -1,15 +1,16 @@
 import Foundation
 import ForgeCore
 
-/// Decision 0025: Home · Ideas · Journal. Every idea lives in one list, grouped
-/// by track, so nothing vanishes from one tab and reappears in another.
+/// Decision 0025: Home · Ideas · Journal; decision 0040 adds Sparks, every
+/// "What if…" the panel has offered, across all ideas.
 enum ForgeTab: String, Hashable, CaseIterable {
-    case home, ideas, journal
+    case home, ideas, sparks, journal
 
     var title: String {
         switch self {
         case .home: "Home"
         case .ideas: "Ideas"
+        case .sparks: "Sparks"
         case .journal: "Journal"
         }
     }
@@ -18,6 +19,7 @@ enum ForgeTab: String, Hashable, CaseIterable {
         switch self {
         case .home: "house"
         case .ideas: "lightbulb"
+        case .sparks: "sparkles"
         case .journal: "book.closed"
         }
     }

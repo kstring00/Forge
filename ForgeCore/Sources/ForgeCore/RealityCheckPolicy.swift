@@ -21,9 +21,8 @@ public enum RealityCheckPolicy {
 public enum WhatIfPolicy {
     public static let confidenceFloor = 40
 
-    public static func shows(confidence: Int, verdict: RealityVerdict) -> Bool {
-        confidence < confidenceFloor || verdict == .cantTell || verdict == .compete
-    }
+    /// Decision 0040: every check comes with What-ifs, strong idea or weak, on every plan.
+    public static func shows(confidence: Int, verdict: RealityVerdict) -> Bool { true }
 
     /// The label on a card: the weakness the pivot fixes.
     public static func raisesLabel(criterionTitle: String) -> String { "Raises \(criterionTitle)" }

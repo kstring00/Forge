@@ -159,7 +159,6 @@ struct MembershipView: View {
                 .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             VStack(alignment: .leading, spacing: 8) {
                 check("Argue it out with the panel when you disagree")
-                check("\"What if…\" ideas when one is shaky")
                 check("Your patterns: learn where your instincts are right")
                 check("The Library: every source, ask it anything")
             }
@@ -227,7 +226,7 @@ struct MembershipView: View {
                 Spacer()
                 Text(state.plan == .free ? "Your plan" : "$0").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             }
-            Text("1 check a month. Catching ideas, the Vault, your steps and the Journal are free forever.")
+            Text("1 check a month, each with its Sparks. Catching ideas, your steps and the Journal are free forever.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             if state.plan != .free {
                 Button("To go back to Free, cancel in Manage subscription") { managing = true }

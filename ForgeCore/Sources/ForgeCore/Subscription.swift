@@ -24,10 +24,12 @@ public struct SubscriptionSnapshot: Equatable, Sendable {
     public var autoRenewProductID: String?
     public var gracePeriodEndsAt: Date?
     public var familyShared: Bool
+    /// This billing period was bought with an App Store offer code (the founding offer).
+    public var offerCode: Bool
 
     public init(productID: String, transactionID: String, purchaseDate: Date, expiresAt: Date?, isTrial: Bool = false,
                 isEntitled: Bool = true, renewal: Renewal = .subscribed, willAutoRenew: Bool = true,
-                autoRenewProductID: String? = nil, gracePeriodEndsAt: Date? = nil, familyShared: Bool = false) {
+                autoRenewProductID: String? = nil, gracePeriodEndsAt: Date? = nil, familyShared: Bool = false, offerCode: Bool = false) {
         self.productID = productID
         self.transactionID = transactionID
         self.purchaseDate = purchaseDate
@@ -39,6 +41,7 @@ public struct SubscriptionSnapshot: Equatable, Sendable {
         self.autoRenewProductID = autoRenewProductID
         self.gracePeriodEndsAt = gracePeriodEndsAt
         self.familyShared = familyShared
+        self.offerCode = offerCode
     }
 
     /// The one that decides the plan when there are several (the person's own
@@ -72,7 +75,7 @@ extension MembershipState {
         }
         let next = s.willAutoRenew ? s.autoRenewProductID.flatMap { $0 == s.productID ? nil : $0 } : nil
         self.init(plan: plan, isTrial: s.isTrial, anchor: s.purchaseDate, productID: s.productID, renewsAt: s.expiresAt,
-                  founding: s.productID == MembershipProduct.plusFoundingYearly, transactionID: s.transactionID,
+                  founding: s.productID == MembershipProduct.plusYearly && s.offerCode, transactionID: s.transactionID,
                   willAutoRenew: s.willAutoRenew, nextProductID: next, billing: billing, familyShared: s.familyShared)
     }
 
@@ -103,12 +106,11 @@ extension MembershipState {
 }
 
 extension MembershipProduct {
-    /// "Plus · monthly", "Plus · yearly", "Plus · founding member", "Pro · yearly".
+    /// "Plus · monthly", "Plus · yearly", "Pro · yearly".
     public static func displayName(_ id: String) -> String {
         switch id {
         case plusMonthly: "Plus · monthly"
         case plusYearly: "Plus · yearly"
-        case plusFoundingYearly: "Plus · founding member"
         case proMonthly: "Pro · monthly"
         case proYearly: "Pro · yearly"
         default: plan(for: id)?.displayName ?? "Free"
@@ -119,8 +121,10 @@ extension MembershipProduct {
 /// What picking a product does for this person, by Apple's rules (decision
 /// 0043): an upgrade starts now and Apple credits the unused part of the old
 /// plan; a downgrade, or the same plan for a different length, starts at the
-/// next renewal and costs nothing until then; the same plan for the same
-/// length at another price (Plus yearly ↔ founding) starts now.
+/// next renewal and costs nothing until then. (Apple starts a switch between
+/// two products on the same level with the same length at once, but Hunch has
+/// no such pair: each level has one monthly and one yearly product. The
+/// founding price is an offer code on Plus yearly, not a product.)
 public enum PlanOption: Equatable, Sendable {
     /// Nothing active (or Free): buying starts it today.
     case subscribe
@@ -133,7 +137,6 @@ public enum PlanOption: Equatable, Sendable {
     /// Already booked for the next renewal.
     case booked(Date?)
     case upgradeNow
-    case switchNow
     case switchesOn(Date?)
 
     public static func `for`(_ productID: String, in state: MembershipState) -> PlanOption {
@@ -146,8 +149,8 @@ public enum PlanOption: Equatable, Sendable {
         }
         if productID == state.nextProductID { return .booked(state.renewsAt) }
         if want < have { return .upgradeNow }
-        if want > have { return .switchesOn(state.renewsAt) }
-        return MembershipProduct.isYearly(productID) == MembershipProduct.isYearly(current) ? .switchNow : .switchesOn(state.renewsAt)
+        // A downgrade, or the same plan for a different length: at renewal.
+        return .switchesOn(state.renewsAt)
     }
 
     /// The label on the card: "Current", "Upgrade now", "Switches on Dec 9".
@@ -159,7 +162,6 @@ public enum PlanOption: Equatable, Sendable {
         case .currentEnding(let d): return "Ends \(on(d))"
         case .booked(let d): return "Starts \(on(d))"
         case .upgradeNow: return "Upgrade now"
-        case .switchNow: return "Switch now"
         case .switchesOn(let d): return "Switches on \(on(d))"
         }
     }
@@ -181,9 +183,7 @@ public enum PlanOption: Equatable, Sendable {
         case .currentSwitching(let next, let d):
             return "You stay on \(oldName). The switch to \(MembershipProduct.displayName(next)) on \(on(d)) is cancelled. Nothing is charged today."
         case .upgradeNow:
-            return "\(newName) starts now. Apple charges \(price) today and gives back the unused part of \(oldName). Your checks for the month start fresh, and up to \(state.plan.monthlyChecks) unused ones carry over."
-        case .switchNow:
-            return "\(newName) starts now. Apple charges \(price) today and gives back the unused part of \(oldName)."
+            return "\(newName) starts now. Apple charges \(price) today and gives back the unused part of \(oldName). Your checks for the month start fresh, and up to \(state.plan.monthlyChecks) unused and carried-over ones come with you."
         case .switchesOn(let d):
             return "You keep \(oldName) until \(on(d)). \(newName) starts then at \(price). Nothing is charged today."
         }

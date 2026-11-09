@@ -116,27 +116,6 @@
           "referenceName": "Plus \u00b7 yearly",
           "subscriptionGroupID": "5A0B3C01",
           "type": "RecurringSubscription"
-        },
-        {
-          "adHocOffers": [],
-          "codeOffers": [],
-          "displayPrice": "39.99",
-          "familyShareable": false,
-          "groupNumber": 2,
-          "internalID": "6C1D2E05",
-          "introductoryOffer": null,
-          "localizations": [
-            {
-              "description": "Plus at the founding price, for as long as you stay subscribed.",
-              "displayName": "Hunch Plus \u00b7 founding member",
-              "locale": "en_US"
-            }
-          ],
-          "productID": "hunch.plus.founding.yearly",
-          "recurringSubscriptionPeriod": "P1Y",
-          "referenceName": "Plus \u00b7 founding yearly",
-          "subscriptionGroupID": "5A0B3C01",
-          "type": "RecurringSubscription"
         }
       ]
     }

@@ -14,19 +14,15 @@ struct MembershipView: View {
     @State private var period: MembershipStore.Period = .monthly
     @State private var managing = false
     @State private var showingPrivacy = false
+    @State private var redeeming = false
     /// A plan change waiting for the person to confirm it.
     @State private var change: Change?
 
     private var store: MembershipStore { env.membership }
     private var state: MembershipState { env.entitlements.state }
     private var balance: CheckBalance { env.entitlements.balance }
-    private var founding: Bool { period == .yearly && store.showsFoundingOffer }
-    /// The one yearly Plus this person is offered: founding for testers, regular otherwise.
-    /// Both tabs quote it, so Monthly and Yearly never disagree.
-    private var plusYearlyID: String { store.showsFoundingOffer ? MembershipProduct.plusFoundingYearly : MembershipProduct.plusYearly }
-    private var plusID: String {
-        period == .monthly ? MembershipProduct.plusMonthly : (founding ? MembershipProduct.plusFoundingYearly : MembershipProduct.plusYearly)
-    }
+    private var plusYearlyID: String { MembershipProduct.plusYearly }
+    private var plusID: String { period == .monthly ? MembershipProduct.plusMonthly : MembershipProduct.plusYearly }
     private var proID: String { period == .monthly ? MembershipProduct.proMonthly : MembershipProduct.proYearly }
 
     var body: some View {
@@ -50,6 +46,8 @@ struct MembershipView: View {
         .background(ForgeColor.canvas)
         .overlay(alignment: .bottom) { banner }
         .manageSubscriptionsSheet(isPresented: $managing)
+        // Decision 0043: founders redeem their offer code here (Plus yearly, first year at the founding price).
+        .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refresh() } }
         .sheet(isPresented: $showingPrivacy) { PrivacySummarySheet() }
         .alert(change?.title ?? "", isPresented: Binding(get: { change != nil }, set: { if !$0 { change = nil } }), presenting: change) { c in
             Button(c.confirm) { Task { await perform(c) } }
@@ -219,11 +217,10 @@ struct MembershipView: View {
         return option.badge(date: day)
     }
 
-    /// One short line only when it matters: a trial, a founding price, going back to Free.
+    /// One short line only when it matters: a trial, a booked switch, going back to Free.
     private func note(_ plan: Plan, _ option: PlanOption?) -> String? {
         switch option {
         case .subscribe where plan == .plus:
-            if founding { return "Founding member price, kept as long as you stay subscribed." }
             if period == .yearly && store.trialEligible { return "7 days free, up to \(MembershipState.trialChecks) checks. Cancel anytime." }
             return nil
         case .booked(let d):
@@ -285,7 +282,6 @@ struct MembershipView: View {
     }
 
     private func subscribeTitle(_ plan: Plan) -> String {
-        if plan == .plus && founding { return "Join as a founding member" }
         if plan == .plus && period == .yearly && store.trialEligible { return "Try Plus free for 7 days" }
         return "Choose \(plan.displayName)"
     }
@@ -358,6 +354,7 @@ struct MembershipView: View {
             Text("Subscriptions renew automatically unless cancelled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage or cancel in your Apple account settings. A check that fails doesn't count.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: ForgeSpacing.l) {
+                Button("Redeem a code") { redeeming = true }
                 Button("Terms") { openURL(LegalLinks.terms) }
                 Button("Privacy") {
                     if let url = LegalLinks.privacy { openURL(url) } else { showingPrivacy = true }

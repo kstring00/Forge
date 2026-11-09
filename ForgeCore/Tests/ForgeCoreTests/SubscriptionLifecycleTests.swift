@@ -87,6 +87,7 @@ final class SubscriptionLifecycleTests: XCTestCase {
     }
 
     /// 3. Upgrade Plus → Pro: immediate; up to Plus's 15 carry; Pro's 60 start now; cycles follow the new billing date.
+    /// Checks carried in from last month move with the upgrade (decision 0043).
     func testUpgradeIsImmediate() {
         var p = phone()
         p.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9)), at: d(2026, 11, 9))
@@ -97,6 +98,40 @@ final class SubscriptionLifecycleTests: XCTestCase {
         XCTAssertEqual(b.rolledOverLeft, 12)
         XCTAssertEqual(b.monthlyLeft, 60)
         XCTAssertEqual(short(b.resetsAt), "Dec 20")
+    }
+
+    /// 3b. On an upgrade, carried-over and unused checks move over together, capped at the
+    /// old plan's allowance (times the carry setting), and expire at the end of the new cycle.
+    /// Carried checks are spent first, so with today's one-month cap any carried check left
+    /// means none of this month's were used: the result is the same as carrying only unused.
+    func testCarriedChecksMoveWithAnUpgrade() {
+        let twoMonths = PlanRules(rollover: .init(enabled: true, capMonths: 2))
+        var l = CheckLedger(firstFreeUsed: true)
+        let oct = MembershipState(entitlement: sub(MembershipProduct.plusMonthly, from: d(2026, 10, 9)))
+        l.roll(oct, now: d(2026, 10, 9), rules: twoMonths, calendar: cal)
+        let nov = MembershipState(entitlement: sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9)))
+        l.roll(nov, now: d(2026, 11, 9), rules: twoMonths, calendar: cal)
+        XCTAssertEqual(l.rolledOver, 15, "October's 15 unused")
+        for _ in 0..<5 { l.commit(nov, now: d(2026, 11, 10), rules: twoMonths, calendar: cal) }   // 5 of the carried
+        let pro = MembershipState(entitlement: sub(MembershipProduct.proMonthly, from: d(2026, 11, 20)))
+        let b = l.balance(pro, now: d(2026, 11, 20), rules: twoMonths, calendar: cal)
+        XCTAssertEqual(b.rolledOverLeft, 10 + 15, "10 carried + 15 unused move; the cap is 2 × 15")
+        XCTAssertEqual(short(b.resetsAt), "Dec 20", "and expire when Pro's first cycle ends")
+
+        // The same at a renewal: carried checks expire, only unused ones carry.
+        let renewal = MembershipState(entitlement: sub(MembershipProduct.plusMonthly, from: d(2026, 12, 9)))
+        XCTAssertEqual(l.balance(renewal, now: d(2026, 12, 9), rules: twoMonths, calendar: cal).rolledOverLeft, 15)
+
+        // Today's cap (one month): carried 10 + unused 15, capped at Plus's 15.
+        var one = CheckLedger(firstFreeUsed: true)
+        one.roll(oct, now: d(2026, 10, 9), calendar: cal)
+        for _ in 0..<5 { one.commit(oct, now: d(2026, 10, 10), calendar: cal) }
+        one.roll(nov, now: d(2026, 11, 9), calendar: cal)
+        for _ in 0..<4 { one.commit(nov, now: d(2026, 11, 10), calendar: cal) }
+        XCTAssertEqual(one.balance(pro, now: d(2026, 11, 20), calendar: cal).rolledOverLeft, 15)
+        var moved = one
+        moved.roll(pro, now: d(2026, 11, 20), calendar: cal)
+        XCTAssertEqual(moved.events.last { $0.kind == .expire }?.checks, 6 + 15 - 15, "what didn't fit under the cap expires")
     }
 
     /// 4. Downgrade Pro → Plus: booked for renewal; Pro and its checks stay until then.
@@ -252,18 +287,24 @@ final class SubscriptionLifecycleTests: XCTestCase {
         XCTAssertEqual(b.rolledOverLeft, 0)
     }
 
-    /// 13. Founding member: exactly Plus yearly.
-    func testFoundingIsPlusYearly() {
-        let f = MembershipState(entitlement: sub(MembershipProduct.plusFoundingYearly, from: d(2026, 11, 9)))
+    /// 13. Founding member: Plus yearly bought with the founding offer code ($39.99 the
+    /// first year). It is Plus yearly in every way; the renewal after it is a regular year.
+    func testFoundingIsPlusYearlyWithAnOfferCode() {
+        var code = sub(MembershipProduct.plusYearly, from: d(2026, 11, 9))
+        code.offerCode = true
+        let f = MembershipState(entitlement: code)
         let y = MembershipState(entitlement: sub(MembershipProduct.plusYearly, from: d(2026, 11, 9)))
         XCTAssertTrue(f.founding)
+        XCTAssertFalse(y.founding)
         XCTAssertEqual(f.plan, y.plan)
+        XCTAssertEqual(f.productID, y.productID)
         XCTAssertEqual(f.monthlyAllowance, y.monthlyAllowance)
         for m in 0..<14 {
             let t = d(2026, 11, 9).addingTimeInterval(Double(m) * 30 * 86_400)
             XCTAssertEqual(CheckPeriod.cycle(containing: t, for: f, calendar: cal).start, CheckPeriod.cycle(containing: t, for: y, calendar: cal).start)
         }
-        XCTAssertEqual(MembershipProduct.level(MembershipProduct.plusFoundingYearly), MembershipProduct.level(MembershipProduct.plusYearly))
+        XCTAssertFalse(MembershipState(entitlement: sub(MembershipProduct.plusYearly, from: d(2027, 11, 9))).founding, "year two is regular")
+        XCTAssertFalse(MembershipProduct.all.contains("hunch.plus.founding.yearly"), "no founding product")
     }
 
     /// 14. Top-ups never expire and plan changes never touch them; a refund removes only that purchase's unused checks.
@@ -332,7 +373,7 @@ final class SubscriptionLifecycleTests: XCTestCase {
 
         let plus = MembershipState(entitlement: sub(MembershipProduct.plusYearly, from: d(2026, 11, 9)))
         XCTAssertEqual(PlanOption.for(MembershipProduct.proMonthly, in: plus), .upgradeNow)
-        XCTAssertEqual(PlanOption.for(MembershipProduct.plusFoundingYearly, in: plus), .switchNow, "same level, same length: now")
+        XCTAssertEqual(PlanOption.for(MembershipProduct.plusMonthly, in: plus), .switchesOn(d(2027, 11, 9)), "the only same-level switch is another length: at renewal")
         XCTAssertEqual(PlanOption.for(MembershipProduct.plusMonthly, in: .free), .subscribe)
 
         let booked = MembershipState(entitlement: sub(MembershipProduct.proMonthly, from: d(2026, 11, 9), next: MembershipProduct.plusMonthly))

@@ -25,16 +25,6 @@ final class MembershipStore {
         self.entitlements = entitlements
     }
 
-    /// Founding members (TestFlight testers) see Plus yearly at the founding price.
-    /// The proxy will flag testers by account later; for now a TestFlight build or Debug.
-    var showsFoundingOffer: Bool {
-        #if DEBUG
-        return UserDefaults.standard.object(forKey: "membership.foundingPreview") as? Bool ?? true
-        #else
-        return Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
-        #endif
-    }
-
     // MARK: Lifecycle
 
     /// Once at launch: listen first (so nothing is missed), then unfinished
@@ -128,7 +118,7 @@ final class MembershipStore {
                                     expiresAt: t.expirationDate, isTrial: isIntroductory(t), isEntitled: entitled,
                                     renewal: renewal, willAutoRenew: info?.willAutoRenew ?? true,
                                     autoRenewProductID: info?.autoRenewPreference, gracePeriodEndsAt: info?.gracePeriodExpirationDate,
-                                    familyShared: t.ownershipType == .familyShared)
+                                    familyShared: t.ownershipType == .familyShared, offerCode: isOfferCode(t))
     }
 
     // MARK: Buying
@@ -233,6 +223,12 @@ final class MembershipStore {
     private static func isIntroductory(_ t: Transaction) -> Bool {
         if #available(iOS 17.2, *) { return t.offer?.type == .introductory }
         return t.offerType == .introductory
+    }
+
+    /// Decision 0043: founders redeem an offer code on Plus yearly.
+    private static func isOfferCode(_ t: Transaction) -> Bool {
+        if #available(iOS 17.2, *) { return t.offer?.type == .code }
+        return t.offerType == .code
     }
 
     // MARK: Prices

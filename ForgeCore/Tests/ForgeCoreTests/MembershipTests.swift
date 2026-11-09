@@ -22,7 +22,7 @@ final class MembershipTests: XCTestCase {
         XCTAssertFalse(Plan.plus.includes(.priority))
         XCTAssertFalse(Plan.plus.includes(.deepResearch))
         XCTAssertTrue(Plan.pro.includes(.reports))
-        XCTAssertEqual(MembershipProduct.plan(for: "hunch.plus.founding.yearly"), .plus)
+        XCTAssertNil(MembershipProduct.plan(for: "hunch.plus.founding.yearly"), "decision 0043: founders use an offer code on Plus yearly")
         XCTAssertEqual(MembershipProduct.plan(for: "hunch.pro.monthly"), .pro)
         XCTAssertNil(MembershipProduct.plan(for: "hunch.topup.5"))
         XCTAssertEqual(MembershipProduct.yearlySaving(monthly: 9.99, yearly: 59.99), 50)

@@ -43,33 +43,37 @@ public enum MembershipProduct {
     public static let groupName = "Hunch Membership"
     public static let plusMonthly = "hunch.plus.monthly"
     public static let plusYearly = "hunch.plus.yearly"
-    public static let plusFoundingYearly = "hunch.plus.founding.yearly"
     public static let proMonthly = "hunch.pro.monthly"
     public static let proYearly = "hunch.pro.yearly"
     public static let topUp5 = "hunch.topup.5"
     /// Checks in one top-up, from the rules in force (decision 0042).
     public static var topUpChecks: Int { PlanRules.current.topUpChecks }
 
-    public static let subscriptions = [plusMonthly, plusYearly, plusFoundingYearly, proMonthly, proYearly]
+    public static let subscriptions = [plusMonthly, plusYearly, proMonthly, proYearly]
+    /// Decision 0043: founders get Plus yearly through an App Store offer code
+    /// ($39.99 for the first year, then the regular price), not a product of
+    /// their own; a separate product would show in Apple's Edit Subscription
+    /// sheet to every subscriber.
+    public static let foundingFirstYearPrice: Decimal = 39.99
     public static let all = subscriptions + [topUp5]
 
-    /// Apple's level in the group: 1 is the highest. Pro ranks above Plus;
-    /// the founding price is Plus. Keep App Store Connect the same.
+    /// Apple's level in the group: 1 is the highest. Pro ranks above Plus.
+    /// Keep App Store Connect the same.
     public static func level(_ productID: String) -> Int? {
         switch productID {
         case proMonthly, proYearly: 1
-        case plusMonthly, plusYearly, plusFoundingYearly: 2
+        case plusMonthly, plusYearly: 2
         default: nil
         }
     }
 
     public static func isYearly(_ productID: String) -> Bool {
-        [plusYearly, plusFoundingYearly, proYearly].contains(productID)
+        [plusYearly, proYearly].contains(productID)
     }
 
     public static func plan(for productID: String) -> Plan? {
         switch productID {
-        case plusMonthly, plusYearly, plusFoundingYearly: .plus
+        case plusMonthly, plusYearly: .plus
         case proMonthly, proYearly: .pro
         default: nil
         }
@@ -81,7 +85,6 @@ public enum MembershipProduct {
         switch id {
         case plusMonthly: 9.99
         case plusYearly: 59.99
-        case plusFoundingYearly: 39.99
         case proMonthly: 24.99
         case proYearly: 179.99
         case topUp5: 2.99
@@ -113,6 +116,8 @@ public struct MembershipState: Codable, Equatable, Sendable {
     public var productID: String?
     /// When the current billing period ends (the transaction's expiration date).
     public var renewsAt: Date?
+    /// Plus yearly bought with the founding offer code: true for that first
+    /// (discounted) year only; the renewal after it is a regular year.
     public var founding: Bool
     /// The entitled transaction, recorded with every grant and carry.
     public var transactionID: String?
@@ -377,6 +382,8 @@ public struct CheckLedger: Codable, Equatable, Sendable {
     public var periodWasTrial: Bool
     /// When this cycle ends, as computed when it began.
     public var periodEnd: Date?
+    /// The plan this cycle ran on, to tell an upgrade from a renewal.
+    public var periodPlan: Plan?
     /// Bought checks, per purchase, oldest first.
     public private(set) var topUpLots: [TopUpLot]
     /// The most recent `eventLimit` changes, oldest first.
@@ -399,6 +406,7 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         self.allowanceThisPeriod = allowanceThisPeriod
         self.periodWasTrial = periodWasTrial
         self.periodEnd = periodEnd
+        self.periodPlan = nil
         self.topUpLots = topUps > 0 ? [TopUpLot(transactionID: Self.legacyLot, checks: topUps, remaining: topUps)] : []
         self.topUps = topUps
         self.events = []
@@ -416,6 +424,7 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         allowanceThisPeriod = try c.decodeIfPresent(Int.self, forKey: .allowanceThisPeriod)
         periodWasTrial = try c.decodeIfPresent(Bool.self, forKey: .periodWasTrial) ?? false
         periodEnd = try c.decodeIfPresent(Date.self, forKey: .periodEnd)
+        periodPlan = try c.decodeIfPresent(Plan.self, forKey: .periodPlan)
         events = try c.decodeIfPresent([LedgerEvent].self, forKey: .events) ?? []
         let saved = try c.decodeIfPresent(Int.self, forKey: .topUps) ?? 0
         var lots = try c.decodeIfPresent([TopUpLot].self, forKey: .topUpLots) ?? []
@@ -437,7 +446,22 @@ public struct CheckLedger: Codable, Equatable, Sendable {
     /// that cycle's allowance went unused.
     func carry(into state: MembershipState, newStart: Date, rules: PlanRules) -> Int {
         guard rules.rollover.enabled, periodStart != .distantPast, !periodWasTrial, !state.isTrial else { return 0 }
-        return min(unusedAtEnd(newStart: newStart, fallback: state.monthlyAllowance), carryCap(into: state, rules: rules))
+        return min(carryPool(into: state, newStart: newStart), carryCap(into: state, rules: rules))
+    }
+
+    /// Decision 0043: an upgrade from a paid plan (Plus → Pro) ends the cycle
+    /// early, so checks carried into it haven't had their month: they move to
+    /// the new plan together with this cycle's unused ones (still capped at
+    /// the old plan's allowance), and expire at the end of the new cycle like
+    /// any carried check. At a renewal they expire as usual.
+    private func isUpgrade(to state: MembershipState) -> Bool {
+        guard let was = periodPlan, was != .free else { return false }
+        return state.plan > was
+    }
+
+    private func carryPool(into state: MembershipState, newStart: Date) -> Int {
+        let unused = unusedAtEnd(newStart: newStart, fallback: state.monthlyAllowance)
+        return unused + (isUpgrade(to: state) ? max(0, rolledOver - rolledOverUsed) : 0)
     }
 
     private func unusedAtEnd(newStart: Date, fallback: Int) -> Int {
@@ -458,9 +482,12 @@ public struct CheckLedger: Codable, Equatable, Sendable {
             let started = periodStart != .distantPast
             let carried = carry(into: state, newStart: cycle.start, rules: rules)
             if started {
+                // Everything that could have carried and didn't: carried checks
+                // at the end of their cycle, and unused ones past the cap.
                 let carriedLeft = max(0, rolledOver - rolledOverUsed)
-                let lapsed = max(0, unusedAtEnd(newStart: cycle.start, fallback: state.monthlyAllowance) - carried)
-                if carriedLeft + lapsed > 0 { log(.expire, carriedLeft + lapsed, state, at: now) }
+                let unused = unusedAtEnd(newStart: cycle.start, fallback: state.monthlyAllowance)
+                let expired = max(0, carriedLeft + unused - carried)
+                if expired > 0 { log(.expire, expired, state, at: now) }
                 if carried > 0 { log(.carry, carried, state, at: now) }
             }
             rolledOver = carried
@@ -475,6 +502,7 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         }
         allowanceThisPeriod = state.monthlyAllowance
         periodWasTrial = state.isTrial
+        periodPlan = state.plan
         periodEnd = cycle.end
     }
 

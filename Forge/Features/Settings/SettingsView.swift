@@ -33,7 +33,6 @@ struct SettingsView: View {
     @State private var managingSubscription = false
     @State private var showingPrivacy = false
     @Environment(\.openURL) private var openURL
-    @AppStorage("membership.foundingPreview") private var foundingPreview = true
     @AppStorage(AppEnvironment.tightFairUseKey) private var tightFairUse = false
 
     private var liveCount: Int { ideas.filter { !$0.isArchived }.count }
@@ -177,7 +176,6 @@ struct SettingsView: View {
                     .foregroundStyle(ForgeColor.emberText)
                 Button("Give checks back") { (env.entitlements as? LocalEntitlements)?.resetForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
-                Toggle("Show the founding offer", isOn: $foundingPreview)
                 Button("Start the next cycle (test rollover)") { (env.entitlements as? LocalEntitlements)?.startNextCycleForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
                 Toggle("Tight fair use (1 a day)", isOn: $tightFairUse)

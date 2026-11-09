@@ -15,11 +15,11 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 | Pro | $24.99 | $179.99 | 60 (leaning 50, decided after the bench) | Everything in Plus, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
-- Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed. How to deliver it at launch is open (decision 0043 §4).
+- Founding members (TestFlight testers): **first year at the founding price.** An App Store offer code on Plus yearly: $39.99 for the first year, then $59.99 (decision 0043 §4). There is no founding product.
 - Plus has a 7-day free trial (introductory offer), capped at 5 checks during the trial.
 - "Within the hour" checks (Batch API, if built) count as half a check.
 - A failed or stopped check never counts.
-- **Unused monthly checks roll over** (decision 0042), up to one month's allowance, and expire at the end of the cycle they rolled into. Spending order: the free first check, carried-over, this month's, then extra (bought, never expire).
+- **Unused monthly checks roll over** (decision 0042), up to one month's allowance, and expire at the end of the cycle they rolled into. Spending order: the free first check, carried-over, this month's, then extra (bought, never expire). On an upgrade (Plus → Pro), carried-over and unused checks move over together, capped at Plus's allowance (decision 0043).
 
 **What costs a check** (decision 0042). Researching an idea is the only thing that costs: the panel's first look is 1 check, and a fresh re-check (new web research on an idea already checked) is 1. Everything done on a checked idea is **included on every plan**: a launch plan, bringing it up to date, re-scoring after a logged conversation, and the Tank. Included follow-ups sit under a quiet daily limit per idea (3 plans, 10 re-scores, 3 Tank runs); reaching it shows a friendly line, never the paywall. Every number here lives in `proxy/config/hunch.ts` (`rules`), which the app loads at launch.
 
@@ -34,7 +34,7 @@ The user-facing unit is a **check** (one idea looked at properly). Retire "credi
 ## Products (App Store Connect)
 
 One subscription group "Hunch Membership", ranked Pro > Plus:
-- `hunch.plus.monthly` $9.99 · `hunch.plus.yearly` $59.99 (7-day trial) · `hunch.plus.founding.yearly` $39.99 (only shown to accounts flagged as beta testers)
+- `hunch.plus.monthly` $9.99 · `hunch.plus.yearly` $59.99 (7-day trial; founders: an offer code, $39.99 the first year)
 - `hunch.pro.monthly` $24.99 · `hunch.pro.yearly` $179.99
 
 Consumable: `hunch.topup.5` $2.99.
@@ -52,7 +52,7 @@ Consumable: `hunch.topup.5` $2.99.
 
 - Checks per active tester per month (median and top 10%). If the median is under 5, lower Plus to 10 checks; if many hit 15 in a week, Pro is validated.
 - Real cost per check by speed (Settings → Spend). Plus must keep ≥70% margin after Apple's 15%.
-- How many testers would take the founding offer (ask at the end of the beta; real purchases only start at App Store launch).
+- How many testers would take the founding offer, first year at $39.99 (ask at the end of the beta; real purchases only start at App Store launch).
 
 ## Economics (estimates)
 

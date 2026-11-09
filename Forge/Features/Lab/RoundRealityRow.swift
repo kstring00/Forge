@@ -36,7 +36,7 @@ struct RoundRealityRow: View {
         if env.ai.isAvailable {
             message = "\(name) arrives with the next build."
         } else {
-            message = "\(name) needs the AI proxy, which isn't connected yet. Your scores and evidence are saved here."
+            message = "\(name) can't reach the panel right now. Your scores and evidence are saved here."
         }
     }
 }

@@ -47,14 +47,14 @@ struct AIConfirmSheet: View {
                             Text("Before FORGE talks to an AI").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
                             list("What is sent", AIConsent.whatIsSent)
                             list("Never sent", AIConsent.neverSent)
-                            Text("Through \(AIConsent.proxyURL ?? "your proxy"). You can withdraw this in Settings, where the same list is shown.")
+                            Text("Sent through Hunch's own server to the AI model, only when you tap Send. You can withdraw this in Settings, where the same list is shown.")
                                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         .padding(ForgeSpacing.m)
                         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                     } else {
-                        Text("Your idea text is sent to an AI model through your proxy.")
+                        Text("Your idea text goes to an AI model through Hunch's server, only for this check.")
                             .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
 

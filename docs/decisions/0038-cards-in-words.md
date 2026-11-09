@@ -31,3 +31,9 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   which could leave a cursor that took no typing. The outcome sheet's step reads as a
   statement, not a title.
 - **Home's title is "Have a hunch?"**
+- **No "proxy" anywhere a user reads.** The app runs its own server; people who download it
+  never set one up. The confirm sheet says the idea goes "to an AI model through Hunch's
+  server, only for this check"; error messages say what happened in plain words ("Hunch
+  couldn't reach the panel just now") and keep the developer detail (tokens, status codes,
+  Vercel logs) behind Details; the server address in Settings shows only in Debug builds; the
+  "what is sent" list drops its phase numbers.

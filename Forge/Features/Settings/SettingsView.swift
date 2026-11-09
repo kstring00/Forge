@@ -106,14 +106,16 @@ struct SettingsView: View {
                     Text("Never sent").forgeLabel().padding(.top, ForgeSpacing.xs)
                     ForEach(AIConsent.neverSent, id: \.self) { Text($0).font(.footnote) }
                 }
-                LabeledContent("Proxy", value: AIConsent.proxyURL ?? "Not configured")
+                #if DEBUG
+                LabeledContent("Server (developer)", value: AIConsent.proxyURL ?? "Not configured")
+                #endif
                 Picker("Monthly ceiling", selection: $ceiling) {
                     ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
                 }
             } header: {
                 Text("AI")
             } footer: {
-                Text("Sent only when you tap an AI action, only for that idea, through your own proxy. You'll be asked before the first call.")
+                Text("Sent only when you tap an AI action, only for that idea, through Hunch's server to the AI model. You'll be asked before the first call.")
             }
 
             Section {
@@ -161,7 +163,7 @@ struct SettingsView: View {
             } header: {
                 Text("Spend")
             } footer: {
-                Text("Checks count the ones that finished, at the cost the proxy reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
+                Text("Checks count the ones that finished, at the cost the server reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
             }
 
             Section {

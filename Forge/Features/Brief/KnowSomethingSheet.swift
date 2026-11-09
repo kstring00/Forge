@@ -100,7 +100,7 @@ struct KnowSomethingSheet: View {
             dismiss()
         } catch let error as AIError {
             message = error == .offline || error == .notConfigured
-                ? "Saved as verified. The re-score needs the proxy; attach it to a criterion in the Lab for now."
+                ? "Saved as verified. The panel can't be reached right now, so attach it to a criterion in the Lab for now."
                 : "Saved as verified. The re-score failed: \(error)."
         } catch {
             message = "Saved as verified. The re-score failed: \(error.localizedDescription)"

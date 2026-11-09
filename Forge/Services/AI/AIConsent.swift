@@ -25,8 +25,8 @@ enum AIConsent {
     static let whatIsSent: [String] = [
         "The idea's title and original text",
         "Your answers to the Explore prompts and your notes on the idea",
-        "The lens, scores and evidence you have recorded (from Phase 3)",
-        "Library sources you have saved to the idea (from Phase 4)",
+        "The kind of idea, and the scores and evidence you have recorded",
+        "Sources you have saved to the idea",
         "The project's outcome, next step and Journal entries, when you ask about a project"
     ]
 
@@ -34,7 +34,7 @@ enum AIConsent {
         "Voice recordings",
         "Ideas other than the one you tapped the action on",
         "Your Steward charter, except to the Steward",
-        "Anything from outside FORGE"
+        "Anything from outside Hunch"
     ]
 
     /// The proxy the app is built with, from Local.xcconfig via Info.plist. Nil until Phase 3.

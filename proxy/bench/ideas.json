@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "rv-park-sites",
+    "id": "0b6a1e10-1111-4a11-8a11-000000000001",
+    "title": "RV park website care",
+    "text": "Weekend website care for RV parks along one Texas highway corridor: a monthly fee to keep their site, booking link and Google listing working, with one visit a quarter."
+  },
+  {
+    "slug": "clinic-id-tags",
+    "id": "0b6a1e10-1111-4a11-8a11-000000000002",
+    "title": "Clinic-issued ID tags",
+    "text": "Tap-to-read ID tags for kids in ABA therapy, sold to clinics and handed to parents at intake, with emergency contacts and communication notes a first responder can read."
+  },
+  {
+    "slug": "night-shift-meals",
+    "id": "0b6a1e10-1111-4a11-8a11-000000000003",
+    "title": "Night-shift nurse meals",
+    "text": "Healthy meal prep delivered to night-shift nurses at two Houston hospitals, ready in the break room at 2am, paid weekly by subscription."
+  },
+  {
+    "slug": "voice-estimates",
+    "id": "0b6a1e10-1111-4a11-8a11-000000000004",
+    "title": "Voice memo estimates",
+    "text": "An app that turns a contractor's voice memo from the job site into a written, itemized estimate and texts it to the client before the contractor leaves the driveway."
+  },
+  {
+    "slug": "charter-bookings",
+    "id": "0b6a1e10-1111-4a11-8a11-000000000005",
+    "title": "Charter booking with weather refunds",
+    "text": "Booking for small Gulf coast fishing charter captains with live weather checks that cancel and refund automatically when the marine forecast turns bad."
+  }
+]

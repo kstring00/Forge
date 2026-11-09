@@ -8,7 +8,14 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["api/**/*.ts", "lib/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "api/**/*.ts",
+    "lib/**/*.ts",
+    "test/**/*.ts",
+    "bench/**/*.ts"
+  ]
 }

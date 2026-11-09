@@ -18,6 +18,10 @@ protocol EntitlementService: AnyObject {
     func canStartCheck(inFlight: Int) -> Bool
     /// A Brief arrived. Failed and stopped runs never call this.
     func commitCheck(wasFreeOnProxy: Bool)
+    /// Decision 0041: whether `checks` can be spent at once (a launch plan), with `inFlight` checks running.
+    func canSpend(_ checks: Int, inFlight: Int) -> Bool
+    /// A plan arrived: spend its checks. Failed runs never call this.
+    func spend(_ checks: Int)
     /// The App Store's current entitlement, with the signed transactions behind it.
     func apply(_ state: MembershipState, jws: [String])
     /// A top-up was bought. Idempotent per transaction.
@@ -51,6 +55,14 @@ final class LocalEntitlements: EntitlementService {
 
     func commitCheck(wasFreeOnProxy: Bool) {
         ledger.commit(state, now: now(), wasFreeOnProxy: wasFreeOnProxy)
+        save()
+    }
+
+    func canSpend(_ checks: Int, inFlight: Int) -> Bool { ledger.canSpend(checks, state, now: now(), inFlight: inFlight) }
+
+    func spend(_ checks: Int) {
+        guard checks > 0 else { return }
+        ledger.spend(checks, state, now: now())
         save()
     }
 

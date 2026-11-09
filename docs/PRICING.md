@@ -12,13 +12,15 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 |---|---|---|---|---|
 | Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel |
 | Plus | $9.99 | $59.99 | 15 | Argue it out (fair use 30/mo), Your patterns, the Library |
-| Pro | $24.99 | $179.99 | 60 | Everything in Plus, faster answers (priority), deep research, exportable reports |
+| Pro | $24.99 | $179.99 | 60 | Everything in Plus, launch plans included, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
 - Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed.
 - Plus has a 7-day free trial (introductory offer), capped at 5 checks during the trial.
 - "Within the hour" checks (Batch API, if built) count as half a check.
 - A failed or stopped check never counts.
+
+**Launch plans** (decision 0041). A short plan built from what Hunch knows about one idea: what's proven and what isn't, the first 90 days in three blocks that each end in a decision rule, the money as price × customers × share, when to stop; exported as a PDF. **Included in Pro.** On Free and Plus a new plan is **3 checks** and bringing one up to date is **1**. The device's free first check never pays for a plan. A plan that fails costs nothing. One plan is one Sonnet call with no web research, about $0.05–0.15, so 3 checks (about $2 of Plus) leaves a wide margin; Pro's cost is bounded by the same fair use as its checks until the proxy ledger counts plans.
 
 **Sparks are free on every plan** (decision 0040). Every check comes back with two or three "What if…" ideas, strong idea or weak. They ride in the same call as the rest of the panel's take, roughly half a cent each check, paid from margin. Running the panel on an idea made from a Spark costs a check, like any idea.
 

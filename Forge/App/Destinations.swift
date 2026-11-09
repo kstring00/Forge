@@ -23,6 +23,7 @@ extension View {
                 case .round(let roundID): RoundDestination(roundID: roundID)
                 case .criteria(let ideaID): CriteriaDestination(ideaID: ideaID)
                 case .brief(let ideaID): BriefDestination(ideaID: ideaID)
+                case .plan(let ideaID): PlanDestination(ideaID: ideaID)
                 }
             }
     }
@@ -125,6 +126,23 @@ struct BriefDestination: View {
     var body: some View {
         if let idea = ideas.first {
             BriefView(idea: idea)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct PlanDestination: View {
+    @Query private var ideas: [Idea]
+
+    init(ideaID: UUID) {
+        _ideas = Query(filter: #Predicate<Idea> { $0.id == ideaID })
+    }
+
+    var body: some View {
+        if let idea = ideas.first {
+            LaunchPlanView(idea: idea)
         } else {
             EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
                 .background(ForgeColor.canvas)

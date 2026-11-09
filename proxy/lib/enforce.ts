@@ -1,7 +1,7 @@
 // The honesty rules, enforced on the server regardless of what the model wrote.
 import { content } from "./content.js";
 import type { z } from "zod";
-import type { PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
+import type { LaunchPlanResult, PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
 
 const ceiling = content.deskResearchRungCeiling;
 
@@ -118,4 +118,18 @@ export function enforceEstimate(e: EstimateT | null, known: Set<string>): Estima
     return { low: Math.min(a, b), high: Math.max(a, b), basis: x.basis, sourceID: x.sourceID && known.has(x.sourceID) ? x.sourceID : null };
   };
   return { price: fix(e.price), reachable: fix(e.reachable), conversion: fix(e.conversion, 1) };
+}
+
+/// Decision 0041: "proven" means a source the app sent says so. A line with
+/// no known source is a belief and moves to "unproven". Four of each at most.
+export function enforceLaunchPlan(p: z.infer<typeof LaunchPlanResult>, known: Set<string>, dropped: Record<string, number> = {}): z.infer<typeof LaunchPlanResult> {
+  const proven: z.infer<typeof LaunchPlanResult>["proven"] = [];
+  const moved: string[] = [];
+  for (const c of p.proven) {
+    if (c.sourceID && known.has(c.sourceID)) proven.push(c);
+    else moved.push(c.text);
+  }
+  if (moved.length) dropped["launchPlan.provenWithoutSource"] = moved.length;
+  const unproven = [...new Set([...p.unproven, ...moved].map((t) => t.trim()).filter(Boolean))];
+  return { ...p, proven: proven.slice(0, 4), unproven: unproven.slice(0, 4) };
 }

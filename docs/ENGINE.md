@@ -203,6 +203,7 @@ Target per full Tank (research + 5 blind verdicts + Advocate + in/out + ≤ 3 co
 - Free and basic: research, blind verdicts, Deal. Plus and Pro: the Tank, step-ins, counteroffers, test pages, model choice (Pro).
 - Hard caps on the proxy: per-user checks per period (from the ledger), a global daily ceiling that pauses politely, stop button honored at every stage boundary, failed or stopped runs never count.
 - Every stage logs tokens and dollars per provider; Settings → Spend shows cost by stage so the expensive layer is always visible.
+- **Launch plans** (decision 0041): one call, no web research, built from the Library, the Deal and what the person logged. Pro: included. Free and Plus: 3 checks for a new plan, 1 to bring one up to date. Same rule as checks: spent only when the plan arrives.
 
 ---
 

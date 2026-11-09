@@ -4,13 +4,14 @@ import ForgeCore
 /// Decision 0025: Home · Ideas · Journal; decision 0040 adds Sparks, every
 /// "What if…" the panel has offered, across all ideas.
 enum ForgeTab: String, Hashable, CaseIterable {
-    case home, ideas, sparks, journal
+    case home, ideas, sparks, plans, journal
 
     var title: String {
         switch self {
         case .home: "Home"
         case .ideas: "Ideas"
         case .sparks: "Sparks"
+        case .plans: "Plans"
         case .journal: "Journal"
         }
     }
@@ -20,6 +21,7 @@ enum ForgeTab: String, Hashable, CaseIterable {
         case .home: "house"
         case .ideas: "lightbulb"
         case .sparks: "sparkles"
+        case .plans: "square.stack.3d.up"
         case .journal: "book.closed"
         }
     }
@@ -42,6 +44,8 @@ enum LabRoute: Hashable {
     case criteria(ideaID: UUID)
     /// The full Brief, from "The panel's take" (decision 0023).
     case brief(ideaID: UUID)
+    /// Decision 0041: the idea's launch plan.
+    case plan(ideaID: UUID)
 }
 
 /// An idea id a sheet can be driven by.

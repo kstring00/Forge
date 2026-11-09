@@ -45,6 +45,18 @@ export function actionInstruction(action: Action): string {
       return "RUN A ROUND. Each requested Sphere returns one verdict: onTrack, offTrack or cantTell, the criterion key it judges, a two-sentence reason, and the source ids it relies on. No source means cantTell with the evidence that would change it. Then crossfire only between Spheres whose verdicts conflict (one onTrack, the other offTrack): at most one reply per such pair, one sentence, answering the other Sphere's reason from your own framework.";
     case "realityCheck":
       return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: buildIt ('Go build it': there's a gap and the user can reach it), compete ('Worth a fight': crowded, but there is an opening), useTheirs ('Already solved': something does this well; try it first), cantTell ('Go ask people': research ran out; real people decide). 'Already solved' is a legitimate outcome; never nudge toward building. Quote figures with the date fetched when the source has one.";
+    case "launchPlan":
+      return `LAUNCH PLAN. Write a short launch plan for this idea from what the Library and the user's own record show, and nothing else. It is read on a phone and printed for a partner or a lender, so every line earns its place: no filler, no headings, no generic advice that would fit any business.
+- oneLine: what it is, for whom, in one sentence under 20 words.
+- forWho: who buys it and the opening they leave, two sentences, grounded in the sources.
+- proven: up to four things the world has shown, strongest first. Lines from the user's own logged conversations and outcomes (class userVerified) come before desk research. Each must point at the source id it rests on.
+- unproven: up to four things that are still beliefs, most dangerous first. Always include "No one has paid yet" or its equivalent when the options say no one has.
+- riskiest: the one belief that, if wrong, kills it.
+- days1to30, days31to60, days61to90: three blocks, each a title (a verb phrase under six words), a detail (one sentence: what the person does), and decide (a decision rule with a number: "If 2 of 3 say yes, build the first batch"). Block one tests the riskiest belief with real people; nothing gets built before a block's rule says so.
+- customerNoun: the plural word for one paying customer ("clinics", "parents", "park owners").
+- stopRule: one sentence: the result by a named day that means stop or change course.
+- stewardNote: one sentence on how the plan fits the user's Steward charter if one is given; null otherwise.
+Use the proof stage, the verdict and the estimate in the options as given; never invent a figure. Write the rationale as one sentence on what the plan rests on most.`;
     case "prefill":
       return `PREFILL. Five Spheres (investor, customer, builder, strategist, skeptic) read the Library and pre-fill the whole Lab for the user to review by exception.
 0. title: the idea's name in 2 to 5 plain words, a noun phrase a person would say ("Clinic-issued ID tags", "Weekend RV park sites"). No "app that", no "what if", no punctuation.

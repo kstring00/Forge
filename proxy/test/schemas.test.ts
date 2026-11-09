@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ActionRequest, PrefillResult, RoundResult } from "../lib/schemas.js";
-import { enforcePrefill, enforceRound } from "../lib/enforce.js";
+import { ActionRequest, LaunchPlanResult, PrefillResult, RoundResult } from "../lib/schemas.js";
+import { enforceLaunchPlan, enforcePrefill, enforceRound } from "../lib/enforce.js";
 import { costUSD, realityCheckEstimateUSD } from "../lib/pricing.js";
 import { content, lensText, lens } from "../lib/content.js";
 import { actionInstruction, stableSystem } from "../lib/prompts.js";
@@ -162,6 +162,27 @@ test("research runs on Haiku with the basic web tools and capped page size", asy
   assert.ok((haiku[1].max_content_tokens ?? 99_999) <= 4000);
   const sonnet = researchTools("claude-sonnet-5-5") as Array<{ type: string }>;
   assert.deepEqual(sonnet.map((t) => t.type), ["web_search_20260209", "web_fetch_20260209"]);
+});
+
+test("a launch plan's proven lines need a source the app sent; the rest become beliefs", () => {
+  const phase = { title: "Sell to 3 clinics", detail: "Visit three.", decide: "If 2 say yes, build." };
+  const raw = LaunchPlanResult.parse({
+    oneLine: "Tags for clinics", forWho: "ABA clinics.",
+    proven: [
+      { text: "3 directors said lost cards are weekly", sourceID: A },
+      { text: "Parents love it", sourceID: null },
+      { text: "Invented source", sourceID: UNKNOWN },
+    ],
+    unproven: ["No clinic has paid yet"], riskiest: "Clinics pay",
+    days1to30: phase, days31to60: phase, days61to90: phase,
+    customerNoun: "clinics", stopRule: "If no clinic pays by day 45.", stewardNote: null,
+  });
+  const dropped: Record<string, number> = {};
+  const p = enforceLaunchPlan(raw, new Set([A, B]), dropped);
+  assert.deepEqual(p.proven.map((c) => c.sourceID), [A]);
+  assert.deepEqual(p.unproven, ["No clinic has paid yet", "Parents love it", "Invented source"]);
+  assert.equal(dropped["launchPlan.provenWithoutSource"], 2);
+  assert.ok(actionInstruction("launchPlan").includes("decide"));
 });
 
 test("every URL the research notes cite becomes its own source with its claims", async () => {

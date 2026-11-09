@@ -42,6 +42,9 @@ struct IdeaDetailView: View {
                         PanelsTakeCard(idea: idea)
                     }
 
+                    // Decision 0041: the launch plan, or the way to make one.
+                    PlanEntryCard(idea: idea)
+
                     original
 
                     if let summary = idea.aiSummary, idea.aiSummaryConfirmed {

@@ -203,7 +203,7 @@ struct MembershipView: View {
                 Spacer()
                 priceBlock(proID, otherLine: period == .yearly ? "or \(store.price(MembershipProduct.proMonthly)) monthly" : "or \(store.price(MembershipProduct.proYearly)) a year")
             }
-            Text("60 checks a month, faster answers, deeper research and exportable reports. For when ideas are your job.")
+            Text("60 checks a month, launch plans included, faster answers and deeper research. For when ideas are your job.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             primaryButton(proTitle, id: proID, emphasised: false)
         }

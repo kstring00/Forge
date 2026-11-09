@@ -219,6 +219,32 @@ public struct PrefillResult: Codable, Sendable {
     }
 }
 
+/// Decision 0041: the launch plan as the proxy returns it. "proven" lines
+/// always carry a source id the app sent (the proxy moves the rest to
+/// "unproven").
+public struct LaunchPlanResult: Codable, Sendable {
+    public struct Claim: Codable, Sendable {
+        public var text: String
+        public var sourceID: UUID?
+    }
+    public struct Phase: Codable, Sendable {
+        public var title: String
+        public var detail: String
+        public var decide: String
+    }
+    public var oneLine: String
+    public var forWho: String
+    public var proven: [Claim]
+    public var unproven: [String]
+    public var riskiest: String
+    public var days1to30: Phase
+    public var days31to60: Phase
+    public var days61to90: Phase
+    public var customerNoun: String
+    public var stopRule: String
+    public var stewardNote: String?
+}
+
 /// Sugar so each action names its payload type in one place.
 public extension AIAction {
     var payloadDescription: String {
@@ -235,6 +261,7 @@ public extension AIAction {
         case .pitch: "PitchResult"
         case .realityCheck: "RealityCheckResult"
         case .prefill: "PrefillResult"
+        case .launchPlan: "LaunchPlanResult"
         }
     }
 }

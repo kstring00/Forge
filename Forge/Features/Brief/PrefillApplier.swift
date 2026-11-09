@@ -135,14 +135,17 @@ enum PrefillApplier {
         return Applied(realityCheck: check, evaluation: evaluation, round: round, draftedAsset: asset)
     }
 
-    /// Research pages become ai-found web Sources with chunks for citation.
+    /// Research pages become ai-found web Sources with chunks for citation:
+    /// pages fetched in full, and every page the notes cite (its claims).
     @MainActor
     static func saveResearch(_ sources: [ResearchResponse.Source], notes: String, to idea: Idea) -> [Source] {
         var saved: [Source] = []
         // Seeded with what the Library already holds, then grown as this batch is
         // saved, so two fetches of one URL in the same run save once.
         var seenURLs = Set(idea.sources.compactMap(\.url))
-        for s in sources where s.kind == "fetched" && !s.text.isEmpty && !seenURLs.contains(s.url) {
+        // Fetched pages carry their full text; "noted" sources are the claims the
+        // research notes made from one page, with that page's address.
+        for s in sources where (s.kind == "fetched" || s.kind == "noted") && !s.text.isEmpty && !seenURLs.contains(s.url) {
             seenURLs.insert(s.url)
             let source = Source(kind: .web, title: s.title.isEmpty ? s.url : s.title, fullText: s.text, sourceClass: .aiFound, url: s.url)
             for (i, chunk) in chunks(of: s.text).enumerated() {

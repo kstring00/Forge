@@ -108,7 +108,7 @@ final class RealityCheckRunner {
                 try Task.checkCancellation()
                 gathered.append(contentsOf: r.sources)
                 if !r.notes.isEmpty { notes = r.notes }
-                phase = .researching(turn: turn, sources: gathered.filter { $0.kind == "fetched" }.count)
+                phase = .researching(turn: turn, sources: gathered.filter { $0.kind == "fetched" || $0.kind == "noted" }.count)
                 if r.status == "done" { break }
                 messages = r.messages
             }

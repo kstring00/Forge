@@ -6,7 +6,7 @@ import researchHandler from "../api/research.js";
 import actionHandler from "../api/action.js";
 import { call, source, type BenchSource, type StageCost } from "./harness.js";
 
-export const flowVersion = "D: as B, and follow-ups (launch plan, re-score) read the saved packet";
+export const flowVersion = "after (decision 0042): packet → scoring model → brief model; follow-ups read the saved packet";
 
 export interface Idea { slug: string; id: string; title: string; text: string }
 

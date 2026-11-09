@@ -162,7 +162,7 @@ struct VerdictVoice: View {
             }
             if !verdict.sources.isEmpty {
                 HStack(spacing: ForgeSpacing.s) {
-                    ForEach(verdict.sources.prefix(3)) { s in
+                    ForEach(Array(verdict.sources.prefix(3)), id: \.id) { s in
                         HStack(spacing: 4) {
                             EvidenceChip(pattern: EvidencePattern(s.sourceClass), size: 10)
                             Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)

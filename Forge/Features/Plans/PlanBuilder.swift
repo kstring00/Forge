@@ -76,6 +76,7 @@ final class PlanBuilder {
             do {
                 let envelope = try await proxy.perform(.launchPlan, context: ctx, options: options, expecting: LaunchPlanResult.self)
                 AISpend.record(envelope.costUSD ?? 0)
+                CostMeterStore.recordFollowUp(kind, envelope)
                 idea.launchPlan = Self.plan(from: envelope.payload, rationale: envelope.rationale, basis: basis)
                 idea.touch()
                 try? context.save()

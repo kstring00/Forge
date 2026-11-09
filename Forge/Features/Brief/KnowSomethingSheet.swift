@@ -90,6 +90,7 @@ struct KnowSomethingSheet: View {
             let envelope = try await env.ai.perform(.rescore, context: AIContext.make(for: idea), expecting: RescoreResult.self)
             if let cost = envelope.costUSD { AISpend.record(cost) }
             env.entitlements.recordUse(.rescore, ideaID: idea.id)
+            CostMeterStore.recordFollowUp(.rescore, envelope)
             let touched = envelope.payload.criteria.filter { $0.sourceIDs.contains(source.id) }
             guard !touched.isEmpty else {
                 message = "Saved as verified. The panel did not find a criterion it changes; you can attach it yourself in the Lab."

@@ -21,6 +21,8 @@ struct ResearchResponse: Decodable {
     let packet: ResearchPacket?
     let model: String
     let costUSD: Double
+    /// Decision 0042, H: tokens for the cost meter. Absent from older proxies.
+    let usage: AIEnvelope<ExpandResult>.Usage?
 }
 
 extension ProxyAIClient {

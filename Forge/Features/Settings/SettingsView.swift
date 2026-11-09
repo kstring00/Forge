@@ -176,6 +176,15 @@ struct SettingsView: View {
                 Picker("Your AI cost cap", selection: $ceiling) {
                     ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
                 }
+                // Decision 0042, H: what checks really cost, by stage, and how much the cache saves.
+                if let m = CostMeterStore.meter.summary {
+                    LabeledContent("Per check (last \(m.checks))", value: RealityCheckCost.cents(m.perCheckUSD))
+                    LabeledContent("Research · scoring · Brief", value: [m.researchUSD, m.scoringUSD, m.briefUSD].map(RealityCheckCost.cents).joined(separator: " · "))
+                    LabeledContent("Cache hit rate", value: "\(Int((m.cacheHitRate * 100).rounded()))% of prompt tokens")
+                    LabeledContent("Included follow-ups", value: m.perFollowUpUSD.map { "\(RealityCheckCost.cents($0)) avg · \(m.followUps)" } ?? "none yet")
+                } else {
+                    LabeledContent("Cost meter", value: "Run a check to start")
+                }
                 let month = RealityCheckCost.month(checks.map { (date: $0.createdAt, costUSD: $0.actualCostUSD) })
                 LabeledContent("Checks this month", value: "\(month.count) · \(AISpend.format(month.spentUSD))")
                 if let avg = RealityCheckCost.average(ofRecent: checks.compactMap(\.actualCostUSD)) {

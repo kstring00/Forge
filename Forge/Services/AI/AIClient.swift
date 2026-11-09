@@ -103,7 +103,16 @@ public struct AIEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
         public var cacheWriteTokens: Int
         public var webSearches: Int
     }
+    /// Decision 0042: what each model call cost (a check's prefill is scoring,
+    /// then the Brief). Absent from older proxies and from canned clients.
+    public struct Stage: Codable, Sendable {
+        public var stage: String
+        public var model: String
+        public var costUSD: Double
+        public var usage: Usage
+    }
     public var payload: Payload
+    public var stages: [Stage]?
     /// List items the proxy removed for failing the contract or lacking a source, by list.
     public var dropped: [String: Int]?
     public var rationale: String

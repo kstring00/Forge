@@ -100,11 +100,13 @@ final class RealityCheckRunner {
             var gathered: [ResearchResponse.Source] = []
             var notes = ""
             var packet: ResearchPacket?
+            var researchTokens = CostMeter.Tokens()
             for turn in 1...Self.maxResearchTurns {
                 phase = .researching(turn: turn, sources: gathered.count)
                 let r = try await proxy.research(ideaID: idea.id, title: idea.title, originalText: idea.originalText,
                                                  advantages: advantages, constraints: constraints, messages: messages)
                 spendRecord(r.costUSD)
+                researchTokens = researchTokens + CostMeterStore.tokens(r.usage)
                 if turn == 1, r.freeCheck == true { wasFree = true }
                 try Task.checkCancellation()
                 gathered.append(contentsOf: r.sources)
@@ -125,6 +127,7 @@ final class RealityCheckRunner {
             // Decision 0042: the panel reads this check's packet, not the pages again.
             let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea, packet: packet, researchedAt: .now), expecting: PrefillResult.self)
             stopLighting()
+            let researchUSD = spentUSD
             spendRecord(envelope.costUSD ?? 0)
             try Task.checkCancellation()
 
@@ -138,6 +141,7 @@ final class RealityCheckRunner {
             }
             litSpheres = Set(Sphere.phase3Panel)
             AISpend.lastRealityCheckUSD = spentUSD
+            CostMeterStore.recordCheck(researchUSD: researchUSD, researchTokens: researchTokens, prefill: envelope)
             applied.realityCheck.actualCostUSD = spentUSD
             applied.realityCheck.droppedFindings = envelope.dropped?.values.reduce(0, +) ?? 0
             applied.realityCheck.wasFree = wasFree

@@ -45,6 +45,11 @@ struct SettingsView: View {
                 LabeledContent("Plan", value: env.entitlements.state.plan.displayName
                                + (env.entitlements.state.isTrial ? " · free trial" : "")
                                + (env.entitlements.state.founding ? " · founding member" : ""))
+                // Decision 0043: a booked switch, a cancel, or a payment problem, in plain words.
+                if env.entitlements.state.plan != .free || env.entitlements.state.billing.hasIssue {
+                    Text(env.entitlements.state.statusLine(date: { $0.formatted(.dateTime.month(.abbreviated).day()) }))
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                }
                 // Decision 0042: what can be spent, in the order it is spent.
                 let b = env.entitlements.balance
                 if b.firstFreeAvailable {

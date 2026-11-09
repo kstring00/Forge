@@ -81,7 +81,7 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "15 checks a month, What-if ideas, Argue it out and the Library.",
+              "description": "15 checks a month. Unused checks carry into next month.",
               "displayName": "Hunch Plus",
               "locale": "en_US"
             }
@@ -106,7 +106,7 @@
           },
           "localizations": [
             {
-              "description": "15 checks a month, What-if ideas, Argue it out and the Library.",
+              "description": "15 checks a month. Unused checks carry into next month.",
               "displayName": "Hunch Plus (yearly)",
               "locale": "en_US"
             }

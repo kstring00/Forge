@@ -14,6 +14,8 @@ struct MembershipView: View {
     @State private var period: MembershipStore.Period = .monthly
     @State private var managing = false
     @State private var showingPrivacy = false
+    /// A plan change waiting for the person to confirm it.
+    @State private var change: Change?
 
     private var store: MembershipStore { env.membership }
     private var state: MembershipState { env.entitlements.state }
@@ -49,7 +51,16 @@ struct MembershipView: View {
         .overlay(alignment: .bottom) { banner }
         .manageSubscriptionsSheet(isPresented: $managing)
         .sheet(isPresented: $showingPrivacy) { PrivacySummarySheet() }
-        .task { await store.load() }
+        .alert(change?.title ?? "", isPresented: Binding(get: { change != nil }, set: { if !$0 { change = nil } }), presenting: change) { c in
+            Button(c.confirm) { Task { await perform(c) } }
+            Button("Not now", role: .cancel) {}
+        } message: { c in
+            Text(c.message)
+        }
+        .task {
+            await store.load()
+            await store.refresh()
+        }
     }
 
     // MARK: Top
@@ -80,19 +91,31 @@ struct MembershipView: View {
         }
     }
 
-    /// One line: your plan and what's left. The breakdown lives in Settings.
+    /// Your plan, what happens next, and what's left. The breakdown lives in Settings.
     private var statusLine: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(statusLabel).forgeLabelSmall()
+            if state.plan != .free || state.billing.hasIssue {
+                Text(state.statusLine(date: day))
+                    .font(.subheadline).foregroundStyle(heads ? ForgeColor.emberText : ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(balance.pillLine).font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
                 .fixedSize(horizontal: false, vertical: true)
+            if state.billing.hasIssue {
+                Button("Update payment details") { openURL(BillingIssueBanner.billingURL) }
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+            }
         }
         .padding(ForgeSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(heads ? ForgeColor.ember.opacity(0.6) : ForgeColor.line))
         .accessibilityElement(children: .combine)
     }
+
+    /// Something is about to change: a booked switch, a cancel, a payment problem.
+    private var heads: Bool { state.nextProductID != nil || state.isCancelled || state.billing.hasIssue }
 
     private var statusLabel: String {
         var s = "You're on \(state.plan.displayName)"
@@ -123,32 +146,39 @@ struct MembershipView: View {
 
     // MARK: Plans
 
-    /// One card per plan: name, price, one line, one button. Your plan says so.
+    /// One card per plan: name, price, one line, and what tapping does, by
+    /// Apple's rules (decision 0043): Current, Upgrade now, or Switches on a date.
     private func planCard(_ plan: Plan) -> some View {
-        let current = state.plan == plan
+        let id = productID(plan)
+        let option = id.map { PlanOption.for($0, in: state) }
+        let mine = state.plan == plan
         return VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack(alignment: .firstTextBaseline) {
                 Text(plan.displayName).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                if current {
-                    Text("Your plan").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.canvas)
+                if let badge = badge(plan, option) {
+                    Text(badge).font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.canvas)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(ForgeColor.ink, in: Capsule())
+                        .background(mine ? ForgeColor.ink : ForgeColor.ember, in: Capsule())
                 }
                 Spacer()
                 Text(priceLine(plan)).font(.system(.headline)).foregroundStyle(ForgeColor.ink)
             }
             Text(what(plan)).font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
-            if let note = note(plan) {
+            if let note = note(plan, option) {
                 Text(note).font(.footnote).foregroundStyle(ForgeColor.emberText).fixedSize(horizontal: false, vertical: true)
             }
-            action(plan, current: current)
+            if let id, let option {
+                action(plan, id: id, option: option)
+            } else if plan == .free, state.plan != .free, !state.isCancelled {
+                manageLink
+            }
         }
         .padding(ForgeSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous)
-            .strokeBorder(current ? ForgeColor.ink.opacity(0.6) : ForgeColor.line, lineWidth: current ? 1.5 : 1))
+            .strokeBorder(mine ? ForgeColor.ink.opacity(0.6) : ForgeColor.line, lineWidth: mine ? 1.5 : 1))
     }
 
     private func productID(_ plan: Plan) -> String? {
@@ -161,7 +191,12 @@ struct MembershipView: View {
 
     private func priceLine(_ plan: Plan) -> String {
         guard let id = productID(plan) else { return "Free" }
-        return "\(store.price(id)) / \(period == .yearly ? "year" : "month")"
+        return "\(store.price(id)) / \(MembershipProduct.isYearly(id) ? "year" : "month")"
+    }
+
+    /// "$9.99 a month", for what people are told before they confirm.
+    private func priceWithPeriod(_ id: String) -> String {
+        "\(store.price(id)) a \(MembershipProduct.isYearly(id) ? "year" : "month")"
     }
 
     private func what(_ plan: Plan) -> String {
@@ -175,78 +210,127 @@ struct MembershipView: View {
         }
     }
 
-    /// One short line only when it matters: a trial, a founding price, a switch that waits for renewal.
-    private func note(_ plan: Plan) -> String? {
-        switch plan {
-        case .plus:
-            if state.plan == .pro { return "You keep Pro until \(renewalDay), then Plus starts. You're never charged twice." }
-            if founding && state.plan == .free { return "Founding member price, kept as long as you stay subscribed." }
-            if period == .yearly && store.trialEligible && state.plan == .free { return "7 days free, up to \(MembershipState.trialChecks) checks. Cancel anytime." }
+    private func badge(_ plan: Plan, _ option: PlanOption?) -> String? {
+        guard let option else {
+            // Free: where a cancelled plan lands.
+            if state.plan == .free { return "Current" }
+            return state.isCancelled ? "From \(renewalDay)" : nil
+        }
+        return option.badge(date: day)
+    }
+
+    /// One short line only when it matters: a trial, a founding price, going back to Free.
+    private func note(_ plan: Plan, _ option: PlanOption?) -> String? {
+        switch option {
+        case .subscribe where plan == .plus:
+            if founding { return "Founding member price, kept as long as you stay subscribed." }
+            if period == .yearly && store.trialEligible { return "7 days free, up to \(MembershipState.trialChecks) checks. Cancel anytime." }
             return nil
-        case .free:
-            return state.plan != .free ? "To go back to Free, cancel in Manage subscription. Your paid plan runs until \(renewalDay)." : nil
-        case .pro:
+        case .booked(let d):
+            return "Starts \(d.map(day) ?? "at your renewal"). Nothing is charged until then."
+        case nil where plan == .free && state.plan != .free && !state.isCancelled:
+            return "To go back to Free, cancel in Manage subscription. Your plan runs until \(renewalDay)."
+        default:
             return nil
         }
     }
 
     @ViewBuilder
-    private func action(_ plan: Plan, current: Bool) -> some View {
-        if current {
-            if plan != .free {
-                HStack(spacing: ForgeSpacing.l) {
-                    // Same plan, other billing period: offer the switch.
-                    if let id = productID(plan), state.productID != id {
-                        Button(store.purchasing == id ? "Switching…" : "Switch to \(period == .yearly ? "yearly" : "monthly")") {
-                            Task { await store.purchase(id) }
-                        }
-                        .disabled(store.purchasing != nil)
-                    }
-                    Button("Manage subscription") { managing = true }
-                }
-                .font(.subheadline.weight(.medium)).foregroundStyle(ForgeColor.emberText)
+    private func action(_ plan: Plan, id: String, option: PlanOption) -> some View {
+        switch option {
+        case .current:
+            manageLink
+        case .booked:
+            EmptyView()
+        case .currentSwitching:
+            HStack(spacing: ForgeSpacing.l) {
+                Button("Keep \(plan.displayName)") { ask(id, option) }
+                manageLink
             }
-        } else if plan == .free {
-            if state.plan != .free {
-                Button("Manage subscription") { managing = true }
-                    .font(.subheadline.weight(.medium)).foregroundStyle(ForgeColor.emberText)
+            .font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.emberText)
+        case .currentEnding:
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                bigButton("Resubscribe", id: id, emphasised: true) { ask(id, option) }
+                manageLink
             }
-        } else if let id = productID(plan) {
-            // The one orange button is the plan most people should pick next.
-            let emphasised = (plan == .plus && state.plan == .free) || (plan == .pro && state.plan == .plus)
-            Button { Task { await store.purchase(id) } } label: {
-                Group {
-                    if store.purchasing == id { ProgressView().tint(emphasised ? .white : ForgeColor.ink) } else { Text(buttonTitle(plan)) }
-                }
-                .font(.system(.body, weight: .semibold))
-                .foregroundStyle(emphasised ? .white : ForgeColor.ink)
-                .frame(maxWidth: .infinity).frame(minHeight: 48)
-                .background(emphasised ? ForgeColor.ember : ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(emphasised ? Color.clear : ForgeColor.line))
-            }
-            .buttonStyle(.plain)
-            .disabled(store.purchasing != nil)
+        case .subscribe:
+            bigButton(subscribeTitle(plan), id: id, emphasised: plan == .plus) { Task { await store.purchase(id) } }
+        case .upgradeNow:
+            bigButton("Upgrade now", id: id, emphasised: true) { ask(id, option) }
+        case .switchNow:
+            bigButton("Switch now", id: id, emphasised: false) { ask(id, option) }
+        case .switchesOn(let d):
+            bigButton("Switch on \(d.map(day) ?? "renewal")", id: id, emphasised: false) { ask(id, option) }
         }
     }
 
-    private func buttonTitle(_ plan: Plan) -> String {
-        switch plan {
-        case .plus:
-            if state.plan == .pro { return "Switch to Plus on \(renewalDay)" }
-            if founding { return "Join as a founding member" }
-            if period == .yearly && store.trialEligible && state.plan == .free { return "Try Plus free for 7 days" }
-            return "Choose Plus"
-        case .pro:
-            return state.plan == .plus ? "Upgrade to Pro" : "Choose Pro"
-        case .free:
-            return ""
+    private var manageLink: some View {
+        Button("Manage subscription") { managing = true }
+            .font(.subheadline.weight(.medium)).foregroundStyle(ForgeColor.emberText)
+    }
+
+    private func bigButton(_ title: String, id: String, emphasised: Bool, _ tap: @escaping () -> Void) -> some View {
+        Button(action: tap) {
+            Group {
+                if store.purchasing == id { ProgressView().tint(emphasised ? .white : ForgeColor.ink) } else { Text(title) }
+            }
+            .font(.system(.body, weight: .semibold))
+            .foregroundStyle(emphasised ? .white : ForgeColor.ink)
+            .frame(maxWidth: .infinity).frame(minHeight: 48)
+            .background(emphasised ? ForgeColor.ember : ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(emphasised ? Color.clear : ForgeColor.line))
+        }
+        .buttonStyle(.plain)
+        .disabled(store.purchasing != nil)
+    }
+
+    private func subscribeTitle(_ plan: Plan) -> String {
+        if plan == .plus && founding { return "Join as a founding member" }
+        if plan == .plus && period == .yearly && store.trialEligible { return "Try Plus free for 7 days" }
+        return "Choose \(plan.displayName)"
+    }
+
+    // MARK: Confirming a change
+
+    private struct Change {
+        let productID: String
+        let option: PlanOption
+        let title: String
+        let confirm: String
+        let message: String
+    }
+
+    /// Says plainly what happens before anything is bought or booked.
+    private func ask(_ id: String, _ option: PlanOption) {
+        let name = MembershipProduct.displayName(id)
+        let current = state.plan.displayName
+        let (title, confirm): (String, String) = switch option {
+        case .upgradeNow: ("Upgrade to \(name)?", "Upgrade now")
+        case .switchNow: ("Switch to \(name)?", "Switch now")
+        case .switchesOn(let d): ("Switch to \(name) on \(d.map(day) ?? "renewal")?", "Book the switch")
+        case .currentSwitching: ("Keep \(current)?", "Keep \(current)")
+        case .currentEnding: ("Keep \(current)?", "Resubscribe")
+        default: ("", "")
+        }
+        guard let message = option.confirmation(productID: id, in: state, price: priceWithPeriod(id), date: day) else { return }
+        change = Change(productID: id, option: option, title: title, confirm: confirm, message: message)
+    }
+
+    private func perform(_ c: Change) async {
+        switch c.option {
+        case .currentSwitching, .currentEnding:
+            // Apple's Manage sheet always works when re-buying doesn't.
+            if await store.keepCurrent() == .failed { managing = true }
+        default:
+            await store.purchase(c.productID)
         }
     }
+
+    /// "Dec 9".
+    private func day(_ date: Date) -> String { date.formatted(.dateTime.month(.abbreviated).day()) }
 
     /// "Dec 9", or "your renewal" before the App Store has said.
-    private var renewalDay: String {
-        state.renewsAt.map { $0.formatted(.dateTime.month(.abbreviated).day()) } ?? "your renewal"
-    }
+    private var renewalDay: String { state.renewsAt.map(day) ?? "your renewal" }
 
     private var topUpRow: some View {
         HStack {
@@ -344,5 +428,35 @@ struct ChecksPill: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(env.entitlements.balance.pillLine). Opens plans and checks.")
+    }
+}
+
+/// Decision 0043: a renewal payment failed. Friendly, never the paywall; the
+/// plan stays on through Apple's grace period. Shown on Home under the pill.
+struct BillingIssueBanner: View {
+    @Environment(AppEnvironment.self) private var env
+    @Environment(\.openURL) private var openURL
+    /// Apple's page for updating the payment method on this Apple ID.
+    static let billingURL = URL(string: "https://apps.apple.com/account/billing")!
+
+    var body: some View {
+        let state = env.entitlements.state
+        if state.billing.hasIssue {
+            Button { openURL(Self.billingURL) } label: {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "creditcard").font(.system(.footnote, weight: .semibold))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(state.statusLine(date: { $0.formatted(.dateTime.month(.abbreviated).day()) }))
+                            .font(.footnote).fixedSize(horizontal: false, vertical: true)
+                        Text("Update payment details").font(.footnote.weight(.semibold)).underline()
+                    }
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ForgeColor.ember.opacity(0.85), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
     }
 }

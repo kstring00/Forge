@@ -18,6 +18,7 @@ final class MembershipStore {
     private(set) var trialEligible = true
     private let entitlements: any EntitlementService
     private var updates: Task<Void, Never>?
+    private var statusUpdates: Task<Void, Never>?
 
     init(entitlements: any EntitlementService) {
         self.entitlements = entitlements
@@ -35,12 +36,20 @@ final class MembershipStore {
 
     // MARK: Lifecycle
 
-    /// Once at launch: products, current entitlements, unfinished transactions, then listen.
+    /// Once at launch: listen first (so nothing is missed), then unfinished
+    /// transactions, products, and what the App Store says now.
     func start() async {
         guard updates == nil else { return }
         updates = Task { [weak self] in
             for await result in Transaction.updates {
                 await self?.handle(result)
+            }
+        }
+        // Renewal info changes (a downgrade booked in Apple's sheet or in
+        // Settings, a cancel, a billing problem) aren't transactions.
+        statusUpdates = Task { [weak self] in
+            for await _ in Product.SubscriptionInfo.Status.updates {
+                await self?.refresh()
             }
         }
         for await result in Transaction.unfinished { await handle(result) }
@@ -63,31 +72,72 @@ final class MembershipStore {
         }
     }
 
-    /// The highest active subscription in the group decides the plan.
+    /// Decision 0043: the one source of truth for the plan. The entitled
+    /// transaction (`Transaction.currentEntitlements`: subscribed or in the
+    /// grace period) plus its renewal info (`Product.SubscriptionInfo.Status`):
+    /// what it renews to, whether it will, billing trouble. Never the latest
+    /// transaction alone: after a downgrade Apple still has the person on Pro
+    /// until renewal, with Plus only in the renewal info.
     func refresh() async {
-        var best: (Plan, Transaction)?
+        var entitled: [UInt64: Transaction] = [:]
         var jws: [String] = []
         for await result in Transaction.currentEntitlements {
-            guard case .verified(let t) = result, t.revocationDate == nil,
-                  let plan = MembershipProduct.plan(for: t.productID) else { continue }
+            guard case .verified(let t) = result, t.revocationDate == nil, !t.isUpgraded,
+                  t.productType == .autoRenewable, MembershipProduct.plan(for: t.productID) != nil else { continue }
             jws.append(result.jwsRepresentation)
-            if best == nil || plan > best!.0 { best = (plan, t) }
+            entitled[t.originalID] = t
         }
-        guard let (plan, t) = best else {
-            entitlements.apply(.free, jws: [])
-            return
+        var snapshots: [SubscriptionSnapshot] = []
+        var described = Set<UInt64>()
+        for status in await statuses() {
+            guard case .verified(let latest) = status.transaction else { continue }
+            let info: Product.SubscriptionInfo.RenewalInfo?
+            if case .verified(let r) = status.renewalInfo { info = r } else { info = nil }
+            let t = entitled[latest.originalID] ?? latest
+            snapshots.append(Self.snapshot(t, state: status.state, info: info, entitled: entitled[latest.originalID] != nil))
+            described.insert(latest.originalID)
         }
-        entitlements.apply(MembershipState(plan: plan, isTrial: Self.isIntroductory(t), anchor: t.originalPurchaseDate,
-                                           productID: t.productID, renewsAt: t.expirationDate,
-                                           founding: t.productID == MembershipProduct.plusFoundingYearly), jws: jws)
+        // Entitled but with no status (the status call failed): still the plan.
+        for (id, t) in entitled where !described.contains(id) {
+            snapshots.append(Self.snapshot(t, state: .subscribed, info: nil, entitled: true))
+        }
+        entitlements.apply(MembershipState(entitlement: SubscriptionSnapshot.deciding(snapshots)), jws: jws)
+    }
+
+    private func statuses() async -> [Product.SubscriptionInfo.Status] {
+        if products.isEmpty { await load() }
+        guard let product = MembershipProduct.subscriptions.lazy.compactMap({ self.products[$0] }).first,
+              let subscription = product.subscription else { return [] }
+        return (try? await subscription.status) ?? []
+    }
+
+    private static func snapshot(_ t: Transaction, state: Product.SubscriptionInfo.RenewalState,
+                                 info: Product.SubscriptionInfo.RenewalInfo?, entitled: Bool) -> SubscriptionSnapshot {
+        let renewal: SubscriptionSnapshot.Renewal =
+            state == .subscribed ? .subscribed
+            : state == .inGracePeriod ? .inGracePeriod
+            : state == .inBillingRetryPeriod ? .inBillingRetry
+            : state == .revoked ? .revoked
+            : .expired
+        return SubscriptionSnapshot(productID: t.productID, transactionID: String(t.id), purchaseDate: t.purchaseDate,
+                                    expiresAt: t.expirationDate, isTrial: isIntroductory(t), isEntitled: entitled,
+                                    renewal: renewal, willAutoRenew: info?.willAutoRenew ?? true,
+                                    autoRenewProductID: info?.autoRenewPreference, gracePeriodEndsAt: info?.gracePeriodExpirationDate,
+                                    familyShared: t.ownershipType == .familyShared)
     }
 
     // MARK: Buying
 
-    func purchase(_ productID: String) async {
+    enum Outcome { case done, pending, cancelled, failed }
+
+    /// Buys, or changes plan. Apple decides when a change starts: an upgrade
+    /// now, a downgrade or a monthly ↔ yearly switch at renewal (no new
+    /// transaction until then; the refresh reads the booking).
+    @discardableResult
+    func purchase(_ productID: String) async -> Outcome {
         guard let product = products[productID] else {
             message = "That plan isn't available right now. Try again in a moment."
-            return
+            return .failed
         }
         purchasing = productID
         message = nil
@@ -96,23 +146,52 @@ final class MembershipStore {
             switch try await product.purchase() {
             case .success(let result):
                 await handle(result)
+                return .done
             case .pending:
                 message = "Waiting for approval. Your plan starts as soon as it's approved."
+                return .pending
             case .userCancelled:
-                break
+                return .cancelled
             @unknown default:
-                break
+                return .cancelled
             }
         } catch {
             message = "The purchase didn't go through: \(error.localizedDescription)"
+            return .failed
         }
     }
 
-    /// Restore purchases: asks the App Store to resend this Apple ID's transactions.
+    /// Keep the current plan: undo a booked switch, or turn renewal back on
+    /// after a cancel. Re-buying the current product does it in Xcode and the
+    /// sandbox; the App Store has been seen to refuse it, so on failure the
+    /// caller opens Apple's Manage sheet (`.failed`), where it always works.
+    func keepCurrent() async -> Outcome {
+        guard let id = entitlements.state.productID else { return .failed }
+        let outcome = await purchase(id)
+        await refresh()
+        guard outcome == .done else {
+            if outcome == .failed { message = nil }
+            return outcome
+        }
+        let kept = entitlements.state.nextProductID == nil && entitlements.state.willAutoRenew
+        return kept ? .done : .failed
+    }
+
+    /// Restore purchases: asks the App Store to resend this Apple ID's
+    /// transactions, then rebuilds the plan and cycle dates from them. Bought
+    /// top-ups in the history are remembered but not given again: how many
+    /// were spent lives in the ledger (and its iCloud copy), not at Apple.
     func restore() async {
         message = nil
         do {
             try await AppStore.sync()
+            var known: [String] = []
+            for await result in Transaction.all {
+                guard case .verified(let t) = result, t.productID == MembershipProduct.topUp5 else { continue }
+                if t.revocationDate != nil { entitlements.refundTopUp(transactionID: String(t.id)) }
+                else { known.append(String(t.id)) }
+            }
+            entitlements.recordKnownTopUps(known)
             await refresh()
             message = entitlements.state.plan == .free ? "Nothing to restore on this Apple ID." : "Restored: \(entitlements.state.plan.displayName)."
         } catch {
@@ -122,13 +201,20 @@ final class MembershipStore {
 
     func dismissMessage() { message = nil }
 
+    /// Grants what a transaction bought (or takes back a refunded top-up),
+    /// finishes it, then re-reads the plan. A top-up is credited once per
+    /// transaction ID, however often it is delivered.
     private func handle(_ result: VerificationResult<Transaction>) async {
         guard case .verified(let t) = result else {
             message = "The App Store couldn't verify that purchase, so nothing changed."
             return
         }
-        if t.productType == .consumable, t.productID == MembershipProduct.topUp5, t.revocationDate == nil {
-            entitlements.creditTopUp(transactionID: String(t.id), jws: result.jwsRepresentation)
+        if t.productID == MembershipProduct.topUp5 {
+            if t.revocationDate != nil {
+                entitlements.refundTopUp(transactionID: String(t.id))
+            } else {
+                entitlements.creditTopUp(transactionID: String(t.id), jws: result.jwsRepresentation)
+            }
         }
         await t.finish()
         await refresh()

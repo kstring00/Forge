@@ -10,7 +10,7 @@ export interface Reply<T = any> { status: number; body: T; headers: Record<strin
 
 export function prepareEnv(): void {
   if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("Set ANTHROPIC_API_KEY to run the bench (it calls the real Claude API).");
+    throw new Error("No API key. In this Terminal window run:  set -a; source .env; set +a  (then try again). The bench calls the real Claude API.");
   }
   process.env.FORGE_PROXY_TOKEN ||= "bench-token";
   process.env.FORGE_REQUESTS_PER_MINUTE ||= "1000";

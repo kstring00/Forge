@@ -24,6 +24,12 @@
 	<string>$(PROXY_URL)</string>
 	<key>ForgeProxyToken</key>
 	<string>$(PROXY_TOKEN)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Lets a test build talk to the proxy running on the developer's Mac (npm run serve). Allowed on the App Store; it opens nothing else. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

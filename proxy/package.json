@@ -11,7 +11,8 @@
     "dev": "vercel dev",
     "deploy": "vercel --prod",
     "bench:checks": "tsx bench/run-checks.ts",
-    "bench:compare": "tsx bench/compare.ts"
+    "bench:compare": "tsx bench/compare.ts",
+    "serve": "tsx scripts/serve.ts"
   },
   "engines": {
     "node": ">=20"

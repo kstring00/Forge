@@ -28,6 +28,17 @@ if (mock) {
   process.env.ANTHROPIC_API_KEY = "mock";
 }
 prepareEnv();
+
+// The proxy logs one JSON line per call (cache hits, salvage). Keep them in
+// the results folder, not on screen.
+const logLines: string[] = [];
+for (const level of ["log", "warn", "error"] as const) {
+  const original = console[level].bind(console);
+  console[level] = (...a: unknown[]) => {
+    if (typeof a[0] === "string" && a[0].startsWith('{"at":')) logLines.push(a[0]);
+    else original(...a);
+  };
+}
 // Imported after the environment is ready: the handlers read it on use.
 const { runCheck, flowVersion } = await import("./flow.js");
 
@@ -52,6 +63,7 @@ for (const idea of ideas) {
     summary.push({ slug: idea.slug, failed: (e as Error).message });
   }
 }
+writeFileSync(join(out, "log.jsonl"), logLines.join("\n") + "\n");
 writeFileSync(join(out, "summary.json"), JSON.stringify({ label, flowVersion, at: new Date().toISOString(), ideas: summary }, null, 2));
 console.log(`\nSaved to bench/results/${label}/`);
 mock?.server.close();

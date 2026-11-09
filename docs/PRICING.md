@@ -29,7 +29,7 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 
 ## Checks, not credits
 
-The user-facing unit is a **check** (one idea looked at properly). Retire "credits" in the UI. Monthly checks reset on the renewal date; top-up checks never expire and are used only after monthly checks run out. Show "N of 15 checks left · resets Dec 1" on Home's pill, the confirm sheet and Settings.
+The user-facing unit is a **check** (one idea looked at properly). Retire "credits" in the UI. Monthly checks renew on the renewal date (unused ones roll over, above); top-up checks never expire and are used only after monthly checks run out. Show "N of 15 checks left · resets Dec 1" on Home's pill, the confirm sheet and Settings.
 
 ## Products (App Store Connect)
 

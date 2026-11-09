@@ -4,8 +4,9 @@ import UniformTypeIdentifiers
 import StoreKit
 import ForgeCore
 
-/// Settings. Phase 1b: export and import of the whole Vault. Later phases add
-/// the AI-sharing disclosure, Advantages, Constraints and the Steward charter.
+/// Settings, ready for the App Store (decision 0039): Membership, AI and
+/// privacy, what the panel knows about you, backup, look and feel, about.
+/// Costs, the server address and data counts live under Developer, Debug only.
 struct SettingsView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.modelContext) private var context
@@ -30,6 +31,8 @@ struct SettingsView: View {
     @State private var alertMessage = ""
     @State private var showingAlert = false
     @State private var managingSubscription = false
+    @State private var showingPrivacy = false
+    @Environment(\.openURL) private var openURL
     @AppStorage("membership.foundingPreview") private var foundingPreview = true
 
     private var liveCount: Int { ideas.filter { !$0.isArchived }.count }
@@ -57,41 +60,6 @@ struct SettingsView: View {
             }
 
             Section {
-                Button {
-                    export()
-                } label: {
-                    Label(isExporting ? "Exporting…" : "Export Vault", systemImage: "square.and.arrow.up")
-                }
-                .disabled(isExporting || ideas.isEmpty)
-
-                if let exportURL {
-                    ShareLink(item: exportURL) {
-                        Label("Share \(exportURL.lastPathComponent)", systemImage: "folder")
-                    }
-                }
-
-                Button {
-                    isImporting = true
-                } label: {
-                    Label("Import an export…", systemImage: "square.and.arrow.down")
-                }
-            } header: {
-                Text("Backup")
-            } footer: {
-                Text("Export writes a folder with vault.json, vault.md and your voice recordings. Save it to Files or AirDrop it. Import adds anything that isn't already here; nothing is overwritten or deleted.")
-            }
-
-            Section {
-                Picker("Appearance", selection: $appearance) {
-                    ForEach(Appearance.allCases) { Text($0.displayName).tag($0) }
-                }
-            } header: {
-                Text("Appearance")
-            } footer: {
-                Text("Dark is the studio's default. Light inverts the same palette. Showing \(colorScheme == .dark ? "dark" : "light") now.")
-            }
-
-            Section {
                 if consentStamp > 0 {
                     LabeledContent("AI sharing", value: "Agreed \(Date(timeIntervalSince1970: consentStamp).formatted(date: .abbreviated, time: .omitted))")
                     Button("Withdraw consent", role: .destructive) {
@@ -106,31 +74,18 @@ struct SettingsView: View {
                     Text("Never sent").forgeLabel().padding(.top, ForgeSpacing.xs)
                     ForEach(AIConsent.neverSent, id: \.self) { Text($0).font(.footnote) }
                 }
-                #if DEBUG
-                LabeledContent("Server (developer)", value: AIConsent.proxyURL ?? "Not configured")
-                #endif
-                Picker("Monthly ceiling", selection: $ceiling) {
-                    ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
+                Button("Privacy policy") {
+                    if let url = LegalLinks.privacy { openURL(url) } else { showingPrivacy = true }
                 }
             } header: {
-                Text("AI")
+                Text("AI and privacy")
             } footer: {
-                Text("Sent only when you tap an AI action, only for that idea, through Hunch's server to the AI model. You'll be asked before the first call.")
-            }
-
-            Section {
-                Picker("Quotes", selection: $quotesRaw) {
-                    ForEach(QuotesSetting.allCases) { Text($0.displayName).tag($0.rawValue) }
-                }
-            } header: {
-                Text("Ideas tab")
-            } footer: {
-                Text("One line a day at the top of the Ideas tab. Every quote is attributed to a source you can check.")
+                Text("Your ideas stay on this phone. An idea's text goes to an AI model through Hunch's server only when you tap an AI action, and only for that idea. You'll be asked before the first time.")
             }
 
             Section {
                 if panelNote.isEmpty {
-                    Text("Nothing yet. After three recorded outcomes, FORGE writes a short note from your record and shares it with the panel.")
+                    Text("Nothing yet. After three recorded outcomes, Hunch writes a short note from your record and shares it with the panel.")
                         .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 } else {
                     Text(panelNote).font(.footnote)
@@ -150,43 +105,51 @@ struct SettingsView: View {
             }
 
             Section {
-                let month = RealityCheckCost.month(checks.map { (date: $0.createdAt, costUSD: $0.actualCostUSD) })
-                LabeledContent("Reality Checks this month", value: "\(month.count)")
-                LabeledContent("Their cost this month", value: AISpend.format(month.spentUSD))
-                if let avg = RealityCheckCost.average(ofRecent: checks.compactMap(\.actualCostUSD)) {
-                    LabeledContent("Average per check", value: RealityCheckCost.cents(avg))
+                Button {
+                    export()
+                } label: {
+                    Label(isExporting ? "Exporting…" : "Export your ideas", systemImage: "square.and.arrow.up")
                 }
-                if let last = checks.first(where: { ($0.actualCostUSD ?? 0) > 0 })?.actualCostUSD {
-                    LabeledContent("Last check", value: RealityCheckCost.cents(last))
+                .disabled(isExporting || ideas.isEmpty)
+
+                if let exportURL {
+                    ShareLink(item: exportURL) {
+                        Label("Share \(exportURL.lastPathComponent)", systemImage: "folder")
+                    }
                 }
-                LabeledContent("All AI this month", value: AISpend.format(spendMonth == AISpend.currentMonth() ? spentThisMonth : 0))
+
+                Button {
+                    isImporting = true
+                } label: {
+                    Label("Import an export…", systemImage: "square.and.arrow.down")
+                }
             } header: {
-                Text("Spend")
+                Text("Backup")
             } footer: {
-                Text("Checks count the ones that finished, at the cost the server reported. All AI adds runs that failed partway and every other AI action. The average uses the last \(RealityCheckCost.averageWindow) finished checks and is what the Reality Check button quotes.")
+                Text("Export saves every idea, step and voice note to a folder you can keep in Files or AirDrop. Import adds anything that isn't already here; nothing is overwritten or deleted.")
             }
 
             Section {
-                LabeledContent("Ideas", value: "\(liveCount)")
-                ForEach(Track.allCases) { track in
-                    LabeledContent("  \(track.displayName)", value: "\(TrackCounts.count(track, in: ideas))")
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(Appearance.allCases) { Text($0.displayName).tag($0) }
                 }
-                LabeledContent("Archived", value: "\(archivedCount)")
-                LabeledContent("Projects", value: "\(projects.count) · \(projects.filter { $0.status == .active }.count) active")
-                if let report = ProjectCleanup.lastReport() {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Project cleanup · \(report.ranAt.formatted(date: .abbreviated, time: .shortened))").forgeLabelSmall()
-                        Text(report.line).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-                    }
+                Picker("Daily quote", selection: $quotesRaw) {
+                    ForEach(QuotesSetting.allCases) { Text($0.displayName).tag($0.rawValue) }
                 }
             } header: {
-                Text("Ideas")
+                Text("Look and feel")
             } footer: {
-                Text("Counts are by track, the same as the Ideas tab and Home's pipeline. The cleanup ran once at launch: one project per idea.")
+                Text("Dark is the default. The daily quote sits at the top of the Ideas tab, always with its source.")
             }
 
-            Section("About") {
+            Section {
+                Button { sendFeedback() } label: { Label("Send feedback", systemImage: "envelope") }
+                Button { openURL(LegalLinks.terms) } label: { Label("Terms of use", systemImage: "doc.text") }
                 LabeledContent("Version", value: Self.versionString)
+            } header: {
+                Text("About")
+            } footer: {
+                Text("Feedback goes to \(Self.feedbackAddress) with the app version, so we can find what you saw.")
             }
 
             #if DEBUG
@@ -196,10 +159,24 @@ struct SettingsView: View {
                 Button("Give checks back") { (env.entitlements as? LocalEntitlements)?.resetForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
                 Toggle("Show the founding offer", isOn: $foundingPreview)
+                LabeledContent("Server", value: AIConsent.proxyURL ?? "Not configured")
+                Picker("Your AI cost cap", selection: $ceiling) {
+                    ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }
+                }
+                let month = RealityCheckCost.month(checks.map { (date: $0.createdAt, costUSD: $0.actualCostUSD) })
+                LabeledContent("Checks this month", value: "\(month.count) · \(AISpend.format(month.spentUSD))")
+                if let avg = RealityCheckCost.average(ofRecent: checks.compactMap(\.actualCostUSD)) {
+                    LabeledContent("Average per check", value: RealityCheckCost.cents(avg))
+                }
+                LabeledContent("All AI this month", value: AISpend.format(spendMonth == AISpend.currentMonth() ? spentThisMonth : 0))
+                LabeledContent("Ideas", value: "\(liveCount) live · \(archivedCount) archived · \(projects.count) projects")
+                if let report = ProjectCleanup.lastReport() {
+                    Text(report.line).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                }
             } header: {
                 Text("Developer")
             } footer: {
-                Text("Replay shows the welcome flow, the free-check screen and the first-Brief guide again without deleting anything. Give checks back restores this month's checks and the free first check; bought checks stay. Purchases here use Hunch.storekit: Debug → StoreKit → Manage Transactions refunds or expires them. Debug builds only.")
+                Text("Replay shows the welcome flow, the free-check screen and the first-Brief guide again without deleting anything. Give checks back restores this month's checks and the free first check; bought checks stay. Purchases here use Hunch.storekit: Debug → StoreKit → Manage Transactions refunds or expires them. The cost cap and the dollar figures are what the server reports for your own runs. Debug builds only; App Store builds are limited by the check allowance and the server's daily ceiling.")
             }
             #endif
         }
@@ -207,6 +184,7 @@ struct SettingsView: View {
         .background(ForgeColor.canvas)
         .navigationTitle("Settings")
         .manageSubscriptionsSheet(isPresented: $managingSubscription)
+        .sheet(isPresented: $showingPrivacy) { PrivacySummarySheet() }
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.folder, .json], allowsMultipleSelection: false) { result in
             handleImport(result)
         }
@@ -298,9 +276,23 @@ struct SettingsView: View {
         let b = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
         return "\(v) (\(b))"
     }
+
+    static let feedbackAddress = "kyle@stringhamwebdesign.com"
+
+    /// TestFlight item 3: an email with the app and iOS versions already in it.
+    private func sendFeedback() {
+        let subject = "Hunch feedback (\(Self.versionString))"
+        let body = "\n\n\n—\nHunch \(Self.versionString) · iOS \(UIDevice.current.systemVersion) · \(UIDevice.current.model)"
+        var c = URLComponents()
+        c.scheme = "mailto"
+        c.path = Self.feedbackAddress
+        c.queryItems = [URLQueryItem(name: "subject", value: subject), URLQueryItem(name: "body", value: body)]
+        if let url = c.url { openURL(url) }
+    }
 }
 
 #Preview {
     NavigationStack { SettingsView() }
         .modelContainer(try! .forge(inMemory: true))
+
 }

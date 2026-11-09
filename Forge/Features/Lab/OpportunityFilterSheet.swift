@@ -85,7 +85,7 @@ struct OpportunityFilterSheet: View {
                 }
             }
             Text(verdict.flagged
-                 ? "Three or more no. FORGE suggests \(verdict.suggestion?.displayName.lowercased() ?? "exploring further") before a full evaluation. You can still score it; the suggestion will be remembered."
+                 ? "Three or more no. Hunch suggests \(verdict.suggestion?.displayName.lowercased() ?? "exploring further") before a full evaluation. You can still score it; the suggestion will be remembered."
                  : "No red flags so far. Scoring will take ten to fifteen minutes if you read the rubrics.")
                 .font(.footnote)
                 .foregroundStyle(ForgeColor.inkSecondary)

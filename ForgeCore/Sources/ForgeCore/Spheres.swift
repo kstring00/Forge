@@ -24,7 +24,7 @@ public extension Framework {
         name: "Built to Sell", author: "John Warrillow",
         note: "Does it have value without you in it? Recurring, repeatable, transferable.")
     static let antiDelusion = Framework(
-        name: "Anti-delusion rules", author: "FORGE house rules",
+        name: "Anti-delusion rules", author: "Hunch house rules",
         note: "Vanity metrics, fake urgency and overbuilding are named as such.")
 }
 

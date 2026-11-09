@@ -44,7 +44,7 @@ struct AIConfirmSheet: View {
 
                     if firstTime {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                            Text("Before FORGE talks to an AI").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                            Text("Before Hunch talks to an AI").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
                             list("What is sent", AIConsent.whatIsSent)
                             list("Never sent", AIConsent.neverSent)
                             Text("Sent through Hunch's own server to the AI model, only when you tap Send. You can withdraw this in Settings, where the same list is shown.")

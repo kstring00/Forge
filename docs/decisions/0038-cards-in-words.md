@@ -47,3 +47,10 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
 - **Membership opens on Monthly**, and both tabs quote the same yearly Plus: the founding
   price ($39.99) for testers, the regular one ($59.99) for everyone else, with "Yearly · save
   N%" computed from whichever is offered. `docs/PRICING.md` stays the source of truth.
+- **Settings is App Store shaped.** Membership; AI and privacy (consent, withdraw, what is
+  sent, privacy policy); what the panel knows about you; backup ("Export your ideas"); look
+  and feel (appearance, daily quote); About (Send feedback to kyle@stringhamwebdesign.com with
+  the app and iOS versions in the email, Terms of use, version). The server address, the cost
+  cap, the dollar figures and data counts moved under Developer, Debug only. The $10 cost cap
+  no longer stops a check in App Store builds; the check allowance and the server's daily
+  ceiling do. "FORGE" no longer appears anywhere a user reads; it says Hunch.

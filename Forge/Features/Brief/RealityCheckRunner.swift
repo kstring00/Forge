@@ -80,10 +80,14 @@ final class RealityCheckRunner {
             phase = .offline("The panel can't be reached from this build of Hunch. Your idea is saved; try again later.")
             return
         }
+        #if DEBUG
+        // The developer's own cap, Debug only. App Store builds are limited by the
+        // check allowance and the server's daily ceiling, never by a dollar figure.
         if AISpend.wouldExceed(estimate: estimate.upperBound) {
             phase = .overCeiling(estimate: estimate.upperBound, remaining: AISpend.remainingUSD())
             return
         }
+        #endif
         litSpheres = []
         spentUSD = 0
         savedThisRun = []

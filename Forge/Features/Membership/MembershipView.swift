@@ -103,6 +103,10 @@ struct MembershipView: View {
                 }
             }
             .frame(height: 5)
+            if balance.rolledOverLeft > 0 {
+                Text("+\(balance.rolledOverLeft) carried over from last month, used first. They expire \(balance.expiresText).")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+            }
             if balance.topUps > 0 {
                 Text("+\(balance.topUps) extra \(balance.topUps == 1 ? "check" : "checks"), used after these. They never expire.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
@@ -383,7 +387,7 @@ struct ChecksPill: View {
         Button { env.showingMembership = true } label: {
             HStack(spacing: 6) {
                 Image(systemName: "circle.hexagonpath").font(.system(.footnote, weight: .semibold))
-                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                Text(env.entitlements.balance.pillLine).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 Image(systemName: "chevron.right").font(.system(.footnote, weight: .bold)).opacity(0.7)
             }
             .foregroundStyle(.white)
@@ -391,6 +395,6 @@ struct ChecksPill: View {
             .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(env.entitlements.balance.line). Opens plans and checks.")
+        .accessibilityLabel("\(env.entitlements.balance.pillLine). Opens plans and checks.")
     }
 }

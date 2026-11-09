@@ -42,12 +42,34 @@ public struct PlanRules: Codable, Equatable, Sendable {
         }
     }
 
+    /// Unused monthly checks carry into the next cycle (decision 0042, F).
+    public struct Rollover: Codable, Equatable, Sendable {
+        public var enabled: Bool
+        /// How much can carry, in months of allowance. 1 = up to one month's.
+        public var capMonths: Int
+
+        public init(enabled: Bool = true, capMonths: Int = 1) {
+            self.enabled = enabled
+            self.capMonths = capMonths
+        }
+    }
+
     public var costs: Costs
     public var fairUse: FairUse
+    public var rollover: Rollover
 
-    public init(costs: Costs = Costs(), fairUse: FairUse = FairUse()) {
+    public init(costs: Costs = Costs(), fairUse: FairUse = FairUse(), rollover: Rollover = Rollover()) {
         self.costs = costs
         self.fairUse = fairUse
+        self.rollover = rollover
+    }
+
+    /// Rules saved by an older app have fewer sections; missing ones are the defaults.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        costs = try c.decodeIfPresent(Costs.self, forKey: .costs) ?? Costs()
+        fairUse = try c.decodeIfPresent(FairUse.self, forKey: .fairUse) ?? FairUse()
+        rollover = try c.decodeIfPresent(Rollover.self, forKey: .rollover) ?? Rollover()
     }
 
     /// The rules in force. The app replaces this with the proxy's on launch.

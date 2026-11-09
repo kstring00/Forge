@@ -52,6 +52,11 @@ final class LocalEntitlements: EntitlementService {
         state = defaults.data(forKey: Self.stateKey).flatMap { try? JSONDecoder().decode(MembershipState.self, from: $0) } ?? .free
         ledger = defaults.data(forKey: Self.ledgerKey).flatMap { try? JSONDecoder().decode(CheckLedger.self, from: $0) } ?? CheckLedger()
         fairUse = defaults.data(forKey: Self.fairUseKey).flatMap { try? JSONDecoder().decode(FairUseLedger.self, from: $0) } ?? FairUseLedger()
+        // Decision 0042: record the cycle we're in at launch, so a cycle with no
+        // checks still carries its unused ones into the next.
+        let before = ledger
+        ledger.roll(state, now: now())
+        if ledger != before { save() }
     }
 
     var balance: CheckBalance { ledger.balance(state, now: now()) }
@@ -111,4 +116,7 @@ extension CheckBalance {
     var line: String { line(resets: resetsAt.formatted(.dateTime.month(.abbreviated).day())) }
     /// "resets Dec 1"
     var resetsText: String { "Resets \(resetsAt.formatted(.dateTime.month(.abbreviated).day()))" }
+    /// "19 checks left · 4 carried over expire Dec 3"
+    var pillLine: String { pillLine(resets: resetsAt.formatted(.dateTime.month(.abbreviated).day())) }
+    var expiresText: String { resetsAt.formatted(.dateTime.month(.abbreviated).day()) }
 }

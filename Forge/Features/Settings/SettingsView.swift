@@ -44,7 +44,20 @@ struct SettingsView: View {
                 LabeledContent("Plan", value: env.entitlements.state.plan.displayName
                                + (env.entitlements.state.isTrial ? " · free trial" : "")
                                + (env.entitlements.state.founding ? " · founding member" : ""))
-                Text(env.entitlements.balance.line).font(.subheadline).foregroundStyle(ForgeColor.ink)
+                // Decision 0042: what can be spent, in the order it is spent.
+                let b = env.entitlements.balance
+                if b.firstFreeAvailable {
+                    LabeledContent("First check", value: "Free on this phone")
+                }
+                if b.rolledOverLeft > 0 {
+                    LabeledContent("Carried over", value: "\(b.rolledOverLeft) · expire \(b.expiresText)")
+                }
+                LabeledContent("This month", value: "\(b.monthlyLeft) of \(b.monthlyAllowance) · \(b.resetsText.lowercased())")
+                if b.topUps > 0 {
+                    LabeledContent("Extra", value: "\(b.topUps) · never expire")
+                }
+                Text("Carried-over checks are used first, then this month's, then extra ones. Unused checks carry into next month, up to one month's worth.")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 Button("Plans and checks") { env.showingMembership = true }
                 Button("Restore purchases") { Task { await env.membership.restore() } }
                 if env.entitlements.state.plan != .free {

@@ -149,15 +149,11 @@ extension CheckLedger {
         return balance(state, now: now, calendar: calendar).total - inFlight >= checks
     }
 
-    /// Spend `checks` at once: monthly first, then bought ones. Called only
+    /// Spend `checks` at once: carried-over, monthly, then bought. Called only
     /// when what they paid for arrived.
     public mutating func spend(_ checks: Int, _ state: MembershipState, now: Date, calendar: Calendar = .current) {
         roll(state, now: now, calendar: calendar)
-        for _ in 0..<max(0, checks) {
-            if usedThisPeriod < state.monthlyAllowance { usedThisPeriod += 1 }
-            else if topUps > 0 { topUps -= 1 }
-            else { usedThisPeriod += 1 }
-        }
+        for _ in 0..<max(0, checks) { _ = spendOne(state) }
     }
 }
 

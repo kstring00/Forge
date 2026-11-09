@@ -10,6 +10,8 @@ struct WhatIfCards: View {
     let idea: Idea
     let check: RealityCheck
     let evaluation: Evaluation
+    /// Free shows the first only (decision 0038).
+    var limit: Int? = nil
     @Environment(\.modelContext) private var context
     @State private var opened: Idea?
 
@@ -18,7 +20,7 @@ struct WhatIfCards: View {
             Text("What if…").forgeLabel()
             Text("The Strategist's pivots. Each keeps what scored well and changes one thing the Library gives a reason to change.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-            ForEach(check.pivots) { pivot in card(pivot) }
+            ForEach(Array(check.pivots.prefix(limit ?? check.pivots.count))) { pivot in card(pivot) }
         }
         .navigationDestination(item: $opened) { IdeaDetailView(idea: $0) }
     }
@@ -109,11 +111,11 @@ struct WhatIfLocked: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("What if…").forgeLabel()
-            Text("The panel has \(count) \(count == 1 ? "idea" : "ideas") for raising this one: a change to the idea, the weakness it fixes, and the first test.")
+            Text("More what-ifs").forgeLabel()
+            Text("The panel has \(count) more \(count == 1 ? "idea" : "ideas") for raising this one: a change to the idea, the weakness it fixes, and the first test.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             Button { env.showingMembership = true } label: {
-                Text("What-if ideas come with Plus").frame(maxWidth: .infinity).modifier(SecondaryButtonChrome())
+                SecondaryButtonLabel(title: "See \(count == 1 ? "it" : "them") with Plus")
             }
             .buttonStyle(.plain)
         }

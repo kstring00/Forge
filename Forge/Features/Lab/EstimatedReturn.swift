@@ -87,7 +87,7 @@ enum EstimatedReturn {
 /// evaluation yet, nothing: the card's title opens the idea).
 struct EstimatedReturnRow: View {
     let idea: Idea
-    /// Dense, for the stakes cards; full, for the next-move panel.
+    /// One row, for the cards; stacked and centred, for "What's riding on it".
     var compact = true
     /// Leading on the cards, trailing in the next-move panel.
     var alignment: HorizontalAlignment = .leading
@@ -100,19 +100,7 @@ struct EstimatedReturnRow: View {
 
     var body: some View {
         Button { if opens { showing = true } } label: {
-            VStack(alignment: alignment, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(value.label).forgeLabelSmall()
-                    if let prefix { Text("\(prefix) ·").forgeLabelSmall() }
-                    if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
-                    if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
-                    figure
-                }
-                if let basis {
-                    Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
-                }
-            }
-            .contentShape(Rectangle())
+            if compact { row } else { stacked }
         }
         .buttonStyle(.plain)
         .disabled(!opens)
@@ -121,6 +109,57 @@ struct EstimatedReturnRow: View {
         .sheet(isPresented: $showing) {
             if let e = idea.latestEvaluation { ProjectionEstimateSheet(idea: idea, evaluation: e) }
         }
+    }
+
+    /// The full panel's column: label, figure and basis on their own lines,
+    /// centred, every line free to wrap. Nothing is ever cut off.
+    private var stacked: some View {
+        VStack(spacing: 8) {
+            Text(value.label).forgeLabelSmall().multilineTextAlignment(.center)
+            Group {
+                switch value {
+                case .yours, .estimate: figure
+                default:
+                    Text(placeholderText)
+                        .font(Font.custom("Fraunces-Italic", size: 18, relativeTo: .body))
+                        .foregroundStyle(ForgeColor.ink)
+                }
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            if let basis {
+                Text(basis).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+
+    private var placeholderText: String {
+        switch value {
+        case .impact(let lead, _): lead
+        case .impactMissing: "Add who it helps"
+        case .unchecked: "Get the panel's take"
+        case .none: "No price found yet"
+        default: "Too early to estimate"
+        }
+    }
+
+    private var row: some View {
+        VStack(alignment: alignment, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(value.label).forgeLabelSmall()
+                if let prefix { Text("\(prefix) ·").forgeLabelSmall() }
+                if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
+                if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
+                figure
+            }
+            if let basis {
+                Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+            }
+        }
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -138,8 +177,8 @@ struct EstimatedReturnRow: View {
             }
         case .impact(let lead, let rest):
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(1)
-                if let rest { Text(rest).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(2)
+                if let rest { Text(rest).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
             }
         case .impactMissing:
             placeholder("Add who it helps")
@@ -154,13 +193,13 @@ struct EstimatedReturnRow: View {
 
     /// Placeholders are 13 pt muted sans, never display serif or colour.
     private func placeholder(_ text: String) -> some View {
-        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
     }
 
     private var basis: String? {
         switch value {
         case .yours(_, let verified): verified ? "your numbers · partly verified" : "your numbers"
-        case .estimate(_, _, let basis): "from " + (basis ?? "the desk research")
+        case .estimate(_, _, let basis): "from " + (basis ?? "online research")
         default: nil
         }
     }
@@ -168,7 +207,7 @@ struct EstimatedReturnRow: View {
     private var accessibility: String {
         switch value {
         case .yours(let m, _): "Estimated return \(Projection.compact(m)) a month, your numbers"
-        case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "the desk research")"
+        case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "online research")"
         case .impact(let lead, let rest): "Impact: \(lead) \(rest ?? "")"
         case .impactMissing: "Impact: add who it helps"
         case .unchecked: "No estimate yet. Get the panel's take to estimate."
@@ -204,7 +243,7 @@ struct ProjectionEstimateSheet: View {
                                 EvidenceChip(pattern: .stripes, size: 12)
                                 Text("\(EstimatedReturn.range(low, high)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink)
                             }
-                            Text("The Investor's estimate, from \(basis ?? "the desk research"). It is AI-found: a range the desk supports, not a projection you made. Nothing is yours until you type it.")
+                            Text("The Investor's estimate, from \(basis ?? "online research"). It is AI-found: a range online research supports, not a projection you made. Nothing is yours until you type it.")
                                 .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         case .tooEarly(let why):
                             Text("Too early").font(ForgeType.numeral).foregroundStyle(ForgeColor.inkSecondary)
@@ -228,7 +267,7 @@ struct ProjectionEstimateSheet: View {
                                     EvidenceChip(pattern: c.source.map { EvidencePattern($0.sourceClass) } ?? .stripes, size: 12).padding(.top, 3)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("\(c.name) · \(c.pricing)").font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
-                                        if let s = c.source { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                                        if let s = c.source { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
                                     }
                                 }
                             }

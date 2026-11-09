@@ -51,7 +51,7 @@ struct ProjectionCard: View {
         if p.isEmpty, let low = evaluation.projectionEstimateLow, let high = evaluation.projectionEstimateHigh, high > 0 {
             HStack(alignment: .top, spacing: ForgeSpacing.xs) {
                 SparkGlyph()
-                Text("The Investor's estimate: \(EstimatedReturn.range(low, high)) a month, from \(evaluation.projectionEstimateBasis ?? "the desk research"). Tap to enter your own; nothing is a projection until you type it.")
+                Text("The Investor's estimate: \(EstimatedReturn.range(low, high)) a month, from \(evaluation.projectionEstimateBasis ?? "online research"). Tap to enter your own; nothing is a projection until you type it.")
                     .font(ForgeType.aiText).foregroundStyle(ForgeColor.spark)
             }
         } else if p.isEmpty, let suggestion = evaluation.projectionSuggestion, !suggestion.isEmpty {

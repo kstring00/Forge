@@ -7,7 +7,7 @@ struct ResearchResponse: Decodable {
         let url: String
         let title: String
         let text: String
-        let kind: String          // "fetched" | "searchHit"
+        let kind: String          // "fetched" | "searchHit" | "noted"
         let retrievedAt: String?
     }
     let status: String            // "done" | "paused"

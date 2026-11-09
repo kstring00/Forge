@@ -10,7 +10,8 @@ struct MembershipView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @State private var period: MembershipStore.Period = .yearly
+    /// Opens on Monthly: the smaller number first (decision 0039).
+    @State private var period: MembershipStore.Period = .monthly
     @State private var managing = false
     @State private var showingPrivacy = false
 
@@ -18,6 +19,9 @@ struct MembershipView: View {
     private var state: MembershipState { env.entitlements.state }
     private var balance: CheckBalance { env.entitlements.balance }
     private var founding: Bool { period == .yearly && store.showsFoundingOffer }
+    /// The one yearly Plus this person is offered: founding for testers, regular otherwise.
+    /// Both tabs quote it, so Monthly and Yearly never disagree.
+    private var plusYearlyID: String { store.showsFoundingOffer ? MembershipProduct.plusFoundingYearly : MembershipProduct.plusYearly }
     private var plusID: String {
         period == .monthly ? MembershipProduct.plusMonthly : (founding ? MembershipProduct.plusFoundingYearly : MembershipProduct.plusYearly)
     }
@@ -125,7 +129,7 @@ struct MembershipView: View {
             ForEach(MembershipStore.Period.allCases, id: \.self) { p in
                 let on = period == p
                 Button { withAnimation(ForgeMotion.settle) { period = p } } label: {
-                    Text(p == .monthly ? "Monthly" : "Yearly · save \(store.saving(monthly: MembershipProduct.plusMonthly, yearly: MembershipProduct.plusYearly))%")
+                    Text(p == .monthly ? "Monthly" : "Yearly · save \(store.saving(monthly: MembershipProduct.plusMonthly, yearly: plusYearlyID))%")
                         .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(on ? ForgeColor.canvas : ForgeColor.inkSecondary)
                         .frame(maxWidth: .infinity).frame(height: 40)
@@ -149,7 +153,7 @@ struct MembershipView: View {
                 Spacer()
                 priceBlock(plusID, otherLine: period == .yearly
                            ? "\(store.perMonth(plusID)) a month · or \(store.price(MembershipProduct.plusMonthly)) monthly"
-                           : "or \(store.price(MembershipProduct.plusYearly)) a year")
+                           : "or \(store.price(plusYearlyID)) a year\(store.showsFoundingOffer ? " as a founding member" : "")")
             }
             Text("15 checks a month. About 15 ideas looked at properly.")
                 .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
@@ -380,12 +384,12 @@ struct ChecksPill: View {
         Button { env.showingMembership = true } label: {
             HStack(spacing: 6) {
                 Image(systemName: "circle.hexagonpath").font(.system(.footnote, weight: .semibold))
-                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(1)
+                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 Image(systemName: "chevron.right").font(.system(.footnote, weight: .bold)).opacity(0.7)
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 12).frame(height: 32)
-            .background(.white.opacity(0.18), in: Capsule())
+            .padding(.horizontal, 12).padding(.vertical, 6).frame(minHeight: 32)
+            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(env.entitlements.balance.line). Opens plans and checks.")

@@ -41,7 +41,7 @@ export interface ResearchSource {
   url: string;
   title: string;
   text: string;
-  kind: "fetched" | "searchHit";
+  kind: "fetched" | "searchHit" | "noted";
   retrievedAt: string | null;
 }
 
@@ -80,8 +80,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (response.stop_reason === "refusal") throw new HttpError(502, "refused", "The model declined this request.");
 
-    const sources = extractSources(response.content);
     const notes = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n\n").trim();
+    const found = extractSources(response.content);
+    const sources = [...found, ...notedSources(notes, found)];
+    console.log(JSON.stringify({
+      at: "research",
+      fetched: found.filter((x) => x.kind === "fetched").length,
+      searchHits: found.filter((x) => x.kind === "searchHit").length,
+      noted: sources.length - found.length,
+    }));
     const u = response.usage;
     const out: ResearchResponse = {
       status: response.stop_reason === "pause_turn" ? "paused" : "done",
@@ -143,6 +150,45 @@ export function extractSources(blocks: Anthropic.ContentBlock[]): ResearchSource
         }
       }
     }
+  }
+  return out;
+}
+
+/// The research notes end every claim with the URL it came from. Each URL the
+/// model did not fetch in full becomes its own source holding the claims made
+/// from it, so the panel can cite the page (a review site, a pricing page, a
+/// forum) instead of the notes, and the app can grade it by what kind of page
+/// it is. The text is the researcher's summary of the page, not the page.
+export function notedSources(notes: string, found: ResearchSource[]): ResearchSource[] {
+  const fetched = new Set(found.filter((f) => f.kind === "fetched").map((f) => f.url));
+  const hits = new Map(found.filter((f) => f.kind === "searchHit").map((f) => [f.url, f]));
+  const claims = new Map<string, string[]>();
+  for (const raw of notes.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const urls = [...line.matchAll(/https?:\/\/[^\s)\]>"']+/g)].map((m) => m[0].replace(/[.,;:!?]+$/, ""));
+    if (!urls.length) continue;
+    const claim = line
+      .replace(/https?:\/\/[^\s)\]>"']+/g, "")
+      .replace(/^(?:[-*•]|\d+[.)])\s+/, "")
+      .replace(/\(\s*\)|\[\s*\]/g, "")
+      .replace(/\s+([.,;:])/g, "$1")
+      .replace(/[\s()[\]\-–—:,;]+$/, "")
+      .trim();
+    if (claim.length < 12) continue;
+    for (const url of new Set(urls)) {
+      if (fetched.has(url)) continue;
+      const list = claims.get(url) ?? [];
+      list.push(claim);
+      claims.set(url, list);
+    }
+  }
+  const out: ResearchSource[] = [];
+  for (const [url, list] of claims) {
+    const hit = hits.get(url);
+    let host = url;
+    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { continue; }
+    out.push({ url, title: hit?.title || host, text: list.map((c) => `- ${c}`).join("\n"), kind: "noted", retrievedAt: hit?.retrievedAt ?? null });
   }
   return out;
 }

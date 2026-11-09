@@ -47,7 +47,9 @@ struct BriefSection: View {
                     if env.entitlements.has(.whatIf) {
                         WhatIfCards(idea: idea, check: check, evaluation: evaluation)
                     } else {
-                        WhatIfLocked(count: check.pivots.count)
+                        // Decision 0038: Free sees the panel's first What-if; the rest are Plus.
+                        WhatIfCards(idea: idea, check: check, evaluation: evaluation, limit: 1)
+                        if check.pivots.count > 1 { WhatIfLocked(count: check.pivots.count - 1) }
                     }
                 }
                 buttons
@@ -117,7 +119,7 @@ struct BriefSection: View {
         return VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Text("What we found").forgeLabel()
             if lines.isEmpty {
-                Text("Nothing the desk could stand behind. The panel says so below.")
+                Text("Nothing online the panel could stand behind. It says so below.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
@@ -125,7 +127,7 @@ struct BriefSection: View {
                     EvidenceChip(pattern: line.1.map { EvidencePattern($0.sourceClass) } ?? .dots, size: 12).padding(.top, 3)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(line.0).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
-                        if let s = line.1 { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                        if let s = line.1 { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
                     }
                 }
             }
@@ -143,7 +145,7 @@ struct BriefSection: View {
                 StripedRingCard(value: e.potential, label: "Potential", tint: ForgeColor.ink, striped: allProposed,
                                 caption: Plain.potential + ". " + (allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment."))
                 StripedRingCard(value: e.confidence, label: "Confidence", tint: ForgeColor.ember, striped: allProposed,
-                                caption: Plain.confidence + ". Desk research only. Rises when you bring something back from the world.")
+                                caption: Plain.confidence + ". From online research only. Rises when real people give time or money.")
             }
             PatternLegend(breakdown: e.confidenceBreakdown)
             ProofBreakdownView(idea: idea, evaluation: e).padding(.top, ForgeSpacing.s)

@@ -190,7 +190,7 @@ enum VaultExporter {
         df.dateStyle = .medium
         df.timeStyle = .short
 
-        out.append("# FORGE Vault")
+        out.append("# Hunch export")
         out.append("")
         out.append("Exported \(df.string(from: doc.exportedAt)). \(doc.ideas.count) \(doc.ideas.count == 1 ? "idea" : "ideas").")
         out.append("")
@@ -319,7 +319,7 @@ enum VaultExporter {
                             recordingsFrom recordingsDir: URL = RecordingStore.directory) throws -> URL {
         let stamp = DateFormatter()
         stamp.dateFormat = "yyyy-MM-dd HHmm"
-        let folder = parent.appendingPathComponent("FORGE Export \(stamp.string(from: doc.exportedAt))", isDirectory: true)
+        let folder = parent.appendingPathComponent("Hunch Export \(stamp.string(from: doc.exportedAt))", isDirectory: true)
         let fm = FileManager.default
         if fm.fileExists(atPath: folder.path) { try fm.removeItem(at: folder) }
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)

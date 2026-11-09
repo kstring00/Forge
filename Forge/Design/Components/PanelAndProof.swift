@@ -10,9 +10,12 @@ enum ProofStage: Equatable {
     case talked(Int)
     case signups(Int)
     case paid
+    /// Someone used it again or asked for more (proof level 5).
+    case cameBack
 
     static func of(_ idea: Idea) -> ProofStage {
         let lived = idea.latestEvaluation?.allEvidence.filter { $0.source?.sourceClass == .userVerified } ?? []
+        if lived.contains(where: { $0.ladderRung >= 5 }) { return .cameBack }
         if lived.contains(where: { $0.ladderRung >= 4 }) || (idea.latestEvaluation?.projection.verifiedUnits ?? 0) > 0 { return .paid }
         let talked = idea.sources.filter { $0.sourceClass == .userVerified && $0.title.hasPrefix(FieldEvidence.conversationKind) }.count
         if talked > 0 { return .talked(talked) }
@@ -23,17 +26,18 @@ enum ProofStage: Equatable {
     var label: String {
         switch self {
         case .none: ""
-        case .deskOnly: "Desk research only"
+        case .deskOnly: "Not tested with people yet"
         case .talked(let n): "Talked to people · \(n)"
         case .signups(let n): "Signups · \(n)"
         case .paid: "Someone paid"
+        case .cameBack: "Someone came back"
         }
     }
 
     /// The proof number appears only once a person has brought something back.
     var showsNumber: Bool {
         switch self {
-        case .talked, .signups, .paid: true
+        case .talked, .signups, .paid, .cameBack: true
         case .none, .deskOnly: false
         }
     }
@@ -65,9 +69,9 @@ struct PanelAndProof: View {
                     Image(systemName: stage == .deskOnly ? "doc.text.magnifyingglass" : "person.2.fill")
                         .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     Text(stage.label + (stage.showsNumber ? " · proof \(evaluation?.confidence ?? 0)" : ""))
-                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
                     if let recent {
-                        Text(recent.line).font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                        Text(recent.line).font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink).lineLimit(2)
                     }
                 }
             }
@@ -88,7 +92,7 @@ struct ProofBreakdownView: View {
             ForEach(evaluation.lens.criteria) { c in
                 if let s = evaluation.criterionScore(for: c.key) { line(c.title, s) }
             }
-            Text("Desk research adds up to 1 level per criterion, more for independent reviewed or published sources than for one forum post. What you bring back from people counts from level 3.")
+            Text("Looking things up online adds up to 1 level per criterion, more for independent reviewed or published sources than for one forum post. What you bring back from people counts from level 3.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             if !idea.proofMoves.isEmpty {
                 Text("Proof history").forgeLabel().padding(.top, ForgeSpacing.s)
@@ -114,7 +118,7 @@ struct ProofBreakdownView: View {
         }
         return HStack(spacing: 6) {
             EvidenceChip(pattern: s.evidenceLevel >= 3 ? .solid : (s.deskSourceCount > 0 ? .stripes : .dots), size: 10)
-            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).lineLimit(1)
+            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

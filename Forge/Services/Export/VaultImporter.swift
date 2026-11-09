@@ -20,7 +20,7 @@ enum ImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedSchema(let v): "This export was made by a newer FORGE (schema \(v)). Update the app and try again."
+        case .unsupportedSchema(let v): "This export was made by a newer Hunch (schema \(v)). Update the app and try again."
         case .noVaultFile: "That folder doesn't contain a vault.json."
         }
     }

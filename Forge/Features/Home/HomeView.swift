@@ -85,7 +85,7 @@ struct HomeView: View {
                     .accessibilityLabel("Settings")
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("From idea\nto reality")
+                    Text("Have a hunch?")
                         .font(Font.custom("Fraunces-SemiBold", size: 40, relativeTo: .largeTitle))
                         .foregroundStyle(ForgeColor.ink)
                         .lineSpacing(-2)
@@ -181,7 +181,8 @@ struct HomeView: View {
                 Text("Everything you have is in the card above.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(listed.prefix(8)) { idea in
-                StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
+                // Decision 0038: one card design everywhere.
+                IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
             }
         }
         .padding(.top, ForgeSpacing.s)
@@ -273,7 +274,7 @@ struct StakeCard: View {
     private var heading: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).lineLimit(1)
+                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 StageTrail(track: idea.track)
             }

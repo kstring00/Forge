@@ -235,10 +235,10 @@ struct VerdictCard: View {
                 Text("No source")
             }
         }
-        .font(.system(.footnote, design: .monospaced, weight: .medium))
-        .textCase(.uppercase).kerning(0.6)
+        .font(.footnote)
         .foregroundStyle(ForgeColor.inkSecondary)
-        .lineLimit(1)
+        .lineLimit(3)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func rulingLine(_ ruling: Ruling) -> some View {

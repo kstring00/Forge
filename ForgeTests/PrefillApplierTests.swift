@@ -155,6 +155,22 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertEqual(idea.sources.count, 2)
     }
 
+    func testPagesTheNotesCiteBecomeGradedSources() throws {
+        let idea = Idea(originalText: "Website care for RV parks")
+        store.context.insert(idea)
+        let saved = PrefillApplier.saveResearch([
+            .init(url: "https://www.g2.com/products/campspot/reviews", title: "Campspot reviews", text: "- Owners say the widget breaks on mobile", kind: "noted", retrievedAt: nil),
+            .init(url: "https://www.reddit.com/r/RVLiving/comments/1", title: "reddit.com", text: "- An owner asks who builds park sites", kind: "noted", retrievedAt: nil),
+        ], notes: "notes", to: idea)
+        XCTAssertEqual(saved.count, 3, "two cited pages plus the notes")
+        XCTAssertEqual(saved[0].url, "https://www.g2.com/products/campspot/reviews")
+        XCTAssertEqual(saved[0].evidenceRank, .reviewed)
+        XCTAssertEqual(saved[1].evidenceRank, .discussed)
+        let grade = DeskGrade.level(sources: saved.prefix(2).map { ($0.url, $0.evidenceRank) }, proposedLevel: 2)
+        XCTAssertEqual(grade.independentSources, 2)
+        XCTAssertGreaterThan(grade.level, 1.0, "real pages lift a criterion off the floor")
+    }
+
     func testSpendAccounting() {
         let suite = UserDefaults(suiteName: "forge.tests.spend.\(UUID().uuidString)")!
         AISpend.defaults = suite

@@ -19,6 +19,8 @@ final class FirstRun {
     /// Debug: the flow runs again on top of real state and leaves it alone.
     private(set) var replaying = false
     private var replayDismissed: Set<GuideStep> = []
+    /// The replay's own "welcome seen", so leaving the welcome during a replay never brings it back.
+    private var replayWelcomeSeen = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -29,10 +31,15 @@ final class FirstRun {
     // MARK: Welcome
 
     /// The welcome shows once, before anything exists; and again on replay.
-    func showsWelcome(ideasEmpty: Bool) -> Bool { replaying || (!welcomeSeen && ideasEmpty) }
+    func showsWelcome(ideasEmpty: Bool) -> Bool {
+        replaying ? !replayWelcomeSeen : (!welcomeSeen && ideasEmpty)
+    }
 
     func markWelcomeSeen() {
-        guard !replaying else { return }
+        if replaying {
+            replayWelcomeSeen = true
+            return
+        }
         welcomeSeen = true
         defaults.set(true, forKey: Self.welcomeKey)
     }
@@ -66,12 +73,14 @@ final class FirstRun {
 
     func startReplay() {
         replayDismissed = []
+        replayWelcomeSeen = false
         replaying = true
     }
 
     func endReplay() {
         replaying = false
         replayDismissed = []
+        replayWelcomeSeen = false
     }
 }
 

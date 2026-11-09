@@ -51,7 +51,12 @@ struct CriterionDetailView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("\(criterion.key) · \(criterion.frameworks.map(\.name).joined(separator: ", "))").forgeLabel().lineLimit(2)
+            Text(criterion.key).forgeLabel()
+            if !criterion.frameworks.isEmpty {
+                Text("Drawn from \(criterion.frameworks.map(\.name).joined(separator: ", "))")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(criterion.title)
                 .font(ForgeType.ideaTitleHero)
                 .foregroundStyle(ForgeColor.ink)
@@ -200,9 +205,11 @@ struct CriterionDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("\(i + 1). \(step.title)").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer()
-                        Text("\(Plain.level(step.reachesRung)) · \(step.effort)").forgeLabelSmall()
                     }
+                    Text("\(Plain.level(step.reachesRung)) · \(step.effort)").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(step.body).font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
                 }
                 .padding(ForgeSpacing.m)

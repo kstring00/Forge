@@ -37,7 +37,7 @@ struct PatternsView: View {
     private var waiting: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Text("\(patterns.outcomes) of \(Patterns.minimumOutcomes) outcomes recorded.").font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
-            Text("When you record what happened on an idea, FORGE asks which of the panel's points it settled. After three, your record appears here: which voices you overrule and how that turns out, and which criteria you score high or low. Nothing is guessed before then.")
+            Text("When you record what happened on an idea, Hunch asks which of the panel's points it settled. After three, your record appears here: which voices you overrule and how that turns out, and which criteria you score high or low. Nothing is guessed before then.")
                 .font(.system(.subheadline)).foregroundStyle(ForgeColor.inkSecondary)
         }
         .padding(ForgeSpacing.cardPadding)

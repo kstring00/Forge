@@ -66,4 +66,17 @@ final class ProofTests: XCTestCase {
         XCTAssertEqual(ProofStage.of(idea), .talked(1))
         XCTAssertTrue(ProofStage.of(idea).showsNumber)
     }
+
+    func testProofTileNamesTheNextStep() throws {
+        let idea = Idea(originalText: "Clinic-issued ID tags handed to parents at intake")
+        store.context.insert(idea)
+        prefill(idea, citing: "https://www.reddit.com/r/autism/comments/3")
+        XCTAssertEqual(ProofStage.of(idea).nextStep(for: idea), "talk to 3 people who'd buy it")
+        XCTAssertEqual(ProofStage.talked(3).nextStep(for: idea), "ask one of them to pay")
+
+        let project = WorkshopActions.convert(idea, with: .init(name: "Tags", desiredOutcome: "", nextStep: "Call Shady Oaks"), in: store.context)
+        WorkshopActions.setNextStep(project, "Call Shady Oaks", target: 1, criterionKey: "A2")
+        XCTAssertEqual(ProofStage.of(idea).nextStep(for: idea), "Call Shady Oaks", "the idea's own step wins")
+        XCTAssertEqual(ProofStage.sentence("talk to 3 people"), "Talk to 3 people.")
+    }
 }

@@ -131,21 +131,7 @@ struct InterviewSheet: View {
         if finishing {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 Text("What did they give?").forgeSubhead()
-                HStack(spacing: 8) {
-                    ForEach([3, 4, 5], id: \.self) { r in
-                        let on = effectiveRung == r
-                        Button { rung = r } label: {
-                            Text(RungInference.label(r))
-                                .font(.system(.footnote, weight: .medium))
-                                .foregroundStyle(on ? .white : ForgeColor.ink)
-                                .padding(.horizontal, 12).frame(height: 32)
-                                .background(on ? ForgeColor.ember : ForgeColor.surface, in: Capsule())
-                                .overlay(Capsule().strokeBorder(on ? Color.clear : ForgeColor.line))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(on ? .isSelected : [])
-                    }
-                }
+                RungChoices(options: [3, 4, 5], selected: effectiveRung) { rung = $0 }
                 Text("\(Plain.rung(effectiveRung).prefix(1).uppercased() + Plain.rung(effectiveRung).dropFirst()). Saved as verified by you, counted as one of \(project.effectiveTarget), and written to the Journal.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 Button {

@@ -34,6 +34,8 @@ struct IdeaCard: View {
                 } else {
                     header
                 }
+                // Full width under the header, outside its link: the meters, the estimate, the What-if.
+                statusBlock
                 if showsAction { CardPrimaryAction(idea: idea) }
             }
             .padding(ForgeSpacing.cardPadding)
@@ -48,7 +50,7 @@ struct IdeaCard: View {
             IdeaSpark(idea: idea, size: 44)
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 HStack(spacing: ForgeSpacing.m) {
-                    Text(topLine).forgeLabelSmall().lineLimit(1)
+                    Text(topLine).forgeLabelSmall().lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     StageTrail(track: track)
                 }
@@ -57,7 +59,6 @@ struct IdeaCard: View {
                     .foregroundStyle(ForgeColor.ink)
                     .lineLimit(2)
                 IdeaSubtitle(idea: idea)
-                statusBlock
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,11 +107,13 @@ struct IdeaCard: View {
         case .impact:
             EstimatedReturnRow(idea: idea)
         case .checked:
-            // Decision 0037: the panel's view of potential, proof as a stage, no "Confidence".
-            VStack(alignment: .leading, spacing: 6) {
-                PanelAndProof(idea: idea)
+            // Decision 0038: words and shapes, not bare numbers; then the panel's best What-if.
+            VStack(alignment: .leading, spacing: 12) {
+                CardMeters(idea: idea)
                 EstimatedReturnRow(idea: idea)
+                WhatIfTeaser(idea: idea)
             }
+            .padding(.top, 4)
         }
     }
 
@@ -157,7 +160,7 @@ struct IdeaSubtitle: View {
 
     var body: some View {
         if !words.isEmpty && words != idea.title {
-            Text(words).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+            Text(words).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(3)
         }
     }
 }

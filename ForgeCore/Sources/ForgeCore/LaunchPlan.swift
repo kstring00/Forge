@@ -153,7 +153,7 @@ extension CheckLedger {
     /// when what they paid for arrived.
     public mutating func spend(_ checks: Int, _ state: MembershipState, now: Date, calendar: Calendar = .current) {
         roll(state, now: now, calendar: calendar)
-        for _ in 0..<max(0, checks) { _ = spendOne(state) }
+        for _ in 0..<max(0, checks) { _ = spendOne(state, now: now) }
     }
 }
 

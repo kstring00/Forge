@@ -249,7 +249,7 @@ struct StakesPanel: View {
                             } else {
                                 VStack(spacing: 4) {
                                     Image(systemName: "doc.text.magnifyingglass").font(.title3).foregroundStyle(ForgeColor.inkSecondary).frame(width: 56, height: 56)
-                                    Text("Desk research only").forgeLabelSmall()
+                                    Text("Not tested yet").forgeLabelSmall()
                                 }
                             }
                         }
@@ -331,7 +331,7 @@ enum NextStepPlan {
 
     /// "This step is how 33 becomes a real number. Five conversations move Demand to rung 3."
     static func ridingLine(confidence: Int, target: Int, moves: String?, hasProof: Bool = true) -> String {
-        let first = hasProof ? "This step is how \(confidence) becomes a real number." : "This step turns desk research into proof."
+        let first = hasProof ? "This step is how \(confidence) becomes a real number." : "This step tests it with real people."
         let countWord = spelled(target)
         let unit = target == 1 ? "conversation" : "conversations"
         if let moves = moves?.trimmingCharacters(in: .whitespacesAndNewlines), !moves.isEmpty {

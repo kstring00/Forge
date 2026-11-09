@@ -160,7 +160,7 @@ struct EstimatedReturnRow: View {
     private var basis: String? {
         switch value {
         case .yours(_, let verified): verified ? "your numbers · partly verified" : "your numbers"
-        case .estimate(_, _, let basis): "from " + (basis ?? "the desk research")
+        case .estimate(_, _, let basis): "from " + (basis ?? "online research")
         default: nil
         }
     }
@@ -168,7 +168,7 @@ struct EstimatedReturnRow: View {
     private var accessibility: String {
         switch value {
         case .yours(let m, _): "Estimated return \(Projection.compact(m)) a month, your numbers"
-        case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "the desk research")"
+        case .estimate(let l, let h, let b): "Estimated return \(EstimatedReturn.range(l, h)) a month, from \(b ?? "online research")"
         case .impact(let lead, let rest): "Impact: \(lead) \(rest ?? "")"
         case .impactMissing: "Impact: add who it helps"
         case .unchecked: "No estimate yet. Get the panel's take to estimate."
@@ -204,7 +204,7 @@ struct ProjectionEstimateSheet: View {
                                 EvidenceChip(pattern: .stripes, size: 12)
                                 Text("\(EstimatedReturn.range(low, high)) / mo").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink)
                             }
-                            Text("The Investor's estimate, from \(basis ?? "the desk research"). It is AI-found: a range the desk supports, not a projection you made. Nothing is yours until you type it.")
+                            Text("The Investor's estimate, from \(basis ?? "online research"). It is AI-found: a range online research supports, not a projection you made. Nothing is yours until you type it.")
                                 .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                         case .tooEarly(let why):
                             Text("Too early").font(ForgeType.numeral).foregroundStyle(ForgeColor.inkSecondary)

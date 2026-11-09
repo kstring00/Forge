@@ -177,7 +177,7 @@ final class RealityCheckRunner {
 
     /// What Stop leaves behind: the step it stopped in, and that the spend is in Settings.
     static func stoppedLine(step: Step, spentUSD: Double) -> String {
-        let at = step == .research ? "during the desk research" : "before the Brief was written"
+        let at = step == .research ? "during the research" : "before the Brief was written"
         let spent = spentUSD > 0 ? " It doesn't count against your checks." : " Nothing was charged."
         return "Stopped \(at). Nothing was saved.\(spent)"
     }
@@ -188,7 +188,7 @@ final class RealityCheckRunner {
     /// it rather than quietly going back to idle. No prices: Settings → Spend
     /// has those.
     static func failurePhase(_ error: Error, step: Step, pagesSaved: Int, spentUSD: Double) -> Phase {
-        let what = step == .research ? "The desk research stopped" : "The panel stopped before the Brief"
+        let what = step == .research ? "The research stopped" : "The panel stopped before the Brief"
         let kept = pagesSaved > 0
             ? " \(pagesSaved) \(pagesSaved == 1 ? "source it found is" : "sources it found are") saved in the Library."
             : " Nothing was saved."

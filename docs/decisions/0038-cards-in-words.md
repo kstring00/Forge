@@ -37,3 +37,5 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   couldn't reach the panel just now") and keep the developer detail (tokens, status codes,
   Vercel logs) behind Details; the server address in Settings shows only in Debug builds; the
   "what is sent" list drops its phase numbers.
+- **No "desk" on cards.** Proof's first step is "Not tested yet" on the card and "Looked up
+  online" in the four steps; "desk research" elsewhere in the app reads "online research".

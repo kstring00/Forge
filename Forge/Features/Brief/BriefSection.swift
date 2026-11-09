@@ -119,7 +119,7 @@ struct BriefSection: View {
         return VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Text("What we found").forgeLabel()
             if lines.isEmpty {
-                Text("Nothing the desk could stand behind. The panel says so below.")
+                Text("Nothing online the panel could stand behind. It says so below.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
@@ -145,7 +145,7 @@ struct BriefSection: View {
                 StripedRingCard(value: e.potential, label: "Potential", tint: ForgeColor.ink, striped: allProposed,
                                 caption: Plain.potential + ". " + (allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment."))
                 StripedRingCard(value: e.confidence, label: "Confidence", tint: ForgeColor.ember, striped: allProposed,
-                                caption: Plain.confidence + ". Desk research only. Rises when you bring something back from the world.")
+                                caption: Plain.confidence + ". From online research only. Rises when real people give time or money.")
             }
             PatternLegend(breakdown: e.confidenceBreakdown)
             ProofBreakdownView(idea: idea, evaluation: e).padding(.top, ForgeSpacing.s)

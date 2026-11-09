@@ -26,7 +26,7 @@ enum ProofStage: Equatable {
     var label: String {
         switch self {
         case .none: ""
-        case .deskOnly: "Desk research only"
+        case .deskOnly: "Not tested with people yet"
         case .talked(let n): "Talked to people · \(n)"
         case .signups(let n): "Signups · \(n)"
         case .paid: "Someone paid"
@@ -92,7 +92,7 @@ struct ProofBreakdownView: View {
             ForEach(evaluation.lens.criteria) { c in
                 if let s = evaluation.criterionScore(for: c.key) { line(c.title, s) }
             }
-            Text("Desk research adds up to 1 level per criterion, more for independent reviewed or published sources than for one forum post. What you bring back from people counts from level 3.")
+            Text("Looking things up online adds up to 1 level per criterion, more for independent reviewed or published sources than for one forum post. What you bring back from people counts from level 3.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             if !idea.proofMoves.isEmpty {
                 Text("Proof history").forgeLabel().padding(.top, ForgeSpacing.s)

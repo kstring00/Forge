@@ -109,7 +109,7 @@ extension ProofStage {
     /// The four steps of proof, the same words as "What did they give?":
     /// desk research · gave time (talked, or signed up) · paid · came back.
     static let steps: [(title: String, detail: String)] = [
-        ("Desk research", "The panel read the web. It shows the market exists, not that anyone wants yours."),
+        ("Looked up online", "The panel searched the web. That shows people buy things like this, not that anyone wants yours yet."),
         ("Gave time", "A real person talked with you about the problem, or signed up to hear more."),
         ("Paid", "Someone paid or put money down."),
         ("Came back", "Someone used it again, renewed, or asked for more. The strongest proof there is."),
@@ -128,7 +128,7 @@ extension ProofStage {
     var cardWord: String {
         switch self {
         case .none: "Not checked"
-        case .deskOnly: "Desk only"
+        case .deskOnly: "Not tested yet"
         case .talked(let n): "Talked to \(n)"
         case .signups(let n): "\(n) signups"
         case .paid: "Someone paid"

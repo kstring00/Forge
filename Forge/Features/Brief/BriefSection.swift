@@ -127,7 +127,7 @@ struct BriefSection: View {
                     EvidenceChip(pattern: line.1.map { EvidencePattern($0.sourceClass) } ?? .dots, size: 12).padding(.top, 3)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(line.0).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
-                        if let s = line.1 { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                        if let s = line.1 { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
                     }
                 }
             }

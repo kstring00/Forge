@@ -39,3 +39,8 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   "what is sent" list drops its phase numbers.
 - **No "desk" on cards.** Proof's first step is "Not tested yet" on the card and "Looked up
   online" in the four steps; "desk research" elsewhere in the app reads "online research".
+- **Nothing that matters is cut off.** Labels carrying lists ("Criteria · The Mom Test, The
+  Lean Startup, …", a criterion's frameworks) become a short label plus a wrapping sentence
+  ("Drawn from …"). Words on cards, tiles, buttons, the checks pill, source titles and the
+  Hear-the-panel source line wrap to two or three lines instead of ending in "…". Still one
+  line on purpose: an idea's own words under its title, step counts, and web addresses.

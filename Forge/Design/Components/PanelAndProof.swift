@@ -69,9 +69,9 @@ struct PanelAndProof: View {
                     Image(systemName: stage == .deskOnly ? "doc.text.magnifyingglass" : "person.2.fill")
                         .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     Text(stage.label + (stage.showsNumber ? " · proof \(evaluation?.confidence ?? 0)" : ""))
-                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
                     if let recent {
-                        Text(recent.line).font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                        Text(recent.line).font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink).lineLimit(2)
                     }
                 }
             }
@@ -118,7 +118,7 @@ struct ProofBreakdownView: View {
         }
         return HStack(spacing: 6) {
             EvidenceChip(pattern: s.evidenceLevel >= 3 ? .solid : (s.deskSourceCount > 0 ? .stripes : .dots), size: 10)
-            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).lineLimit(1)
+            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

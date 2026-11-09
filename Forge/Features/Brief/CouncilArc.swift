@@ -86,7 +86,7 @@ struct CouncilArc: View {
     private var inside: some View {
         VStack(spacing: 4) {
             Text("The panel on").forgeLabelSmall()
-            Text(title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(1)
+            Text(title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.center)
             if isWorking {
                 Text("Working").font(ForgeType.statement).foregroundStyle(ForgeColor.inkSecondary)
             } else if let verdict {
@@ -165,7 +165,7 @@ struct VerdictVoice: View {
                     ForEach(verdict.sources.prefix(3)) { s in
                         HStack(spacing: 4) {
                             EvidenceChip(pattern: EvidencePattern(s.sourceClass), size: 10)
-                            Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                            Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
                         }
                     }
                 }

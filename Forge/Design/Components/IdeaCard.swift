@@ -50,7 +50,7 @@ struct IdeaCard: View {
             IdeaSpark(idea: idea, size: 44)
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 HStack(spacing: ForgeSpacing.m) {
-                    Text(topLine).forgeLabelSmall().lineLimit(1)
+                    Text(topLine).forgeLabelSmall().lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     StageTrail(track: track)
                 }

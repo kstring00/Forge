@@ -109,7 +109,7 @@ struct EstimatedReturnRow: View {
                     figure
                 }
                 if let basis {
-                    Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+                    Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
                 }
             }
             .contentShape(Rectangle())
@@ -138,8 +138,8 @@ struct EstimatedReturnRow: View {
             }
         case .impact(let lead, let rest):
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(1)
-                if let rest { Text(rest).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                Text(lead).font(ForgeType.numeralSmall).foregroundStyle(Color(hex: 0x7CCB9F)).lineLimit(2)
+                if let rest { Text(rest).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
             }
         case .impactMissing:
             placeholder("Add who it helps")
@@ -154,7 +154,7 @@ struct EstimatedReturnRow: View {
 
     /// Placeholders are 13 pt muted sans, never display serif or colour.
     private func placeholder(_ text: String) -> some View {
-        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+        Text(text).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
     }
 
     private var basis: String? {
@@ -228,7 +228,7 @@ struct ProjectionEstimateSheet: View {
                                     EvidenceChip(pattern: c.source.map { EvidencePattern($0.sourceClass) } ?? .stripes, size: 12).padding(.top, 3)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("\(c.name) · \(c.pricing)").font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
-                                        if let s = c.source { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                                        if let s = c.source { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
                                     }
                                 }
                             }

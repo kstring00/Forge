@@ -105,7 +105,7 @@ struct ProjectDetailView: View {
                         Text("From: \(idea.title)")
                             .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
-                            .lineLimit(1)
+                            .lineLimit(2)
                     }
                 }
             }

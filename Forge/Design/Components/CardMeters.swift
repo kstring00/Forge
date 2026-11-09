@@ -30,7 +30,7 @@ struct CardMeters: View {
                 Text(PotentialWord.word(p))
                     .font(Font.custom("Fraunces-SemiBold", size: 20, relativeTo: .title3))
                     .foregroundStyle(ForgeColor.ink)
-                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
                 Segments(filled: PotentialWord.segments(p), of: 5)
             } else if let verdict = idea.latestRealityCheck?.verdict {
                 Text(verdict.displayName)
@@ -59,7 +59,7 @@ struct CardMeters: View {
             Text(stage.cardWord)
                 .font(Font.custom("Fraunces-SemiBold", size: 20, relativeTo: .title3))
                 .foregroundStyle(ForgeColor.ink)
-                .lineLimit(1).minimumScaleFactor(0.8)
+                .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
             ProofLadder(reached: stage.ladderIndex)
         } caption: {
             if let move = idea.proofMoves.last, move.isRecent() {
@@ -80,7 +80,7 @@ struct CardMeters: View {
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
             }
             value()
-            caption().font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+            caption().font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
@@ -203,7 +203,7 @@ struct WhatIfTeaser: View {
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                         Text("Raises \(Lenses.criterion(pivot.fixes, in: idea.lensType ?? .business)?.title ?? pivot.fixes) · the panel's idea")
-                            .forgeLabelSmall().lineLimit(1)
+                            .forgeLabelSmall().lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 4)
                     Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 3)

@@ -380,12 +380,12 @@ struct ChecksPill: View {
         Button { env.showingMembership = true } label: {
             HStack(spacing: 6) {
                 Image(systemName: "circle.hexagonpath").font(.system(.footnote, weight: .semibold))
-                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(1)
+                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 Image(systemName: "chevron.right").font(.system(.footnote, weight: .bold)).opacity(0.7)
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 12).frame(height: 32)
-            .background(.white.opacity(0.18), in: Capsule())
+            .padding(.horizontal, 12).padding(.vertical, 6).frame(minHeight: 32)
+            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(env.entitlements.balance.line). Opens plans and checks.")

@@ -89,7 +89,7 @@ struct PanelsTakeCard: View {
         return VStack(alignment: .trailing, spacing: 2) {
             Text("\(e.potential)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
             Text("Potential · panel's view").forgeLabelSmall()
-            Text(stage.label + (stage.showsNumber ? " · proof \(e.confidence)" : "")).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+            Text(stage.label + (stage.showsNumber ? " · proof \(e.confidence)" : "")).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Potential \(e.potential), the panel's view. \(stage.label).")
@@ -166,7 +166,7 @@ struct PanelsTakeCard: View {
                 if let evaluation {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("\(evaluation.potential)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
-                        Text(ProofStage.of(idea).label).forgeLabelSmall().lineLimit(1)
+                        Text(ProofStage.of(idea).label).forgeLabelSmall().lineLimit(2).multilineTextAlignment(.trailing)
                     }
                 }
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)

@@ -120,7 +120,7 @@ struct NextStepCard: View {
                     Button { interview = .read(i) } label: {
                         HStack(spacing: ForgeSpacing.s) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                                Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(2)
                                 Text("\(i.answeredCount) of \(i.answers.count) answered · \(i.updatedAt.formatted(date: .abbreviated, time: .omitted))\(i.rung.map { " · \(RungInference.label($0))" } ?? "")")
                                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                             }

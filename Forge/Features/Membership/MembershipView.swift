@@ -162,9 +162,8 @@ struct MembershipView: View {
             Text("\(Plan.plus.monthlyChecks) checks a month. About \(Plan.plus.monthlyChecks) ideas looked at properly. Unused checks carry into next month.")
                 .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             VStack(alignment: .leading, spacing: 8) {
-                check("Argue it out with the panel when you disagree")
                 check("Your patterns: learn where your instincts are right")
-                check("The Library: every source, ask it anything")
+                check("Unused checks carry into next month")
             }
             primaryButton(plusTitle, id: plusID, emphasised: true)
             Text(plusFinePrint).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).frame(maxWidth: .infinity)
@@ -230,7 +229,7 @@ struct MembershipView: View {
                 Spacer()
                 Text(state.plan == .free ? "Your plan" : "$0").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             }
-            Text("\(Plan.free.monthlyChecks) \(Plan.free.monthlyChecks == 1 ? "check" : "checks") a month, each with its Sparks. Once an idea is checked, its launch plan and re-scores are included. Catching ideas, your steps and the Journal are free forever.")
+            Text("\(Plan.free.monthlyChecks) \(Plan.free.monthlyChecks == 1 ? "check" : "checks") a month, each with its Sparks. Once an idea is checked, its launch plan and re-scores are included. Catching ideas, your Library, your steps and the Journal are free forever.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             if state.plan != .free {
                 Button("To go back to Free, cancel in Manage subscription") { managing = true }

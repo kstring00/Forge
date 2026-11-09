@@ -10,9 +10,9 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 
 | Plan | Monthly | Yearly | Checks / month | Includes |
 |---|---|---|---|---|
-| Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel |
-| Plus | $9.99 | $59.99 | 15 | Argue it out (fair use 30/mo), Your patterns, the Library |
-| Pro | $24.99 | $179.99 | 60 | Everything in Plus, faster answers (priority), deep research |
+| Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel, including the Library |
+| Plus | $9.99 | $59.99 | 15 | Your patterns |
+| Pro | $24.99 | $179.99 | 60 (leaning 50, decided after the bench) | Everything in Plus, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
 - Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed.

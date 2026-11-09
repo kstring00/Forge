@@ -20,8 +20,8 @@ public enum Plan: String, Codable, CaseIterable, Sendable, Comparable {
     public func includes(_ feature: PlanFeature) -> Bool {
         switch feature {
         // Decision 0040: What-ifs (Sparks) are free on every plan.
-        case .whatIf: true
-        case .argueItOut, .library: self >= .plus
+        // Decision 0042: the Library is your own work, on every plan.
+        case .whatIf, .library: true
         case .priority, .deepResearch, .reports: self == .pro
         }
     }
@@ -31,9 +31,11 @@ public enum Plan: String, Codable, CaseIterable, Sendable, Comparable {
 }
 
 /// What a plan unlocks beyond checks. Your own work (capture, the Vault, steps,
-/// logging, rulings, the Journal, Your patterns' data) is never on this list.
+/// logging, rulings, the Journal, the Library, Your patterns' data) is never
+/// locked. Decision 0042: "Argue it out" is gone; arguing with the panel is the
+/// Tank, included on every plan.
 public enum PlanFeature: String, Sendable {
-    case whatIf, argueItOut, library, priority, deepResearch, reports
+    case whatIf, library, priority, deepResearch, reports
 }
 
 /// App Store product ids, as in docs/PRICING.md and Hunch.storekit.

@@ -204,6 +204,7 @@ Target per full Tank (research + 5 blind verdicts + Advocate + in/out + ≤ 3 co
 - Hard caps on the proxy: per-user checks per period (from the ledger), a global daily ceiling that pauses politely, stop button honored at every stage boundary, failed or stopped runs never count.
 - Every stage logs tokens and dollars per provider; Settings → Spend shows cost by stage so the expensive layer is always visible.
 - **Launch plans** (decision 0041): one call, no web research, built from the saved research packet, the Deal and what the person logged. Included on every plan since decision 0042.
+- **Decision 0042:** the Advocate comes with the Tank; a check's panel stays the five voices until then.
 - **Decision 0042, how a check runs now:** one research pass (Haiku, web search and fetch) writes notes in fixed sections; the proxy turns them into a research packet (every finding with its page). The five panelists score from the packet on the scoring model (Haiku); the brief model (Sonnet) writes the Brief, next step and What-ifs from the packet and those scores. Models per role are in `proxy/config/hunch.ts`. The packet is saved with the idea; every follow-up (launch plan, update, re-score, the Tank) reads it and never searches. Only researching costs a check; follow-ups are included under a daily fair-use limit.
 
 ---

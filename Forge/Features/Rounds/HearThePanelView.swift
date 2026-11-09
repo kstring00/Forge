@@ -6,8 +6,8 @@ import ForgeCore
 /// sat next to each other under an ember Split bracket that opens the
 /// crossfire, Agree / Disagree / Find out on every card, the Steward as a
 /// dashed placeholder until Phase 5, and the summary once every verdict is
-/// ruled. Rulings land in the Journal as they happen. "Argue it out" arrives
-/// with credits.
+/// ruled. Rulings land in the Journal as they happen. Arguing with the panel
+/// arrives with the Tank (decision 0042), included on every plan.
 struct HearThePanelView: View {
     @Bindable var round: Round
     @Environment(\.modelContext) private var context

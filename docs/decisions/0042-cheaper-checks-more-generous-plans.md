@@ -34,3 +34,11 @@ The check itself gets a little cheaper; everything after it gets much cheaper, w
 **Decided by the developer (Nov 9):** the Brief runs on Sonnet everywhere (no Opus); scoring stays on Haiku; research is unchanged. Rollover on plan changes, the fair-use limits (3 plans, 10 re-scores, 3 Tank runs per idea per day) and keeping the packet on the phone are approved as built. Check allowances per plan stay as they are until the bench gives real numbers.
 
 Caching saves most when checks run within five minutes of each other (many users). At a handful of checks a day the stable prefix is mostly written, not read, which costs 25% more on those tokens; the log shows which.
+
+## Follow-up decisions (Nov 9, evening)
+- **The Library is on every plan**, with pinned facts when they are built: adding your own sources is your own work. `Plan.includes(.library)` is true on Free.
+- **"Argue it out" is gone from Plus.** It was never built, and arguing with the panel is the Tank, which is included on every plan. Plus is now more checks (15, carried over) and Your patterns. The App Store descriptions in RELEASE.md are updated to match.
+- **The Advocate comes with the Tank**, not the current check. Today's panel stays five (investor, customer, builder, strategist, skeptic); adding a sixth voice to every check would add a call while this decision is cutting costs. ENGINE.md §2 already places the Advocate in the Tank, in the Steward's seat.
+- **Pro is leaning to 50 checks** (60 until the bench gives real cost per check). Open question: who Pro is for. The likeliest buyers are people who evaluate other people's ideas: coaches, consultants, accelerators.
+- **Working name: Hunch.** Not committed yet; the name collides with dating apps.
+- **Under the Hood** (See the Work, the Library, pinned facts, panelist weights, build-your-own panel, export) is the next feature after this PR merges.

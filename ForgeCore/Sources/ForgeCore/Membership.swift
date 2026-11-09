@@ -14,14 +14,8 @@ public enum Plan: String, Codable, CaseIterable, Sendable, Comparable {
         }
     }
 
-    /// Checks a month on this plan.
-    public var monthlyChecks: Int {
-        switch self {
-        case .free: 1
-        case .plus: 15
-        case .pro: 60
-        }
-    }
+    /// Checks a month on this plan, from the rules in force (decision 0042).
+    public var monthlyChecks: Int { PlanRules.current.monthlyChecks(for: self) }
 
     public func includes(_ feature: PlanFeature) -> Bool {
         switch feature {
@@ -51,7 +45,8 @@ public enum MembershipProduct {
     public static let proMonthly = "hunch.pro.monthly"
     public static let proYearly = "hunch.pro.yearly"
     public static let topUp5 = "hunch.topup.5"
-    public static let topUpChecks = 5
+    /// Checks in one top-up, from the rules in force (decision 0042).
+    public static var topUpChecks: Int { PlanRules.current.topUpChecks }
 
     public static let subscriptions = [plusMonthly, plusYearly, plusFoundingYearly, proMonthly, proYearly]
     public static let all = subscriptions + [topUp5]
@@ -99,7 +94,8 @@ public struct MembershipState: Codable, Equatable, Sendable {
     public var renewsAt: Date?
     public var founding: Bool
 
-    public static let trialChecks = 5
+    /// Plus's trial cap, from the rules in force (decision 0042).
+    public static var trialChecks: Int { PlanRules.current.trialChecks }
     public static let free = MembershipState(plan: .free, isTrial: false, anchor: nil, productID: nil, renewsAt: nil, founding: false)
 
     public init(plan: Plan, isTrial: Bool, anchor: Date?, productID: String?, renewsAt: Date?, founding: Bool) {

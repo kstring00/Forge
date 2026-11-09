@@ -22,3 +22,11 @@ test("the cache log reads hits and misses from the API's usage", () => {
     { at: "cache", label: "action.prefill.score", model: "claude-haiku-5-5", read: 6000, written: 0, fresh: 2000, hitRate: 0.75, result: "hit" });
   assert.equal(cacheLine("x", "m", { input_tokens: 2000, cache_read_input_tokens: 0, cache_creation_input_tokens: 6000 }).result, "miss");
 });
+
+test("the plan numbers the server sends are the ones the app ships with", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { hunchConfig } = await import("../lib/config.js");
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/rules.json", import.meta.url), "utf8"));
+  assert.deepEqual(JSON.parse(JSON.stringify(hunchConfig.rules)), fixture,
+    "config/hunch.ts rules and test/fixtures/rules.json differ: change both, and ForgeCore's PlanRules defaults (RulesFixtureTests checks those)");
+});

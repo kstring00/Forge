@@ -159,7 +159,7 @@ struct MembershipView: View {
                            ? "\(store.perMonth(plusID)) a month · or \(store.price(MembershipProduct.plusMonthly)) monthly"
                            : "or \(store.price(plusYearlyID)) a year\(store.showsFoundingOffer ? " as a founding member" : "")")
             }
-            Text("15 checks a month. About 15 ideas looked at properly.")
+            Text("\(Plan.plus.monthlyChecks) checks a month. About \(Plan.plus.monthlyChecks) ideas looked at properly. Unused checks carry into next month.")
                 .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             VStack(alignment: .leading, spacing: 8) {
                 check("Argue it out with the panel when you disagree")
@@ -207,7 +207,7 @@ struct MembershipView: View {
                 Spacer()
                 priceBlock(proID, otherLine: period == .yearly ? "or \(store.price(MembershipProduct.proMonthly)) monthly" : "or \(store.price(MembershipProduct.proYearly)) a year")
             }
-            Text("60 checks a month, faster answers and deeper research. For when ideas are your job.")
+            Text("\(Plan.pro.monthlyChecks) checks a month, faster answers and deeper research. For when ideas are your job.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             primaryButton(proTitle, id: proID, emphasised: false)
         }
@@ -230,7 +230,7 @@ struct MembershipView: View {
                 Spacer()
                 Text(state.plan == .free ? "Your plan" : "$0").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             }
-            Text("1 check a month, each with its Sparks. Once an idea is checked, its launch plan and re-scores are included. Catching ideas, your steps and the Journal are free forever.")
+            Text("\(Plan.free.monthlyChecks) \(Plan.free.monthlyChecks == 1 ? "check" : "checks") a month, each with its Sparks. Once an idea is checked, its launch plan and re-scores are included. Catching ideas, your steps and the Journal are free forever.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             if state.plan != .free {
                 Button("To go back to Free, cancel in Manage subscription") { managing = true }

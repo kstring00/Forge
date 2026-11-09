@@ -39,6 +39,8 @@ final class AppEnvironment {
     }
 
     init(ai: any AIClient, speech: SpeechCapture) {
+        // Decision 0042: the last plan numbers the proxy sent, before anything counts checks.
+        AppEnvironment.loadSavedRules()
         self.ai = ai
         self.speech = speech
         self.realityChecks = RealityCheckCenter(proxy: ai as? ProxyAIClient)
@@ -49,6 +51,24 @@ final class AppEnvironment {
         realityChecks.entitlements = entitlements
         plans.entitlements = entitlements
         plans.checks = realityChecks
+    }
+
+    static let rulesKey = "planRules"
+
+    static func loadSavedRules(defaults: UserDefaults = .standard) {
+        if let d = defaults.data(forKey: rulesKey), let r = try? JSONDecoder().decode(PlanRules.self, from: d) {
+            PlanRules.current = r
+        }
+    }
+
+    /// Decision 0042: the plan numbers live in the proxy's config. Fetched at
+    /// launch and kept, so they can change without an app update; until the
+    /// first answer the built-in defaults (the same numbers) apply.
+    func refreshRules(defaults: UserDefaults = .standard) async {
+        guard let proxy = ai as? ProxyAIClient, let rules = try? await proxy.health().rules else { return }
+        guard rules != PlanRules.current else { return }
+        PlanRules.current = rules
+        if let d = try? JSONEncoder().encode(rules) { defaults.set(d, forKey: Self.rulesKey) }
     }
 
     /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.

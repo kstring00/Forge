@@ -3,7 +3,7 @@ import { config, missingConfig } from "../lib/env.js";
 import { requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { realityCheckEstimateUSD } from "../lib/pricing.js";
 import { content } from "../lib/content.js";
-import { models } from "../lib/config.js";
+import { hunchConfig, models } from "../lib/config.js";
 
 /// GET /api/health — is the proxy configured and is this token accepted?
 /// Without a token it still answers, minus the configuration detail, so a
@@ -23,6 +23,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       models: authorized ? models() : undefined,
       limits: authorized ? { searches: config.maxSearchesPerResearchCall, fetches: config.maxFetchesPerResearchCall, tokensPerFetch: config.maxTokensPerFetch } : undefined,
       estimate: { realityCheckUSD: realityCheckEstimateUSD(config.maxSearchesPerResearchCall) },
+      // Decision 0042: the plan numbers, for every app, authorized or not.
+      rules: hunchConfig.rules,
     });
   } catch (err) {
     sendError(res, err, "health");

@@ -27,4 +27,22 @@ export default {
     tank: "medium",
     fast: "low",
   },
+  /// Every number behind checks (decision 0042). The app loads these on
+  /// launch from /api/health and keeps the last ones it saw; its built-in
+  /// defaults (ForgeCore PlanRules) are these same numbers. App Store prices
+  /// and product names are set in App Store Connect, not here.
+  rules: {
+    /// Checks a month on each plan.
+    monthlyChecks: { free: 1, plus: 15, pro: 60 },
+    /// Plus's 7-day trial is capped at this many checks.
+    trialChecks: 5,
+    /// Checks in one $2.99 top-up.
+    topUpChecks: 5,
+    /// Unused monthly checks carry into the next cycle, up to capMonths of allowance.
+    rollover: { enabled: true, capMonths: 1 },
+    /// What each thing costs, in checks. Only research costs.
+    costs: { check: 1, freshRecheck: 1, launchPlan: 0, launchPlanUpdate: 0, rescore: 0, tank: 0 },
+    /// Quiet daily limits on included follow-ups, per idea. Reaching one shows a friendly line, never the paywall.
+    fairUse: { launchPlansPerIdeaPerDay: 3, rescoresPerIdeaPerDay: 10, tankRunsPerIdeaPerDay: 3 },
+  },
 } as const;

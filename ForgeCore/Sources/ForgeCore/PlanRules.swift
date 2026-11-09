@@ -54,19 +54,38 @@ public struct PlanRules: Codable, Equatable, Sendable {
         }
     }
 
+    /// Checks a month, by plan ("free", "plus", "pro").
+    public var monthlyChecks: [String: Int]
+    /// Plus's free trial is capped at this many checks.
+    public var trialChecks: Int
+    /// Checks in one top-up.
+    public var topUpChecks: Int
     public var costs: Costs
     public var fairUse: FairUse
     public var rollover: Rollover
 
-    public init(costs: Costs = Costs(), fairUse: FairUse = FairUse(), rollover: Rollover = Rollover()) {
+    public static let defaultMonthlyChecks = ["free": 1, "plus": 15, "pro": 60]
+
+    public init(monthlyChecks: [String: Int] = PlanRules.defaultMonthlyChecks, trialChecks: Int = 5, topUpChecks: Int = 5,
+                costs: Costs = Costs(), fairUse: FairUse = FairUse(), rollover: Rollover = Rollover()) {
+        self.monthlyChecks = monthlyChecks
+        self.trialChecks = trialChecks
+        self.topUpChecks = topUpChecks
         self.costs = costs
         self.fairUse = fairUse
         self.rollover = rollover
     }
 
+    public func monthlyChecks(for plan: Plan) -> Int {
+        monthlyChecks[plan.rawValue] ?? Self.defaultMonthlyChecks[plan.rawValue] ?? 0
+    }
+
     /// Rules saved by an older app have fewer sections; missing ones are the defaults.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        monthlyChecks = try c.decodeIfPresent([String: Int].self, forKey: .monthlyChecks) ?? Self.defaultMonthlyChecks
+        trialChecks = try c.decodeIfPresent(Int.self, forKey: .trialChecks) ?? 5
+        topUpChecks = try c.decodeIfPresent(Int.self, forKey: .topUpChecks) ?? 5
         costs = try c.decodeIfPresent(Costs.self, forKey: .costs) ?? Costs()
         fairUse = try c.decodeIfPresent(FairUse.self, forKey: .fairUse) ?? FairUse()
         rollover = try c.decodeIfPresent(Rollover.self, forKey: .rollover) ?? Rollover()

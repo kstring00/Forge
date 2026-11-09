@@ -1,4 +1,5 @@
 import Foundation
+import ForgeCore
 
 /// The live client. Talks to the FORGE proxy on Vercel, which holds the key,
 /// validates every answer against the contracts and enforces the evidence
@@ -103,6 +104,8 @@ struct ProxyAIClient: AIClient {
         let version: String
         let authorized: Bool
         let estimate: Estimate
+        /// Decision 0042: the plan numbers from the proxy's config. Absent from older proxies.
+        let rules: PlanRules?
     }
 
     func health() async throws -> Health {

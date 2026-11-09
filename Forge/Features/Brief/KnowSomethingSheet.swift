@@ -47,7 +47,7 @@ struct KnowSomethingSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave).fontWeight(.semibold)
+                    Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave || saved != nil).fontWeight(.semibold)
                 }
             }
             .onAppear { focused = true }
@@ -72,6 +72,11 @@ struct KnowSomethingSheet: View {
         try? context.save()
         saved = source
         guard idea.latestEvaluation != nil else { dismiss(); return }
+        // Decision 0042: re-scoring is included, under a quiet daily limit.
+        guard env.entitlements.canUse(.rescore, ideaID: idea.id) else {
+            message = FollowUp.rescore.limitMessage
+            return
+        }
         confirming = true
     }
 
@@ -84,6 +89,7 @@ struct KnowSomethingSheet: View {
             // Decision 0042: the panelists score again on the scoring model; no new research, no Brief.
             let envelope = try await env.ai.perform(.rescore, context: AIContext.make(for: idea), expecting: RescoreResult.self)
             if let cost = envelope.costUSD { AISpend.record(cost) }
+            env.entitlements.recordUse(.rescore, ideaID: idea.id)
             let touched = envelope.payload.criteria.filter { $0.sourceIDs.contains(source.id) }
             guard !touched.isEmpty else {
                 message = "Saved as verified. The panel did not find a criterion it changes; you can attach it yourself in the Lab."

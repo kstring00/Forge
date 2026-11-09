@@ -203,7 +203,7 @@ struct MembershipView: View {
                 Spacer()
                 priceBlock(proID, otherLine: period == .yearly ? "or \(store.price(MembershipProduct.proMonthly)) monthly" : "or \(store.price(MembershipProduct.proYearly)) a year")
             }
-            Text("60 checks a month, launch plans included, faster answers and deeper research. For when ideas are your job.")
+            Text("60 checks a month, faster answers and deeper research. For when ideas are your job.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             primaryButton(proTitle, id: proID, emphasised: false)
         }
@@ -226,7 +226,7 @@ struct MembershipView: View {
                 Spacer()
                 Text(state.plan == .free ? "Your plan" : "$0").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
             }
-            Text("1 check a month, each with its Sparks. Catching ideas, your steps and the Journal are free forever.")
+            Text("1 check a month, each with its Sparks. Once an idea is checked, its launch plan and re-scores are included. Catching ideas, your steps and the Journal are free forever.")
                 .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             if state.plan != .free {
                 Button("To go back to Free, cancel in Manage subscription") { managing = true }

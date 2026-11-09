@@ -48,10 +48,10 @@ final class LaunchPlanAppTests: XCTestCase {
         let e = LocalEntitlements(defaults: defaults)
         e.commitCheck(wasFreeOnProxy: false) // the free first check
         XCTAssertEqual(e.balance.total, 1, "Free: one check a month")
-        XCTAssertFalse(e.canSpend(PlanCost.newPlan, inFlight: 0))
+        XCTAssertFalse(e.canSpend(3, inFlight: 0))
         e.creditTopUp(transactionID: "t1", jws: "")
-        XCTAssertTrue(e.canSpend(PlanCost.newPlan, inFlight: 0))
-        e.spend(PlanCost.newPlan)
+        XCTAssertTrue(e.canSpend(3, inFlight: 0))
+        e.spend(3)
         XCTAssertEqual(e.balance.total, 3)
     }
 }

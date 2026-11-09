@@ -135,7 +135,7 @@ struct PanelsTakeCard: View {
                 Text("The panel is on it").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                 StopCheckButton(ideaID: idea.id)
             } else if RealityCheckPolicy.isOffered(for: idea.lensType) && !idea.isArchived {
-                RealityCheckButton(idea: idea, pill: true, pillTitle: "Check again")
+                RealityCheckButton(idea: idea, pill: true, pillTitle: "Fresh re-check · \(PlanRules.label(checks: PlanRules.current.costs.freshRecheck))")
             }
             Spacer()
             NavigationLink(value: LabRoute.brief(ideaID: idea.id)) {
@@ -167,7 +167,7 @@ struct PanelsTakeCard: View {
                     Text("The panel is on it").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                     StopCheckButton(ideaID: idea.id)
                 } else if RealityCheckPolicy.isOffered(for: idea.lensType) && !idea.isArchived {
-                    RealityCheckButton(idea: idea, pill: true, pillTitle: "Check again")
+                    RealityCheckButton(idea: idea, pill: true, pillTitle: "Fresh re-check · \(PlanRules.label(checks: PlanRules.current.costs.freshRecheck))")
                 }
                 Spacer()
                 NavigationLink(value: VaultRoute.idea(idea.id)) {

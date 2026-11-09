@@ -22,6 +22,10 @@ protocol EntitlementService: AnyObject {
     func canSpend(_ checks: Int, inFlight: Int) -> Bool
     /// A plan arrived: spend its checks. Failed runs never call this.
     func spend(_ checks: Int)
+    /// Decision 0042: whether an included follow-up on this idea is under today's fair-use limit.
+    func canUse(_ followUp: FollowUp, ideaID: UUID) -> Bool
+    /// An included follow-up arrived. Failed runs never call this.
+    func recordUse(_ followUp: FollowUp, ideaID: UUID)
     /// The App Store's current entitlement, with the signed transactions behind it.
     func apply(_ state: MembershipState, jws: [String])
     /// A top-up was bought. Idempotent per transaction.
@@ -34,17 +38,20 @@ protocol EntitlementService: AnyObject {
 final class LocalEntitlements: EntitlementService {
     static let ledgerKey = "membership.ledger"
     static let stateKey = "membership.state"
+    static let fairUseKey = "membership.fairUse"
 
     private let defaults: UserDefaults
     private let now: () -> Date
     private(set) var state: MembershipState
     private(set) var ledger: CheckLedger
+    private(set) var fairUse: FairUseLedger
 
     init(defaults: UserDefaults = .standard, now: @escaping () -> Date = Date.init) {
         self.defaults = defaults
         self.now = now
         state = defaults.data(forKey: Self.stateKey).flatMap { try? JSONDecoder().decode(MembershipState.self, from: $0) } ?? .free
         ledger = defaults.data(forKey: Self.ledgerKey).flatMap { try? JSONDecoder().decode(CheckLedger.self, from: $0) } ?? CheckLedger()
+        fairUse = defaults.data(forKey: Self.fairUseKey).flatMap { try? JSONDecoder().decode(FairUseLedger.self, from: $0) } ?? FairUseLedger()
     }
 
     var balance: CheckBalance { ledger.balance(state, now: now()) }
@@ -64,6 +71,13 @@ final class LocalEntitlements: EntitlementService {
         guard checks > 0 else { return }
         ledger.spend(checks, state, now: now())
         save()
+    }
+
+    func canUse(_ followUp: FollowUp, ideaID: UUID) -> Bool { fairUse.canUse(followUp, ideaID: ideaID, now: now()) }
+
+    func recordUse(_ followUp: FollowUp, ideaID: UUID) {
+        fairUse.record(followUp, ideaID: ideaID, now: now())
+        if let d = try? JSONEncoder().encode(fairUse) { defaults.set(d, forKey: Self.fairUseKey) }
     }
 
     func apply(_ state: MembershipState, jws: [String]) {

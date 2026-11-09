@@ -35,7 +35,7 @@ struct PlansView: View {
                                     ForEach(ready) { ReadyForPlanCard(idea: $0) }
                                 }
                             }
-                            Text("A plan is \(PlanCost.newPlan) checks; bringing one up to date is \(PlanCost.refresh). Plans are included in Pro. A plan that fails costs nothing.")
+                            Text("Plans are included on every plan once the panel has looked at the idea, new or brought up to date. They read the idea's saved research, so nothing is searched again.")
                                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -155,7 +155,7 @@ struct MakePlanButton: View {
             Button("See the options") { env.showingMembership = true }
             Button("Not now", role: .cancel) {}
         } message: {
-            Text("You have \(env.entitlements.balance.total) of the \(env.plans.cost(for: idea)) this needs. Plans are included in Pro, Plus gives 15 checks a month, or 5 extra checks are $2.99 once. Your checks for panel takes are untouched.")
+            Text("You have \(env.entitlements.balance.total) of the \(env.plans.cost(for: idea)) this needs. Plus gives more checks a month, or extra checks are a one-time top-up.")
         }
         .sheet(isPresented: $confirming) {
             AIConfirmSheet(content: .launchPlan(ideaTitle: idea.title, refreshing: refreshing, allowance: allowance)) { send in
@@ -171,7 +171,7 @@ struct MakePlanButton: View {
 
     private var allowance: String {
         let cost = env.plans.cost(for: idea)
-        if cost == 0 { return "Included in Pro" }
+        if cost == 0 { return "Included. It reads this idea's saved research; nothing is searched again" }
         let left = env.entitlements.balance.total
         return "Uses \(cost) \(cost == 1 ? "check" : "checks") · you have \(left)"
     }

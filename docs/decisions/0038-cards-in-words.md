@@ -44,3 +44,6 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   ("Drawn from …"). Words on cards, tiles, buttons, the checks pill, source titles and the
   Hear-the-panel source line wrap to two or three lines instead of ending in "…". Still one
   line on purpose: an idea's own words under its title, step counts, and web addresses.
+- **Membership opens on Monthly**, and both tabs quote the same yearly Plus: the founding
+  price ($39.99) for testers, the regular one ($59.99) for everyone else, with "Yearly · save
+  N%" computed from whichever is offered. `docs/PRICING.md` stays the source of truth.

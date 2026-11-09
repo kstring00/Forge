@@ -15,7 +15,7 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 | Pro | $24.99 | $179.99 | 60 (leaning 50, decided after the bench) | Everything in Plus, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
-- Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed.
+- Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed. How to deliver it at launch is open (decision 0043 §4).
 - Plus has a 7-day free trial (introductory offer), capped at 5 checks during the trial.
 - "Within the hour" checks (Batch API, if built) count as half a check.
 - A failed or stopped check never counts.

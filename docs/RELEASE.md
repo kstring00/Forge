@@ -70,9 +70,12 @@ No introductory offer on any other product.
 Keep `hunch.plus.founding.yearly` as its own product, as `docs/PRICING.md` says. The App
 Store cannot hide a product from some users, so the app does: it shows the founding price
 only in TestFlight builds (`MembershipStore.showsFoundingOffer`), and later only to
-accounts the proxy flags as testers. Before App Store launch, decide whether to keep it
-(existing founding subscribers keep their price as long as they stay) or stop offering it
-by removing it from sale; removing it from sale never cancels existing subscribers.
+accounts the proxy flags as testers. Before App Store launch, decide how
+founders get their price (decision 0043 §4). Two things to know: TestFlight purchases are
+sandbox, so a tester's founding subscription doesn't carry over to the App Store; and
+removing a subscription from sale also stops renewals for people already on it (after at
+least 31 days). Apple's Edit Subscription sheet lists every product in the group to every
+subscriber, so a founding product on sale can be picked by anyone.
 
 ### 5. The top-up
 

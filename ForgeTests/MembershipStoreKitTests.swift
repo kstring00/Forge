@@ -15,7 +15,12 @@ final class MembershipStoreKitTests: XCTestCase {
     private var store: MembershipStore!
 
     override func setUp() async throws {
-        session = try SKTestSession(configurationFileNamed: "Hunch")
+        // Hunch.storekit is copied into the test bundle (project.yml); fall back to looking it up by name.
+        if let url = Bundle(for: Self.self).url(forResource: "Hunch", withExtension: "storekit") {
+            session = try SKTestSession(contentsOf: url)
+        } else {
+            session = try SKTestSession(configurationFileNamed: "Hunch")
+        }
         session.resetToDefaultState()
         session.clearTransactions()
         session.disableDialogs = true
@@ -88,8 +93,9 @@ final class MembershipStoreKitTests: XCTestCase {
         let transactions = session.allTransactions().count
         let checks = balance
         await buy(MembershipProduct.plusMonthly)
+        let booked = await eventually { state.nextProductID == MembershipProduct.plusMonthly }
+        XCTAssertTrue(booked, "the switch is booked in the renewal info")
         XCTAssertEqual(state.plan, .pro, "Pro until renewal")
-        XCTAssertEqual(state.nextProductID, MembershipProduct.plusMonthly)
         XCTAssertEqual(session.allTransactions().count, transactions, "no new transaction, so no charge")
         XCTAssertEqual(balance, checks)
         XCTAssertEqual(PlanOption.for(MembershipProduct.plusMonthly, in: state), .booked(state.renewsAt))
@@ -104,18 +110,21 @@ final class MembershipStoreKitTests: XCTestCase {
     func testUndoingADowngradeKeepsPro() async {
         await buy(MembershipProduct.proMonthly)
         await buy(MembershipProduct.plusMonthly)
-        XCTAssertEqual(state.nextProductID, MembershipProduct.plusMonthly)
+        let booked = await eventually { state.nextProductID == MembershipProduct.plusMonthly }
+        XCTAssertTrue(booked)
         let outcome = await store.keepCurrent()
         XCTAssertEqual(outcome, .done)
-        XCTAssertNil(state.nextProductID)
+        let undone = await eventually { state.nextProductID == nil }
+        XCTAssertTrue(undone)
         XCTAssertEqual(state.plan, .pro)
     }
 
     func testMonthlyToYearlyWaitsForRenewal() async throws {
         await buy(MembershipProduct.proMonthly)
         await buy(MembershipProduct.proYearly)
+        let booked = await eventually { state.nextProductID == MembershipProduct.proYearly }
+        XCTAssertTrue(booked)
         XCTAssertEqual(state.productID, MembershipProduct.proMonthly)
-        XCTAssertEqual(state.nextProductID, MembershipProduct.proYearly)
         try session.forceRenewalOfSubscription(productIdentifier: MembershipProduct.proMonthly)
         let switched = await eventually { state.productID == MembershipProduct.proYearly }
         XCTAssertTrue(switched)

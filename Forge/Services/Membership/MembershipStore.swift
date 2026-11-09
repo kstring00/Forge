@@ -19,6 +19,7 @@ final class MembershipStore {
     private let entitlements: any EntitlementService
     private var updates: Task<Void, Never>?
     private var statusUpdates: Task<Void, Never>?
+    private var refreshes = 0
 
     init(entitlements: any EntitlementService) {
         self.entitlements = entitlements
@@ -79,6 +80,9 @@ final class MembershipStore {
     /// transaction alone: after a downgrade Apple still has the person on Pro
     /// until renewal, with Plus only in the renewal info.
     func refresh() async {
+        // Several refreshes can overlap (launch, updates, foreground); only the latest applies.
+        refreshes += 1
+        let mine = refreshes
         var entitled: [UInt64: Transaction] = [:]
         var jws: [String] = []
         for await result in Transaction.currentEntitlements {
@@ -101,6 +105,7 @@ final class MembershipStore {
         for (id, t) in entitled where !described.contains(id) {
             snapshots.append(Self.snapshot(t, state: .subscribed, info: nil, entitled: true))
         }
+        guard mine == refreshes else { return }
         entitlements.apply(MembershipState(entitlement: SubscriptionSnapshot.deciding(snapshots)), jws: jws)
     }
 
@@ -113,12 +118,12 @@ final class MembershipStore {
 
     private static func snapshot(_ t: Transaction, state: Product.SubscriptionInfo.RenewalState,
                                  info: Product.SubscriptionInfo.RenewalInfo?, entitled: Bool) -> SubscriptionSnapshot {
-        let renewal: SubscriptionSnapshot.Renewal =
-            state == .subscribed ? .subscribed
-            : state == .inGracePeriod ? .inGracePeriod
-            : state == .inBillingRetryPeriod ? .inBillingRetry
-            : state == .revoked ? .revoked
-            : .expired
+        let renewal: SubscriptionSnapshot.Renewal
+        if state == .subscribed { renewal = .subscribed }
+        else if state == .inGracePeriod { renewal = .inGracePeriod }
+        else if state == .inBillingRetryPeriod { renewal = .inBillingRetry }
+        else if state == .revoked { renewal = .revoked }
+        else { renewal = .expired }
         return SubscriptionSnapshot(productID: t.productID, transactionID: String(t.id), purchaseDate: t.purchaseDate,
                                     expiresAt: t.expirationDate, isTrial: isIntroductory(t), isEntitled: entitled,
                                     renewal: renewal, willAutoRenew: info?.willAutoRenew ?? true,
@@ -185,9 +190,14 @@ final class MembershipStore {
         message = nil
         do {
             try await AppStore.sync()
+            // Top-ups still being delivered get credited when they arrive, not marked known here.
+            var unfinished = Set<UInt64>()
+            for await result in Transaction.unfinished {
+                if case .verified(let t) = result { unfinished.insert(t.id) }
+            }
             var known: [String] = []
             for await result in Transaction.all {
-                guard case .verified(let t) = result, t.productID == MembershipProduct.topUp5 else { continue }
+                guard case .verified(let t) = result, t.productID == MembershipProduct.topUp5, !unfinished.contains(t.id) else { continue }
                 if t.revocationDate != nil { entitlements.refundTopUp(transactionID: String(t.id)) }
                 else { known.append(String(t.id)) }
             }

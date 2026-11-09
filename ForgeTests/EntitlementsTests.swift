@@ -22,10 +22,11 @@ final class EntitlementsTests: XCTestCase {
         e.commitCheck(wasFreeOnProxy: false)          // the free first check
         e.commitCheck(wasFreeOnProxy: false)          // Free's one a month
         XCTAssertFalse(e.canStartCheck(inFlight: 0), "out of checks on Free")
-        XCTAssertFalse(e.has(.whatIf))
+        XCTAssertFalse(e.has(.argueItOut))
+        XCTAssertTrue(e.has(.whatIf), "Sparks are free on every plan (decision 0040)")
 
         e.apply(MembershipState(plan: .plus, isTrial: false, anchor: clock, productID: MembershipProduct.plusYearly, renewsAt: nil, founding: false), jws: [])
-        XCTAssertTrue(e.has(.whatIf))
+        XCTAssertTrue(e.has(.argueItOut))
         XCTAssertEqual(e.balance.monthlyAllowance, 15)
         XCTAssertEqual(e.balance.monthlyLeft, 15, "a new plan starts a new period")
 

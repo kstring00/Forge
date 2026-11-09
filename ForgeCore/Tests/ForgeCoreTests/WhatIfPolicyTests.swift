@@ -2,12 +2,9 @@ import XCTest
 @testable import ForgeCore
 
 final class WhatIfPolicyTests: XCTestCase {
-    func testPivotsShowWhenWeak() {
-        XCTAssertTrue(WhatIfPolicy.shows(confidence: 39, verdict: .buildIt), "under 40 Confidence")
-        XCTAssertTrue(WhatIfPolicy.shows(confidence: 80, verdict: .cantTell), "Go ask people")
-        XCTAssertTrue(WhatIfPolicy.shows(confidence: 80, verdict: .compete), "Worth a fight")
-        XCTAssertFalse(WhatIfPolicy.shows(confidence: 40, verdict: .buildIt))
-        XCTAssertFalse(WhatIfPolicy.shows(confidence: 70, verdict: .useTheirs))
+    func testSparksShowOnEveryCheck() {
+        XCTAssertTrue(WhatIfPolicy.shows(confidence: 39, verdict: .cantTell))
+        XCTAssertTrue(WhatIfPolicy.shows(confidence: 90, verdict: .buildIt), "a strong idea still has a sharper version")
         XCTAssertEqual(WhatIfPolicy.raisesLabel(criterionTitle: "Distribution"), "Raises Distribution")
     }
 }

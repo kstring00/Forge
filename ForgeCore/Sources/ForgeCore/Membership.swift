@@ -25,7 +25,9 @@ public enum Plan: String, Codable, CaseIterable, Sendable, Comparable {
 
     public func includes(_ feature: PlanFeature) -> Bool {
         switch feature {
-        case .whatIf, .argueItOut, .library: self >= .plus
+        // Decision 0040: What-ifs (Sparks) are free on every plan.
+        case .whatIf: true
+        case .argueItOut, .library: self >= .plus
         case .priority, .deepResearch, .reports: self == .pro
         }
     }

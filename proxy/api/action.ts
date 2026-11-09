@@ -19,8 +19,14 @@ const roleFor: Record<Action, Role> = {
 };
 
 /// Output budget per call. Thinking counts against it on models that think.
+/// Scoring on Haiku thinks first and the thinking counts here, so it gets
+/// room to spare (the bench saw re-scores cut off at 8000).
 const maxTokensFor = (a: Action | "score" | "brief") =>
-  a === "prefill" ? 24000 : a === "brief" ? 20000 : a === "runRound" || a === "realityCheck" ? 12000 : 8000;
+  a === "prefill" ? 24000 : a === "brief" ? 20000 : a === "score" || a === "rescore" ? 16000 : a === "runRound" || a === "realityCheck" ? 12000 : 8000;
+
+/// Schemas the structured-output compiler refuses as too large ("compiled
+/// grammar is too large"): go straight to JSON in the prompt.
+const jsonOnly = new Set<string>(["brief", "prefill"]);
 
 /// One model call's accounting, for the app's cost meter (Settings → Developer).
 export interface Stage {
@@ -33,10 +39,10 @@ export interface Stage {
 interface Run<T> { payload: T; rationale: string; stage: Stage; mode: string; dropped: Record<string, number> }
 
 async function run<T extends z.ZodTypeAny>(role: Role, label: string, stage: Stage["stage"], lensType: string, instruction: string, user: string,
-                                           schema: T, maxTokens: number): Promise<Run<z.infer<T>>> {
+                                           schema: T, maxTokens: number, mode: "structured" | "json" = "structured"): Promise<Run<z.infer<T>>> {
   const model = modelFor(role);
   const result = await callStructured({
-    label, model, maxTokens,
+    label, model, maxTokens, mode,
     effort: effortFor(role),
     system: panelSystem(lensType, instruction),
     user,
@@ -153,7 +159,8 @@ async function prefill(user: string, lensType: string, known: Set<string>, lensK
                        dropped: Record<string, number>, modes: string[]) {
   const score = await run("scoring", "action.prefill.score", "scoring", lensType, scoreInstruction, user, ScoreResult, maxTokensFor("score"));
   const scored = enforceScore(score.payload, known, lensKeys);
-  const brief = await run("brief", "action.prefill.brief", "brief", lensType, briefInstruction, `${user}\n\n${scoresText(scored, lensType)}`, BriefResult, maxTokensFor("brief"));
+  const brief = await run("brief", "action.prefill.brief", "brief", lensType, briefInstruction, `${user}\n\n${scoresText(scored, lensType)}`, BriefResult, maxTokensFor("brief"),
+                          jsonOnly.has("brief") ? "json" : "structured");
   for (const r of [score, brief]) { Object.assign(dropped, r.dropped); modes.push(r.mode); }
   const merged = { ...brief.payload, ...scored };
   const payload = enforcePrefill(merged, known, lensKeys, content.explorePrompts.map((p) => p.key), dropped);

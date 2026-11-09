@@ -71,7 +71,11 @@ function plan(id: (i: number) => string | null) {
   };
 }
 
-export function startMock(): Promise<{ url: string; server: Server }> {
+/// `truncateFirst`: the first structured answer is cut off mid-string with
+/// stop_reason max_tokens, as a model that spent its budget thinking would.
+export function startMock(opts: { truncateFirst?: boolean } = {}): Promise<{ url: string; server: Server; requests: string[] }> {
+  let truncate = opts.truncateFirst ?? false;
+  const requests: string[] = [];
   const server = createServer((req, res) => {
     let raw = "";
     req.on("data", (c) => (raw += c));
@@ -86,7 +90,8 @@ export function startMock(): Promise<{ url: string; server: Server }> {
       if (Array.isArray(body.tools) && body.tools.some((t: { name: string }) => t.name === "web_search")) {
         text = notes;
       } else {
-        const instruction = (body.system ?? []).at(-1)?.text ?? "";
+        // The instruction block, wherever it sits (plain-JSON retries append one).
+        const instruction = (body.system ?? []).map((b: { text: string }) => b.text).find((t: string) => /^(SCORE|BRIEF|PREFILL|LAUNCH PLAN)\./.test(t)) ?? "";
         const [schema, payload] =
           instruction.startsWith("SCORE.") ? [ScoreResult, score(id)]
           : instruction.startsWith("BRIEF.") ? [BriefResult, brief(id)]
@@ -97,6 +102,17 @@ export function startMock(): Promise<{ url: string; server: Server }> {
         const answer = { payload, rationale: "Mock rationale." };
         withRationale(schema as never).parse(answer); // the mock never lies about shape
         text = JSON.stringify(answer);
+        requests.push(body.output_config?.format ? "structured" : "json");
+        if (truncate && body.output_config?.format) {
+          truncate = false;
+          res.writeHead(200, { "content-type": "application/json", "request-id": "req_mock" });
+          res.end(JSON.stringify({
+            id: "msg_mock", type: "message", role: "assistant", model: body.model, stop_reason: "max_tokens", stop_sequence: null,
+            content: [{ type: "text", text: text.slice(0, Math.floor(text.length * 0.6)) }],
+            usage: { input_tokens: 2000, output_tokens: 16000, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+          }));
+          return;
+        }
       }
       res.writeHead(200, { "content-type": "application/json", "request-id": "req_mock" });
       res.end(JSON.stringify({
@@ -108,6 +124,6 @@ export function startMock(): Promise<{ url: string; server: Server }> {
   });
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => {
     const a = server.address();
-    resolve({ url: `http://127.0.0.1:${typeof a === "object" && a ? a.port : 0}`, server });
+    resolve({ url: `http://127.0.0.1:${typeof a === "object" && a ? a.port : 0}`, server, requests });
   }));
 }

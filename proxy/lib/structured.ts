@@ -16,6 +16,9 @@ export interface StructuredCall<T extends z.ZodType> {
   user: string;
   schema: T;
   timeoutMs: number;
+  /// "json" skips structured outputs for a schema the API is known to
+  /// refuse as too large to compile, saving a refused request every time.
+  mode?: "structured" | "json";
 }
 
 export interface StructuredResult<T> {
@@ -34,6 +37,7 @@ export interface StructuredResult<T> {
 /// the run fail. Either way the app only ever receives a schema-valid payload.
 export async function callStructured<T extends z.ZodType>(c: StructuredCall<T>): Promise<StructuredResult<z.infer<T>>> {
   const format = zodOutputFormat(c.schema);
+  if (c.mode === "json") return await jsonFallback(c, format.schema, null);
   try {
     const response = await anthropic().messages.parse(
       {
@@ -61,6 +65,13 @@ export async function callStructured<T extends z.ZodType>(c: StructuredCall<T>):
     return await retryWithIssues(c, format.schema, s?.issues ?? ["The answer was not a JSON object."]);
   } catch (err) {
     if (err instanceof HttpError) throw err;
+    // The SDK throws when the answer can't be parsed, usually because it was
+    // cut off (thinking used up max_tokens). Ask again in plain JSON, with the
+    // schema in the prompt, instead of failing the call.
+    if (!(err instanceof Anthropic.APIError) && err instanceof Error && /parse structured output/i.test(err.message)) {
+      console.error(JSON.stringify({ at: c.label, note: "unparseable structured answer; retrying as plain JSON", detail: err.message.slice(0, 200) }));
+      return await jsonFallback(c, format.schema, null);
+    }
     if (!(err instanceof Anthropic.BadRequestError)) {
       if (err instanceof Anthropic.APIError) logUpstream(`${c.label}.structured`, err);
       throw err;

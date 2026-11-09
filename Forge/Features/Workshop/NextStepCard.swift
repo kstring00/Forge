@@ -244,7 +244,7 @@ struct StakesPanel: View {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
                         HStack(spacing: 14) {
                             smallRing(evaluation.potential, "Potential · panel's view", ForgeColor.ink)
-                            if let idea, ProofStage.of(idea).showsNumber {
+                            if ProofStage.of(idea).showsNumber {
                                 smallRing(evaluation.confidence, "Proof · \(ProofStage.of(idea).label)", ForgeColor.ink)
                             } else {
                                 VStack(spacing: 4) {

@@ -185,13 +185,22 @@ struct MembershipView: View {
     private var plusTitle: String {
         if state.productID == plusID { return "Your plan · Manage" }
         if state.plan == .plus { return "Switch to \(period == .yearly ? "yearly" : "monthly")" }
-        if state.plan == .pro { return "Switch to Plus" }
+        // Apple makes a downgrade start at the next renewal, not now.
+        if state.plan == .pro { return "Switch to Plus on \(renewalDay)" }
         if founding { return "Join as a founding member" }
         if period == .yearly && store.trialEligible { return "Try Plus free for 7 days" }
         return "Choose Plus"
     }
 
+    /// "Dec 9", or "your renewal" before the App Store has said.
+    private var renewalDay: String {
+        state.renewsAt.map { $0.formatted(.dateTime.month(.abbreviated).day()) } ?? "your renewal"
+    }
+
     private var plusFinePrint: String {
+        if state.plan == .pro {
+            return "You keep Pro until \(renewalDay); Plus starts then at \(store.price(plusID)) a \(period == .yearly ? "year" : "month"). You're never charged twice."
+        }
         if founding { return "\(store.price(plusID)) a year, kept for as long as you stay subscribed. Cancel anytime in Settings." }
         if period == .yearly && store.trialEligible && state.plan == .free {
             return "Then \(store.price(plusID)) a year. Up to \(MembershipState.trialChecks) checks during the trial. Cancel anytime in Settings."

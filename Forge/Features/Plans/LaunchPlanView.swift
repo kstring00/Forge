@@ -196,24 +196,22 @@ struct LaunchPlanView: View {
     private func moneyCard(_ plan: LaunchPlan) -> some View {
         if let inputs = idea.latestEvaluation?.estimateInputs, let m = PlanMoney(inputs) {
             card("The money") {
-                VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .top, spacing: 8) { equation(m, plan) }
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(alignment: .top, spacing: 8) {
-                                term(LaunchPlanDocument.dollars(m.price), "price / mo", assumption: m.priceIsAssumption)
-                                op("×")
-                                term("\(m.customers) \(plan.customerNoun)", "in year one", assumption: m.customersIsAssumption)
-                            }
-                            HStack(alignment: .top, spacing: 8) {
-                                op("×")
-                                term(m.sharePercent, "who pay", assumption: m.shareIsAssumption)
-                                op("=")
-                                term("\(LaunchPlanDocument.dollars(m.monthly)) / mo", "est. monthly", assumption: false)
-                            }
-                        }
+                // Stacked rows, never one wide line: a long customer word
+                // ("park owners") made the old equation wider than the phone
+                // and pushed the whole page off both edges.
+                VStack(alignment: .leading, spacing: 10) {
+                    moneyRow("Price a month", LaunchPlanDocument.dollars(m.price), assumption: m.priceIsAssumption)
+                    moneyRow("× \(plan.customerNoun.prefix(1).uppercased() + plan.customerNoun.dropFirst()) in year one", "\(m.customers)", assumption: m.customersIsAssumption)
+                    moneyRow("× Share who pay", m.sharePercent, assumption: m.shareIsAssumption)
+                    Rectangle().fill(ForgeColor.line).frame(height: 1)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("= Estimated monthly").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                        Spacer(minLength: 8)
+                        Text("\(LaunchPlanDocument.dollars(m.monthly)) / mo")
+                            .font(Font.custom("Fraunces-SemiBold", size: 22, relativeTo: .title3))
+                            .foregroundStyle(ForgeColor.ink).lineLimit(1).minimumScaleFactor(0.7)
                     }
-                    Text("The middle of the panel's estimate, not a promise. Dotted labels are assumptions; the rest rest on a source.")
+                    Text("The middle of the panel's estimate, not a promise. Dotted rows are assumptions; the rest rest on a source.")
                         .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -230,35 +228,17 @@ struct LaunchPlanView: View {
         return "No figure yet. A price from a real conversation is the first number this plan needs."
     }
 
-    @ViewBuilder
-    private func equation(_ m: PlanMoney, _ plan: LaunchPlan) -> some View {
-        term(LaunchPlanDocument.dollars(m.price), "price / mo", assumption: m.priceIsAssumption)
-        op("×")
-        term("\(m.customers) \(plan.customerNoun)", "in year one", assumption: m.customersIsAssumption)
-        op("×")
-        term(m.sharePercent, "who pay", assumption: m.shareIsAssumption)
-        op("=")
-        term("\(LaunchPlanDocument.dollars(m.monthly)) / mo", "est. monthly", assumption: false)
-    }
-
-    private func term(_ value: String, _ label: String, assumption: Bool) -> some View {
-        VStack(spacing: 6) {
-            Text(value)
-                .font(Font.custom("Fraunces-SemiBold", size: 22, relativeTo: .title3))
-                .foregroundStyle(ForgeColor.ink)
-                .lineLimit(1).minimumScaleFactor(0.7)
-            HStack(spacing: 4) {
-                Text(label.uppercased()).font(.system(.caption2, design: .default, weight: .semibold)).foregroundStyle(ForgeColor.inkSecondary)
+    private func moneyRow(_ label: String, _ value: String, assumption: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(spacing: 6) {
+                Text(label).font(.subheadline).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
                 if assumption { EvidenceChip(pattern: .dots, size: 8) }
             }
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(ForgeColor.line.opacity(0.6), in: Capsule())
+            Spacer(minLength: 8)
+            Text(value)
+                .font(Font.custom("Fraunces-SemiBold", size: 20, relativeTo: .title3))
+                .foregroundStyle(ForgeColor.ink).lineLimit(1).minimumScaleFactor(0.7)
         }
-        .fixedSize()
-    }
-
-    private func op(_ s: String) -> some View {
-        Text(s).font(.title3).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 2)
     }
 
     // MARK: When to stop

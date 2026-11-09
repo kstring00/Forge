@@ -45,9 +45,17 @@ struct KnowSomethingSheet: View {
             .navigationTitle("I know something")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave || saved != nil).fontWeight(.semibold)
+                // Once what they wrote is saved, the only thing left is to close:
+                // the re-score finished, changed nothing, or hit the daily limit.
+                if saved != nil && !running {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }.fontWeight(.semibold)
+                    }
+                } else {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave || saved != nil).fontWeight(.semibold)
+                    }
                 }
             }
             .onAppear { focused = true }

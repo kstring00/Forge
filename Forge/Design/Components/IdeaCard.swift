@@ -160,7 +160,7 @@ struct IdeaSubtitle: View {
 
     var body: some View {
         if !words.isEmpty && words != idea.title {
-            Text(words).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1)
+            Text(words).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(3)
         }
     }
 }

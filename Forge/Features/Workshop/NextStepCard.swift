@@ -225,11 +225,9 @@ struct NextStepCard: View {
     }
 }
 
-/// "What's riding on it": Potential and Confidence at 56 pt with their names,
-/// the Est. return row (the user's figure, or the Investor's range with its
-/// basis) with the verified-vs-estimate bar on Business ideas or the Impact
-/// row on Growth and Creative, and one line tying the step to the evidence it
-/// raises. Hidden when there is no evaluation.
+/// "What's riding on it": three equal columns (Potential, Proof, Est. return)
+/// split by hairlines, every label free to wrap, then the line tying the step
+/// to the evidence it raises, in serif. Hidden when there is no evaluation.
 struct StakesPanel: View {
     let evaluation: Evaluation
     let project: Project
@@ -237,56 +235,94 @@ struct StakesPanel: View {
     private var idea: Idea? { project.idea }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("What's riding on it").forgeLabelSmall()
-            HStack(alignment: .top, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("What's riding on it").forgeLabel()
+            // Three equal columns. Every label wraps instead of cutting off.
+            HStack(alignment: .top, spacing: 0) {
                 if let idea {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
-                        HStack(spacing: 14) {
-                            smallRing(evaluation.potential, "Potential · panel's view", ForgeColor.ink)
-                            if ProofStage.of(idea).showsNumber {
-                                smallRing(evaluation.confidence, "Proof · \(ProofStage.of(idea).label)", ForgeColor.ink)
-                            } else {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "doc.text.magnifyingglass").font(.title3).foregroundStyle(ForgeColor.inkSecondary).frame(width: 56, height: 56)
-                                    Text("Not tested yet").forgeLabelSmall()
-                                }
-                            }
-                        }
+                        ring(evaluation.potential, label: "Potential", sub: "panel's view")
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens the criteria with their evidence")
+                    divider
+                    NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) { proof(idea) }
+                        .buttonStyle(.plain)
+                    divider
                 }
-                VStack(alignment: .trailing, spacing: 6) {
-                    if let idea { EstimatedReturnRow(idea: idea, compact: false, alignment: .trailing) }
+                VStack(spacing: 10) {
+                    if let idea { EstimatedReturnRow(idea: idea, compact: false) }
                     if evaluation.lensType == .business { bar(verified: evaluation.projection.verifiedFraction) }
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 4)
             }
+            Rectangle().fill(ForgeColor.line).frame(height: 1)
             Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves,
                                          hasProof: idea.map { ProofStage.of($0).showsNumber } ?? false))
-                .font(.system(.footnote)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+                .font(Font.custom("Fraunces-Regular", size: 18, relativeTo: .body))
+                .foregroundStyle(ForgeColor.ink)
+                .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
-        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
+        .padding(18)
+        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
-    private func smallRing(_ value: Int, _ name: String, _ tint: Color) -> some View {
-        VStack(spacing: 4) {
+    private var divider: some View {
+        Rectangle().fill(ForgeColor.line).frame(width: 1).frame(minHeight: 96).padding(.vertical, 4)
+    }
+
+    /// Proof: a ring once a person has brought something back, the
+    /// magnifier while it is only online research.
+    @ViewBuilder
+    private func proof(_ idea: Idea) -> some View {
+        let stage = ProofStage.of(idea)
+        if stage.showsNumber {
+            ring(evaluation.confidence, label: "Proof", sub: stage.cardWord)
+        } else {
+            column {
+                Image(systemName: "doc.text.magnifyingglass").font(.system(size: 30, weight: .light))
+                    .foregroundStyle(ForgeColor.ink).frame(width: 64, height: 64)
+            } label: {
+                Text("Not tested yet").forgeLabelSmall().foregroundStyle(ForgeColor.ink)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Proof: not tested with people yet")
+        }
+    }
+
+    private func ring(_ value: Int, label: String, sub: String) -> some View {
+        column {
             ZStack {
                 Circle().stroke(ForgeColor.line, lineWidth: 4)
                 Circle().trim(from: 0, to: Double(min(max(value, 0), 100)) / 100)
-                    .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(ForgeColor.ink, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                Text("\(value)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                Text("\(value)").font(ForgeType.numeralMedium).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                    .minimumScaleFactor(0.7).lineLimit(1)
             }
-            .frame(width: 56, height: 56)
-            Text(name).forgeLabelSmall()
+            .frame(width: 64, height: 64)
+        } label: {
+            Text(label).forgeLabelSmall().foregroundStyle(ForgeColor.ink)
+            Text(sub).forgeLabelSmall()
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name) \(value) out of 100")
+        .accessibilityLabel("\(label) \(value) out of 100, \(sub)")
+    }
+
+    /// A centred column: the figure, then its label lines, wrapping.
+    private func column<F: View, L: View>(@ViewBuilder figure: () -> F, @ViewBuilder label: () -> L) -> some View {
+        VStack(spacing: 10) {
+            figure()
+            VStack(spacing: 3) { label() }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 4)
+        .contentShape(Rectangle())
     }
 
     private func bar(verified: Double) -> some View {

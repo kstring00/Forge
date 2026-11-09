@@ -56,3 +56,5 @@ Recorded 2026-11-09, after "Potential 4" read as four out of five and "proof 20"
   ceiling do. "FORGE" no longer appears anywhere a user reads; it says Hunch.
 
 **Follow-up (Nov 9): the Proof tile names the next step.** The four dots say where proof is; on their own they don't say what to do. Under the dots the tile now says "Next: …": the idea's own step when one is set ("Next: Call Shady Oaks"), otherwise the move the next rung needs (talk to 3 people who'd buy it → ask one of them to pay → get them to come back → find five more like them). The Proof explainer sheet repeats it as its own "Next step" box. "step 2 of 4" moves to VoiceOver only.
+
+**Follow-up (Nov 9): "What's riding on it" never cuts text off.** The panel is three equal columns split by hairlines (Potential ring, Proof ring or the magnifier, Est. return), each label on its own lines and free to wrap; the Est. return column stacks label, figure and basis, with "Too early to estimate" in italic serif. A hairline, then the step's line in serif at 18 pt. The last one-line labels (the stage line on Home's cards, "Up today") wrap too; the original-words excerpt on cards shows up to three lines.

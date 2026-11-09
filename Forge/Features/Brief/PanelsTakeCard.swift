@@ -83,16 +83,40 @@ struct PanelsTakeCard: View {
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
-    /// Decision 0037: the panel's view of potential and proof as a stage, not "Confidence".
+    /// Potential and proof as rings out of 100, each with its word under it.
+    /// Proof is a ring once a person has brought something back; before that,
+    /// the magnifier and "Not tested yet".
     private func confidence(_ e: Evaluation) -> some View {
         let stage = ProofStage.of(idea)
-        return VStack(alignment: .trailing, spacing: 2) {
-            Text("\(e.potential)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
-            Text("Potential · panel's view").forgeLabelSmall()
-            Text(stage.label + (stage.showsNumber ? " · proof \(e.confidence)" : "")).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+        return HStack(alignment: .top, spacing: 10) {
+            miniColumn(label: "Potential", word: PotentialWord.word(e.potential)) {
+                ScoreRing(value: e.potential, size: 56)
+            }
+            if stage.showsNumber {
+                miniColumn(label: "Proof", word: stage.cardWord) {
+                    ScoreRing(value: e.confidence, size: 56, tint: ForgeColor.ember)
+                }
+            } else {
+                miniColumn(label: "Proof", word: "Not tested yet") {
+                    Image(systemName: "doc.text.magnifyingglass").font(.system(size: 22, weight: .light))
+                        .foregroundStyle(ForgeColor.inkSecondary)
+                        .frame(width: 56, height: 56)
+                        .overlay(Circle().strokeBorder(ForgeColor.line, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3])))
+                }
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Potential \(e.potential), the panel's view. \(stage.label).")
+        .accessibilityLabel("Potential \(e.potential) out of 100, \(PotentialWord.word(e.potential)), the panel's view. \(stage.label).")
+    }
+
+    private func miniColumn<R: View>(label: String, word: String, @ViewBuilder ring: () -> R) -> some View {
+        VStack(spacing: 6) {
+            ring()
+            Text(label).forgeLabelSmall()
+            Text(word).font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(width: 68)
     }
 
     private func orbs(size: CGFloat, spacing: CGFloat) -> some View {

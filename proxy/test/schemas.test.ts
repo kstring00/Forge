@@ -184,3 +184,33 @@ test("a launch plan's proven lines need a source the app sent; the rest become b
   assert.equal(dropped["launchPlan.provenWithoutSource"], 2);
   assert.ok(actionInstruction("launchPlan").includes("decide"));
 });
+
+test("every URL the research notes cite becomes its own source with its claims", async () => {
+  const { notedSources } = await import("../api/research.js");
+  const notes = [
+    "RESEARCH NOTES",
+    "- Bundled RV park sites cost $35 to $65 per month (https://www.campspot.com/pricing).",
+    "- A $299 agency option exists — https://parkwebsites.example.com/plans",
+    "- Owners complain booking widgets break on mobile https://www.reddit.com/r/RVLiving/comments/abc and https://www.campspot.com/pricing",
+    "- Fetched page claim https://fetched.example.com/page",
+    "- short https://x.com/a",
+    "No URL on this line at all.",
+  ].join("\n");
+  const found = [
+    { url: "https://fetched.example.com/page", title: "Fetched", text: "full page", kind: "fetched" as const, retrievedAt: null },
+    { url: "https://www.campspot.com/pricing", title: "Campspot pricing", text: "", kind: "searchHit" as const, retrievedAt: "2026-10-01" },
+  ];
+  const out = notedSources(notes, found);
+  const campspot = out.find((s) => s.url === "https://www.campspot.com/pricing");
+  assert.ok(campspot);
+  assert.equal(campspot.title, "Campspot pricing");
+  assert.equal(campspot.kind, "noted");
+  assert.equal(campspot.text.split("\n").length, 2, "two claims cite it");
+  assert.equal(campspot.text.split("\n")[0], "- Bundled RV park sites cost $35 to $65 per month.");
+  assert.equal(out.find((s) => s.url.includes("parkwebsites"))?.text, "- A $299 agency option exists");
+  assert.ok(!campspot.text.includes("http"));
+  assert.equal(out.find((s) => s.url.includes("parkwebsites"))?.title, "parkwebsites.example.com");
+  assert.ok(out.some((s) => s.url.includes("reddit.com")));
+  assert.ok(!out.some((s) => s.url.includes("fetched.example.com")), "a fetched page is already a source");
+  assert.ok(!out.some((s) => s.url === "https://x.com/a"), "too short to be a claim");
+});

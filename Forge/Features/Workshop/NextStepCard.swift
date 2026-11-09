@@ -241,7 +241,7 @@ struct StakesPanel: View {
             HStack(alignment: .top, spacing: 0) {
                 if let idea {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
-                        ring(evaluation.potential, label: "Potential", sub: "panel's view")
+                        ring(evaluation.potential, label: "Potential", sub: "\(PotentialWord.word(evaluation.potential)) · panel's view")
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens the criteria with their evidence")
@@ -295,15 +295,7 @@ struct StakesPanel: View {
 
     private func ring(_ value: Int, label: String, sub: String) -> some View {
         column {
-            ZStack {
-                Circle().stroke(ForgeColor.line, lineWidth: 4)
-                Circle().trim(from: 0, to: Double(min(max(value, 0), 100)) / 100)
-                    .stroke(ForgeColor.ink, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                Text("\(value)").font(ForgeType.numeralMedium).foregroundStyle(ForgeColor.ink).monospacedDigit()
-                    .minimumScaleFactor(0.7).lineLimit(1)
-            }
-            .frame(width: 64, height: 64)
+            ScoreRing(value: value, size: 64)
         } label: {
             Text(label).forgeLabelSmall().foregroundStyle(ForgeColor.ink)
             Text(sub).forgeLabelSmall()

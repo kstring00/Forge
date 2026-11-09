@@ -59,6 +59,25 @@ final class AppEnvironment {
         if let d = defaults.data(forKey: rulesKey), let r = try? JSONDecoder().decode(PlanRules.self, from: d) {
             PlanRules.current = r
         }
+        applyTestingOverrides(defaults: defaults)
+    }
+
+    /// Settings → Developer, test builds: fair-use limits of 1 a day, so the
+    /// friendly limit message is easy to reach.
+    static let tightFairUseKey = "debug.tightFairUse"
+
+    static func applyTestingOverrides(defaults: UserDefaults = .standard) {
+        #if DEBUG
+        if defaults.bool(forKey: tightFairUseKey) {
+            PlanRules.current.fairUse = .init(launchPlansPerIdeaPerDay: 1, rescoresPerIdeaPerDay: 1, tankRunsPerIdeaPerDay: 1)
+        }
+        #endif
+    }
+
+    /// The rules again from what was saved (or the defaults), then any testing override.
+    static func reloadRules(defaults: UserDefaults = .standard) {
+        PlanRules.current = PlanRules()
+        loadSavedRules(defaults: defaults)
     }
 
     /// Decision 0042: the plan numbers live in the proxy's config. Fetched at
@@ -69,6 +88,7 @@ final class AppEnvironment {
         guard rules != PlanRules.current else { return }
         PlanRules.current = rules
         if let d = try? JSONEncoder().encode(rules) { defaults.set(d, forKey: Self.rulesKey) }
+        Self.applyTestingOverrides(defaults: defaults)
     }
 
     /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.

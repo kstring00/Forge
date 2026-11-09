@@ -34,6 +34,7 @@ struct SettingsView: View {
     @State private var showingPrivacy = false
     @Environment(\.openURL) private var openURL
     @AppStorage("membership.foundingPreview") private var foundingPreview = true
+    @AppStorage(AppEnvironment.tightFairUseKey) private var tightFairUse = false
 
     private var liveCount: Int { ideas.filter { !$0.isArchived }.count }
     private var archivedCount: Int { ideas.count - liveCount }
@@ -172,6 +173,10 @@ struct SettingsView: View {
                 Button("Give checks back") { (env.entitlements as? LocalEntitlements)?.resetForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
                 Toggle("Show the founding offer", isOn: $foundingPreview)
+                Button("Start the next cycle (test rollover)") { (env.entitlements as? LocalEntitlements)?.startNextCycleForTesting() }
+                    .foregroundStyle(ForgeColor.emberText)
+                Toggle("Tight fair use (1 a day)", isOn: $tightFairUse)
+                    .onChange(of: tightFairUse) { _, _ in AppEnvironment.reloadRules() }
                 LabeledContent("Server", value: AIConsent.proxyURL ?? "Not configured")
                 Picker("Your AI cost cap", selection: $ceiling) {
                     ForEach([5.0, 10.0, 25.0, 50.0, 100.0], id: \.self) { Text(AISpend.format($0)).tag($0) }

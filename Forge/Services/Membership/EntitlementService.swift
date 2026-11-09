@@ -97,6 +97,16 @@ final class LocalEntitlements: EntitlementService {
     }
 
     #if DEBUG
+    /// Settings → Developer: pretend this cycle ended, so the next one starts now
+    /// and this cycle's unused checks carry over (decision 0042, F).
+    func startNextCycleForTesting() {
+        let cal = Calendar.current
+        ledger.periodStart = cal.date(byAdding: .month, value: -1, to: ledger.periodStart) ?? ledger.periodStart
+        if let end = ledger.periodEnd { ledger.periodEnd = cal.date(byAdding: .month, value: -1, to: end) }
+        ledger.roll(state, now: now())
+        save()
+    }
+
     /// Settings → Developer: monthly checks back, the free first check back. Bought checks stay.
     func resetForTesting() {
         ledger.usedThisPeriod = 0

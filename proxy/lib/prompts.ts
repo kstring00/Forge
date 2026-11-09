@@ -15,6 +15,18 @@ export const houseRules = `You are the AI partner inside FORGE, a personal idea-
 - When a RESEARCH PACKET is given, it is this idea's shared research. Read it instead of searching, and cite the source id each finding names. A finding with no id is not citable. If you need something the packet and the Library do not cover, say what is missing (as evidenceNeeded, in a note, or as an assumption). Never guess a fact, a figure or a source.
 - Be short. Plain English. No headings in free text.`;
 
+/// Every panel call's system prompt (decision 0042): stable first, each part
+/// marked for caching. The house rules, lens, panel and Explore prompts are
+/// identical for every call on a lens; the instruction (with its output
+/// format) for every call of an action. The idea and its packet follow in the
+/// user turn, after both breakpoints.
+export function panelSystem(lensType: string, instruction: string) {
+  return [
+    { type: "text" as const, text: stableSystem(lensType), cache_control: { type: "ephemeral" as const } },
+    { type: "text" as const, text: instruction, cache_control: { type: "ephemeral" as const } },
+  ];
+}
+
 export function stableSystem(lensType: string): string {
   return [houseRules, "", lensText(lensType), "", spheresText(), "", explorePromptsText()].join("\n");
 }

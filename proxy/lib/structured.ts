@@ -5,6 +5,7 @@ import { anthropic } from "./anthropic.js";
 import { HttpError } from "./http.js";
 import { logUpstream, upstreamMessage } from "./upstream.js";
 import { salvage, totalDropped } from "./salvage.js";
+import { logCache } from "./cachelog.js";
 
 export interface StructuredCall<T extends z.ZodType> {
   label: string;
@@ -45,6 +46,7 @@ export async function callStructured<T extends z.ZodType>(c: StructuredCall<T>):
       { timeout: c.timeoutMs, maxRetries: 1 },
     );
     guardStop(response, c.label);
+    logCache(c.label, c.model, response.usage);
     if (response.parsed_output != null) {
       return { parsed: response.parsed_output as z.infer<T>, response, mode: "structured", dropped: {} };
     }
@@ -117,7 +119,7 @@ async function plainJSONCall<T extends z.ZodType>(c: StructuredCall<T>, jsonSche
     });
   }
   try {
-    return await anthropic().messages.create(
+    const response = await anthropic().messages.create(
       {
         model: c.model,
         max_tokens: c.maxTokens,
@@ -127,6 +129,8 @@ async function plainJSONCall<T extends z.ZodType>(c: StructuredCall<T>, jsonSche
       },
       { timeout: c.timeoutMs, maxRetries: 1 },
     );
+    logCache(`${c.label}.${issues ? "jsonRetry" : "jsonFallback"}`, c.model, response.usage);
+    return response;
   } catch (err) {
     logUpstream(`${c.label}.${issues ? "jsonRetry" : "jsonFallback"}`, err);
     const second = upstreamMessage(err);

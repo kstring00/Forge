@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { ActionRequest, BriefResult, ScoreResult, payloadSchemas, withRationale, type Action, type Envelope } from "../lib/schemas.js";
-import { actionInstruction, briefInstruction, scoreInstruction, stableSystem, userTurn } from "../lib/prompts.js";
+import { actionInstruction, briefInstruction, panelSystem, scoreInstruction, userTurn } from "../lib/prompts.js";
 import { enforceLaunchPlan, enforcePitch, enforcePrefill, enforceRealityCheck, enforceRound, enforceScore } from "../lib/enforce.js";
 import { content, lens } from "../lib/content.js";
 import { callStructured } from "../lib/structured.js";
@@ -38,10 +38,7 @@ async function run<T extends z.ZodTypeAny>(role: Role, label: string, stage: Sta
   const result = await callStructured({
     label, model, maxTokens,
     effort: effortFor(role),
-    system: [
-      { type: "text", text: stableSystem(lensType), cache_control: { type: "ephemeral" } },
-      { type: "text", text: instruction },
-    ],
+    system: panelSystem(lensType, instruction),
     user,
     schema: withRationale(schema),
     // Under the function's maxDuration in vercel.json.

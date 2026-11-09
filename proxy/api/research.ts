@@ -5,6 +5,7 @@ import { anthropic } from "../lib/anthropic.js";
 import { config } from "../lib/env.js";
 import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { costUSD, round4 } from "../lib/pricing.js";
+import { logCache } from "../lib/cachelog.js";
 import { researchSystem } from "../lib/prompts.js";
 import { buildPacket, cleanClaim, urlsIn, type ResearchPacket } from "../lib/packet.js";
 
@@ -79,10 +80,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       system: [{ type: "text", text: researchSystem(), cache_control: { type: "ephemeral" } }],
       tools: researchTools(config.researchModel),
       output_config: { effort: "medium" },
+      // Top-level cache marker: each continuation turn re-sends the turns
+      // before it, so those are read from cache instead of paid again.
+      cache_control: { type: "ephemeral" },
       messages,
     }, { timeout: 110_000, maxRetries: 1 });
 
     if (response.stop_reason === "refusal") throw new HttpError(502, "refused", "The model declined this request.");
+    logCache("research", config.researchModel, response.usage);
 
     const notes = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n\n").trim();
     const found = extractSources(response.content);

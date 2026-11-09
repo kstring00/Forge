@@ -35,6 +35,15 @@ function explorePromptsText(): string {
   return ["EXPLORE PROMPTS (keys in brackets):", ...content.explorePrompts.map((p) => `- [${p.key}] ${p.question} ${p.hint}${p.sphere ? ` (asked by the ${p.sphere})` : ""}`)].join("\n");
 }
 
+/// The four verdicts, shared by REALITY CHECK and BRIEF.
+const verdictDefinitions = "buildIt ('Go build it': there's a gap and the user can reach it), compete ('Worth a fight': crowded, but there is an opening), useTheirs ('Already solved': something does this well; try it first), cantTell ('Go ask people': research ran out; real people decide). 'Already solved' is a legitimate outcome; never nudge toward building.";
+
+/// Decision 0042, bench follow-up: the split Brief, without these, answered
+/// "Go ask people" for crowded, paid-for markets. The verdict judges the market
+/// the research can see; no customer conversations yet is the normal state at
+/// this point and belongs in the riskiest assumption and the next step.
+const verdictCalibration = "VERDICT: " + verdictDefinitions + " The verdict judges the market the research can see, not whether customers have been interviewed yet; nobody has talked to customers at this stage, and that belongs in the riskiest assumption and the next step. A crowded, paid-for category with a gap the user could try is compete. Choose cantTell only when the research cannot show what people use today or whether anyone pays for it.";
+
 // The prefill's parts (decision 0042). The full PREFILL is still one call for
 // older apps that ask for it; a check now runs SCORE on the scoring model and
 // then BRIEF on the brief model, each with its own parts.
@@ -69,6 +78,7 @@ Write the rationale as one sentence: what the scores rest on most.`;
 /// The brief model (config/hunch.ts) writes the panel's take from the packet and the scores.
 export const briefInstruction = `BRIEF. Write the panel's take from the research packet, the Library and the PANEL SCORES below (the five panelists already scored; do not re-score or contradict their numbers without saying why).
 ${numbered([part.title, part.realityCheck, part.explorations, part.riskiest, part.nextMove, part.draftedAssets, part.pivots])}
+${verdictCalibration}
 ${part.citing}
 Write the rationale as three sentences: what the Library supports, what it does not, and the one thing nobody can tell from a desk.`;
 
@@ -95,7 +105,7 @@ export function actionInstruction(action: Action): string {
     case "runRound":
       return "RUN A ROUND. Each requested Sphere returns one verdict: onTrack, offTrack or cantTell, the criterion key it judges, a two-sentence reason, and the source ids it relies on. No source means cantTell with the evidence that would change it. Then crossfire only between Spheres whose verdicts conflict (one onTrack, the other offTrack): at most one reply per such pair, one sentence, answering the other Sphere's reason from your own framework.";
     case "realityCheck":
-      return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: buildIt ('Go build it': there's a gap and the user can reach it), compete ('Worth a fight': crowded, but there is an opening), useTheirs ('Already solved': something does this well; try it first), cantTell ('Go ask people': research ran out; real people decide). 'Already solved' is a legitimate outcome; never nudge toward building. Quote figures with the date fetched when the source has one.";
+      return "REALITY CHECK. From the Library sources only: list 3 to 8 current alternatives (including do nothing and DIY) with pricing where public, positioning, praises, complaints and traction signals, each pointing at a source id; list demand signals each tagged with the rung it supports (never above the desk ceiling); draw the gap map as a Blue Ocean grid in prose; note fit to the user's advantages and constraints; end with one of four verdicts: " + verdictDefinitions + " Quote figures with the date fetched when the source has one.";
     case "launchPlan":
       return `LAUNCH PLAN. Write a short launch plan for this idea from what the Library and the user's own record show, and nothing else. It is read on a phone and printed for a partner or a lender, so every line earns its place: no filler, no headings, no generic advice that would fit any business.
 - oneLine: what it is, for whom, in one sentence under 20 words.

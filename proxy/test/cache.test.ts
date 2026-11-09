@@ -30,3 +30,9 @@ test("the plan numbers the server sends are the ones the app ships with", async 
   assert.deepEqual(JSON.parse(JSON.stringify(hunchConfig.rules)), fixture,
     "config/hunch.ts rules and test/fixtures/rules.json differ: change both, and ForgeCore's PlanRules defaults (RulesFixtureTests checks those)");
 });
+
+test("the Brief writer gets the four verdicts and judges the market, not the interviews", async () => {
+  const { briefInstruction } = await import("../lib/prompts.js");
+  for (const v of ["buildIt", "compete", "useTheirs", "cantTell", "Worth a fight", "Go ask people"]) assert.ok(briefInstruction.includes(v), v);
+  assert.ok(briefInstruction.includes("A crowded, paid-for category with a gap the user could try is compete"));
+});

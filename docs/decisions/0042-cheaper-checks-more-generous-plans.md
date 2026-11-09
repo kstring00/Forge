@@ -48,3 +48,19 @@ Built on its own branch after this PR merges and then #30 merges, in that order.
 - **No dollar figures in the App Store app, ever.** The cost meter and the AI cost cap stay in Settings → Developer, test builds only.
 - **Pro may run panelists on Sonnet** with no extra checks; fair-use limits cap it. The Developer cost meter shows the extra cost per check so it can be watched in the beta.
 - **Reddit is paste-only**, never fetched by the server. The Library offers a one-tap Paste button and a friendly line: "Reddit doesn't let apps read posts directly. Copy the post and paste it here." Other sites are fetched through the proxy, with paste as the fallback when a site blocks it.
+
+## Bench results (Nov 9, five sample ideas, real API)
+Measured with `proxy/bench/` on the developer's Mac; replaces the estimates above.
+
+| Per check, average | Before | After |
+|---|---|---|
+| Research (Haiku, 5 web searches) | $0.103 | $0.108 |
+| Scoring (Haiku) | in the prefill | $0.005 |
+| Brief, next step, What-ifs (Sonnet) | $0.087 (whole prefill) | $0.070 |
+| **Total** | **$0.191** | **$0.183** (4% less) |
+| Follow-ups (launch plan, re-score) | $0.053–0.062 | $0.012–0.024 (about 70% less) |
+
+- **Research is most of a check** (about $0.10: half the five searches, half reading their results). This decision did not touch it; it is the next cost lever (fewer searches, cheaper results to read), each change with its own bench run.
+- **Sources held:** criteria citing a real page 25 → 26 of 30, pages cited 63 → 64, claims resting on the model's own notes 0 → 0, every competitor sourced in both.
+- **Verdicts shifted:** before, 5 of 5 "Worth a fight"; after, 2 "Worth a fight" and 3 "Go ask people", some contradicting their own summary ("crowded" yet "Go ask people"). The split Brief had never been given the four verdicts' definitions. Fixed: BRIEF now carries them and the rule that the verdict judges the market the research can see, not whether customers have been interviewed (that goes in the riskiest assumption and the next step). To be confirmed by a rerun of "after".
+- **Two failures fixed along the way:** re-scores cut off when Haiku's thinking used up 8,000 tokens (now 16,000, and a cut-off answer is retried as plain JSON instead of failing); the Brief's schema is refused by the structured-output compiler on every call, so it goes straight to plain JSON.

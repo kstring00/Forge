@@ -2,6 +2,7 @@
 // per action. Volatile content (the idea, its sources) goes in the user turn.
 import { content, lensText, spheresText } from "./content.js";
 import { config } from "./env.js";
+import { notesFormat } from "./packet.js";
 import type { Action, AIContextT } from "./schemas.js";
 
 export const houseRules = `You are the AI partner inside FORGE, a personal idea-to-execution tool. You are constructive and skeptical.
@@ -11,6 +12,7 @@ export const houseRules = `You are the AI partner inside FORGE, a personal idea-
 - Preserve the user's original intent. You never edit the user's words; you propose, the user decides.
 - Everything you propose is labeled AI-found until the user verifies it. Desk research proves at most that the problem and the market exist (evidence rung ${content.deskResearchRungCeiling}). Rungs 3 to 5 require a real person outside the app giving time, money or coming back.
 - Cite only the Library sources you are given, by their exact id, and only in the sourceIDs fields. Never write an id into prose the user will read; name the source by its title there.
+- When a RESEARCH PACKET is given, it is this idea's shared research. Read it instead of searching, and cite the source id each finding names. A finding with no id is not citable. If you need something the packet and the Library do not cover, say what is missing (as evidenceNeeded, in a note, or as an assumption). Never guess a fact, a figure or a source.
 - Be short. Plain English. No headings in free text.`;
 
 export function stableSystem(lensType: string): string {
@@ -93,10 +95,21 @@ export function userTurn(ctx: AIContextT, options: Record<string, unknown> | und
   if (ctx.constraints.length) parts.push("Standing constraints:\n" + ctx.constraints.map((c) => `- ${c}`).join("\n"));
   if (ctx.stewardCharter) parts.push(`Steward charter (for the Steward only): ${ctx.stewardCharter}`);
   if (ctx.aboutUser) parts.push(`About this user, from their own record of rulings and outcomes (kept by FORGE, not a judgment of them): ${ctx.aboutUser}\nUse it to anticipate where they over- or under-weigh evidence. Never quote it back to them.`);
+  if (ctx.packet && ctx.packet.findings.length) {
+    const date = ctx.packet.researchedAt ? ` (researched ${ctx.packet.researchedAt.slice(0, 10)})` : "";
+    const lines: string[] = [`RESEARCH PACKET${date}. One line per finding: [source id] what the page shows.`];
+    for (const section of ["competitors", "prices", "complaints", "demand", "other"] as const) {
+      const fs = ctx.packet.findings.filter((f) => f.section === section);
+      if (!fs.length) continue;
+      lines.push(`${section.toUpperCase()}:`, ...fs.map((f) => `- [${f.sourceID ?? "no id"}] ${f.text}`));
+    }
+    if (ctx.packet.gaps.length) lines.push("THE RESEARCH COULD NOT FIND:", ...ctx.packet.gaps.map((g) => `- ${g}`));
+    parts.push(lines.join("\n"));
+  }
   if (ctx.sources.length) {
-    parts.push("LIBRARY SOURCES (cite by id; class and reviewed flag matter):\n" + ctx.sources.map((s) => {
+    parts.push("LIBRARY SOURCES (cite by id; class and reviewed flag matter; pages the packet covers are listed by title):\n" + ctx.sources.map((s) => {
       const text = s.chunks.map((c) => c.text).join("\n").slice(0, 6000);
-      return `--- source id=${s.id} class=${s.sourceClass} reviewed=${s.reviewed}\n${s.title}\n${text}`;
+      return `--- source id=${s.id} class=${s.sourceClass} reviewed=${s.reviewed}\n${s.title}${text ? `\n${text}` : ""}`;
     }).join("\n"));
   } else {
     parts.push("LIBRARY SOURCES: none. Every verdict must be cantTell and every claim an assumption.");
@@ -113,4 +126,4 @@ You are doing desk research for a Reality Check on one idea. Use web_search and 
 2. Demand signals: complaint threads, community posts, job postings for roles that handle the problem, search-interest proxies, "I wish there was" posts.
 3. Anything that bears on the user's angle specifically.
 Prefer primary pages (pricing pages, review sites, forums) over blog roundups. You have at most ${config.maxSearchesPerResearchCall} searches and ${config.maxFetchesPerResearchCall} fetches: search broadly first, then fetch only the pages that carry prices, reviews or complaints. Do not fetch the same site twice.
-When you are done, write RESEARCH NOTES: a plain list of claims, each ending with the URL it came from and the date if the page shows one. No verdict, no recommendation, no praise. If you could not find something, say "could not find".`;
+${notesFormat}`;

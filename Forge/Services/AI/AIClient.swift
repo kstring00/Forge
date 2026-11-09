@@ -46,6 +46,8 @@ public struct AIContext: Codable, Sendable {
     /// The user's own track record against the panel, kept by FORGE (§5).
     /// Under 80 words; the user reads, edits and resets it in Settings.
     public var aboutUser: String?
+    /// Decision 0042: the check's shared research, findings tied to Library sources.
+    public var packet: PacketSnapshot?
     public var spheres: [Sphere] = Sphere.phase3Panel
 
     public init(ideaID: UUID, originalText: String, title: String, lens: LensType? = nil) {
@@ -54,6 +56,20 @@ public struct AIContext: Codable, Sendable {
         self.title = title
         self.lens = lens
     }
+}
+
+/// The research packet as the proxy reads it: each finding with the id of
+/// the Library source for its page (nil when no source has that address).
+public struct PacketSnapshot: Codable, Sendable {
+    public struct Finding: Codable, Sendable {
+        public var section: ResearchPacket.Section
+        public var text: String
+        public var url: String
+        public var sourceID: UUID?
+    }
+    public var researchedAt: String?
+    public var findings: [Finding]
+    public var gaps: [String]
 }
 
 public struct ScoredCriterionSnapshot: Codable, Sendable {

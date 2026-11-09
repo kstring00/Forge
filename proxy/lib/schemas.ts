@@ -2,6 +2,7 @@
 // Structured outputs guarantee the shape; the clamps in `enforce.ts` guarantee
 // the honesty rules (desk research never exceeds rung 2, no source → cantTell).
 import { z } from "zod";
+import { packetSections } from "./packet.js";
 
 export const actions = [
   "expand", "summarize", "explainCriterion", "designExperiment", "nextStep", "plan",
@@ -45,6 +46,19 @@ export const AIContext = z.object({
   constraints: z.array(z.string()).default([]),
   stewardCharter: z.string().nullable().optional(),
   aboutUser: z.string().nullable().optional(),
+  /// The check's shared research (decision 0042): findings with the Library
+  /// source each came from. When present, Library pages arrive without their
+  /// text; the packet is what the panel reads.
+  packet: z.object({
+    researchedAt: z.string().nullable().optional(),
+    findings: z.array(z.object({
+      section: z.enum(packetSections),
+      text: z.string(),
+      url: z.string(),
+      sourceID: uuid.nullable(),
+    })).default([]),
+    gaps: z.array(z.string()).default([]),
+  }).nullable().optional(),
   spheres: z.array(sphere).default([...["investor", "customer", "builder", "strategist", "skeptic"]] as z.infer<typeof sphere>[]),
 });
 export type AIContextT = z.infer<typeof AIContext>;

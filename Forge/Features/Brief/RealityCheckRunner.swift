@@ -99,6 +99,7 @@ final class RealityCheckRunner {
             var messages: [JSONValue]? = nil
             var gathered: [ResearchResponse.Source] = []
             var notes = ""
+            var packet: ResearchPacket?
             for turn in 1...Self.maxResearchTurns {
                 phase = .researching(turn: turn, sources: gathered.count)
                 let r = try await proxy.research(ideaID: idea.id, title: idea.title, originalText: idea.originalText,
@@ -108,6 +109,7 @@ final class RealityCheckRunner {
                 try Task.checkCancellation()
                 gathered.append(contentsOf: r.sources)
                 if !r.notes.isEmpty { notes = r.notes }
+                if let p = r.packet { packet = p }
                 phase = .researching(turn: turn, sources: gathered.filter { $0.kind == "fetched" || $0.kind == "noted" }.count)
                 if r.status == "done" { break }
                 messages = r.messages
@@ -120,7 +122,8 @@ final class RealityCheckRunner {
             step = .prefill
             phase = .prefilling
             startLighting()
-            let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea), expecting: PrefillResult.self)
+            // Decision 0042: the panel reads this check's packet, not the pages again.
+            let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea, packet: packet, researchedAt: .now), expecting: PrefillResult.self)
             stopLighting()
             spendRecord(envelope.costUSD ?? 0)
             try Task.checkCancellation()

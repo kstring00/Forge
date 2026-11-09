@@ -6,7 +6,7 @@ import researchHandler from "../api/research.js";
 import actionHandler from "../api/action.js";
 import { call, source, type BenchSource, type StageCost } from "./harness.js";
 
-export const flowVersion = "before: research turns + one prefill on the sphere model";
+export const flowVersion = "A: one research pass → packet; the prefill reads the packet, pages by title";
 
 export interface Idea { slug: string; id: string; title: string; text: string }
 
@@ -14,7 +14,7 @@ export interface CheckRecord {
   flowVersion: string;
   idea: Idea;
   stages: StageCost[];
-  research: { turns: number; notes: string; sources: { kind: string; url: string; title: string }[] };
+  research: { turns: number; notes: string; sources: { kind: string; url: string; title: string }[]; packet?: any };
   library: { id: string; title: string; url: string | null; kind: string }[];
   prefill: any;
   rationale: string;
@@ -35,11 +35,21 @@ function stageFrom(stage: string, body: any, ms: number): StageCost {
   };
 }
 
-/// AIContext.make(for:) for a fresh idea: no lens, no explorations, every Library source.
-function context(idea: Idea, library: BenchSource[]) {
+/// AIContext.make(for:packet:) for a fresh idea: with a packet, web pages go by
+/// title only and the person's own sources in full; findings carry the id of
+/// the source with their page's address.
+function context(idea: Idea, library: BenchSource[], packet?: any, researchedAt?: string) {
+  const lean = (s: BenchSource) => packet && s.sourceClass !== "userVerified";
+  const byURL = new Map<string, string>();
+  for (const s of library) if (s.url && !byURL.has(s.url)) byURL.set(s.url, s.id);
   return {
     ideaID: idea.id, originalText: idea.text, title: idea.title,
-    sources: library.map((s) => ({ id: s.id, title: s.title, sourceClass: s.sourceClass, reviewed: s.reviewed, chunks: s.chunks })),
+    sources: library.map((s) => ({ id: s.id, title: s.title, sourceClass: s.sourceClass, reviewed: s.reviewed, chunks: lean(s) ? [] : s.chunks })),
+    packet: packet ? {
+      researchedAt: researchedAt ?? null,
+      findings: packet.findings.map((f: any) => ({ section: f.section, text: f.text, url: f.url, sourceID: [f.url, ...f.alsoURLs].map((u: string) => byURL.get(u)).find(Boolean) ?? null })),
+      gaps: packet.gaps,
+    } : null,
   };
 }
 
@@ -57,6 +67,7 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
     rec.research.turns = turn;
     gathered.push(...r.body.sources);
     if (r.body.notes) rec.research.notes = r.body.notes;
+    if (r.body.packet) rec.research.packet = r.body.packet;
     if (r.body.status === "done") break;
     messages = r.body.messages;
   }
@@ -74,9 +85,10 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
   if (rec.research.notes.trim()) library.push(source("Research notes", rec.research.notes.trim(), null, "text"));
   rec.library = library.map((s) => ({ id: s.id, title: s.title, url: s.url, kind: s.kind }));
 
-  // 3. The prefill: one call writes the panel, the scores and the Brief.
+  const researchedAt = new Date().toISOString();
+  // 3. The prefill reads the packet.
   const t0 = Date.now();
-  const p = await call(actionHandler as never, { action: "prefill", context: context(idea, library) });
+  const p = await call(actionHandler as never, { action: "prefill", context: context(idea, library, rec.research.packet, researchedAt) });
   if (p.status !== 200) { rec.errors.push(`prefill ${p.status}: ${JSON.stringify(p.body).slice(0, 300)}`); return rec; }
   rec.stages.push(stageFrom("prefill", p.body, Date.now() - t0));
   rec.prefill = p.body.payload;

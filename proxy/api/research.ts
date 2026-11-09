@@ -6,6 +6,7 @@ import { config } from "../lib/env.js";
 import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { researchSystem } from "../lib/prompts.js";
+import { buildPacket, cleanClaim, urlsIn, type ResearchPacket } from "../lib/packet.js";
 
 /// Desk research for a Reality Check, one model turn per HTTP call so each
 /// call stays inside the function time limit. The app loops while `status`
@@ -47,6 +48,9 @@ export interface ResearchSource {
 
 export interface ResearchResponse {
   status: "done" | "paused";
+  /// The shared research packet, on the turn that finishes ("done"). Every
+  /// panelist and the Brief read it instead of searching again.
+  packet?: ResearchPacket;
   messages: Anthropic.MessageParam[];
   sources: ResearchSource[];
   notes: string;
@@ -95,6 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       messages: [...messages, { role: "assistant", content: response.content }],
       sources,
       notes,
+      packet: response.stop_reason === "pause_turn" ? undefined : buildPacket(notes, found),
       model: response.model,
       usage: {
         inputTokens: u.input_tokens,
@@ -166,17 +171,11 @@ export function notedSources(notes: string, found: ResearchSource[]): ResearchSo
   for (const raw of notes.split("\n")) {
     const line = raw.trim();
     if (!line) continue;
-    const urls = [...line.matchAll(/https?:\/\/[^\s)\]>"']+/g)].map((m) => m[0].replace(/[.,;:!?]+$/, ""));
+    const urls = urlsIn(line);
     if (!urls.length) continue;
-    const claim = line
-      .replace(/https?:\/\/[^\s)\]>"']+/g, "")
-      .replace(/^(?:[-*•]|\d+[.)])\s+/, "")
-      .replace(/\(\s*\)|\[\s*\]/g, "")
-      .replace(/\s+([.,;:])/g, "$1")
-      .replace(/[\s()[\]\-–—:,;]+$/, "")
-      .trim();
+    const claim = cleanClaim(line);
     if (claim.length < 12) continue;
-    for (const url of new Set(urls)) {
+    for (const url of urls) {
       if (fetched.has(url)) continue;
       const list = claims.get(url) ?? [];
       list.push(claim);

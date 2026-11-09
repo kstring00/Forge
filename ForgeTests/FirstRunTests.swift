@@ -44,6 +44,7 @@ final class FirstRunTests: XCTestCase {
         XCTAssertTrue(f.offersFirstCheck(hasAnyCheck: true))
         XCTAssertTrue(f.showsGuide(.verdict))
         f.markWelcomeSeen()
+        XCTAssertFalse(f.showsWelcome(ideasEmpty: false), "leaving the welcome during a replay never traps you on it")
         f.dismiss(.verdict); f.dismiss(.orbs)
         XCTAssertTrue(f.replaying)
         f.dismiss(.nextStep)

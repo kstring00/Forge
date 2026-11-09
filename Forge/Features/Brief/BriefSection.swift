@@ -47,7 +47,9 @@ struct BriefSection: View {
                     if env.entitlements.has(.whatIf) {
                         WhatIfCards(idea: idea, check: check, evaluation: evaluation)
                     } else {
-                        WhatIfLocked(count: check.pivots.count)
+                        // Decision 0038: Free sees the panel's first What-if; the rest are Plus.
+                        WhatIfCards(idea: idea, check: check, evaluation: evaluation, limit: 1)
+                        if check.pivots.count > 1 { WhatIfLocked(count: check.pivots.count - 1) }
                     }
                 }
                 buttons

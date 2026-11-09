@@ -181,7 +181,8 @@ struct HomeView: View {
                 Text("Everything you have is in the card above.").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(listed.prefix(8)) { idea in
-                StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
+                // Decision 0038: one card design everywhere.
+                IdeaCard(idea: idea, status: IdeaStatus.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil))
             }
         }
         .padding(.top, ForgeSpacing.s)

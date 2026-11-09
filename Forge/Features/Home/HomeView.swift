@@ -274,7 +274,7 @@ struct StakeCard: View {
     private var heading: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).lineLimit(1)
+                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 StageTrail(track: idea.track)
             }

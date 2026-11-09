@@ -87,7 +87,7 @@ enum EstimatedReturn {
 /// evaluation yet, nothing: the card's title opens the idea).
 struct EstimatedReturnRow: View {
     let idea: Idea
-    /// Dense, for the stakes cards; full, for the next-move panel.
+    /// One row, for the cards; stacked and centred, for "What's riding on it".
     var compact = true
     /// Leading on the cards, trailing in the next-move panel.
     var alignment: HorizontalAlignment = .leading
@@ -100,19 +100,7 @@ struct EstimatedReturnRow: View {
 
     var body: some View {
         Button { if opens { showing = true } } label: {
-            VStack(alignment: alignment, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(value.label).forgeLabelSmall()
-                    if let prefix { Text("\(prefix) ·").forgeLabelSmall() }
-                    if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
-                    if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
-                    figure
-                }
-                if let basis {
-                    Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
-                }
-            }
-            .contentShape(Rectangle())
+            if compact { row } else { stacked }
         }
         .buttonStyle(.plain)
         .disabled(!opens)
@@ -121,6 +109,57 @@ struct EstimatedReturnRow: View {
         .sheet(isPresented: $showing) {
             if let e = idea.latestEvaluation { ProjectionEstimateSheet(idea: idea, evaluation: e) }
         }
+    }
+
+    /// The full panel's column: label, figure and basis on their own lines,
+    /// centred, every line free to wrap. Nothing is ever cut off.
+    private var stacked: some View {
+        VStack(spacing: 8) {
+            Text(value.label).forgeLabelSmall().multilineTextAlignment(.center)
+            Group {
+                switch value {
+                case .yours, .estimate: figure
+                default:
+                    Text(placeholderText)
+                        .font(Font.custom("Fraunces-Italic", size: 18, relativeTo: .body))
+                        .foregroundStyle(ForgeColor.ink)
+                }
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            if let basis {
+                Text(basis).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+
+    private var placeholderText: String {
+        switch value {
+        case .impact(let lead, _): lead
+        case .impactMissing: "Add who it helps"
+        case .unchecked: "Get the panel's take"
+        case .none: "No price found yet"
+        default: "Too early to estimate"
+        }
+    }
+
+    private var row: some View {
+        VStack(alignment: alignment, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(value.label).forgeLabelSmall()
+                if let prefix { Text("\(prefix) ·").forgeLabelSmall() }
+                if case .estimate = value { EvidenceChip(pattern: .stripes, size: 9) }
+                if case .yours(_, let verified) = value { EvidenceChip(pattern: verified ? .solid : .dots, size: 9) }
+                figure
+            }
+            if let basis {
+                Text(basis).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2)
+            }
+        }
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder

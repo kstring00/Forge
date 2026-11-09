@@ -62,7 +62,7 @@ struct CardMeters: View {
                 .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
             ProofLadder(reached: stage.ladderIndex)
             if let move = idea.proofMoves.last, move.isRecent() {
-                Text("Up today · \(move.from)").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink).lineLimit(1)
+                Text("Up today · \(move.from)").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
             }
         } caption: {
             // The dots say where it is; this says what moves it.

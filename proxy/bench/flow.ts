@@ -6,7 +6,7 @@ import researchHandler from "../api/research.js";
 import actionHandler from "../api/action.js";
 import { call, source, type BenchSource, type StageCost } from "./harness.js";
 
-export const flowVersion = "B: packet → scoring model scores, brief model writes the Brief; re-score is scoring only";
+export const flowVersion = "D: as B, and follow-ups (launch plan, re-score) read the saved packet";
 
 export interface Idea { slug: string; id: string; title: string; text: string }
 
@@ -104,14 +104,14 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
 
   // 4. Follow-ups on the checked idea: a launch plan, and a re-score after a logged conversation.
   const t1 = Date.now();
-  const plan = await call(actionHandler as never, { action: "launchPlan", context: context(idea, library), options: { paid: "No one has paid yet." } });
+  const plan = await call(actionHandler as never, { action: "launchPlan", context: context(idea, library, rec.research.packet, researchedAt), options: { paid: "No one has paid yet." } });
   if (plan.status === 200) rec.followUps.push({ kind: "launchPlan", payload: plan.body.payload, stage: stageFrom("followUp", plan.body, Date.now() - t1) });
   else rec.errors.push(`launchPlan ${plan.status}: ${JSON.stringify(plan.body).slice(0, 300)}`);
 
   const talk = source("Conversation · bench", "A potential customer said this is a real weekly problem and asked what it would cost. They agreed to a follow-up call next week.", null, "note", "userVerified");
   talk.reviewed = true;
   const t2 = Date.now();
-  const re = await call(actionHandler as never, { action: "rescore", context: context(idea, [...library, talk]) });
+  const re = await call(actionHandler as never, { action: "rescore", context: context(idea, [...library, talk], rec.research.packet, researchedAt) });
   if (re.status === 200) rec.followUps.push({ kind: "rescore", payload: { criteria: re.body.payload.criteria }, stage: stageFrom("followUp", re.body, Date.now() - t2) });
   else rec.errors.push(`rescore ${re.status}: ${JSON.stringify(re.body).slice(0, 300)}`);
   return rec;

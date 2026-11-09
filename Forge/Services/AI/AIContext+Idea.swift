@@ -5,8 +5,12 @@ extension AIContext {
     /// Everything the model may see for one idea, and nothing else. With a
     /// research packet (decision 0042) the panel reads the packet: web pages go
     /// by title only (still citable by id), the person's own sources in full.
+    /// By default that is the idea's saved packet, so nothing after a check
+    /// searches again; a check passes the packet its research just built.
     @MainActor
-    static func make(for idea: Idea, packet: ResearchPacket? = nil, researchedAt: Date? = nil) -> AIContext {
+    static func make(for idea: Idea, packet fresh: ResearchPacket? = nil, researchedAt freshAt: Date? = nil) -> AIContext {
+        let packet = fresh ?? idea.researchPacket
+        let researchedAt = fresh != nil ? freshAt : idea.researchedAt
         var ctx = AIContext(ideaID: idea.id, originalText: idea.originalText, title: idea.title, lens: idea.lensType)
         ctx.explorations = idea.explorations
             .filter { !ExplorePrompts.isAIKey($0.promptKey) && !$0.userText.isEmpty }

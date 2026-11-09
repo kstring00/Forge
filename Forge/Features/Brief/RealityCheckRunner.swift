@@ -131,6 +131,11 @@ final class RealityCheckRunner {
             // 3. Records.
             phase = .applying
             let applied = PrefillApplier.apply(envelope.payload, rationale: envelope.rationale, costUSD: spentUSD, to: idea, in: context)
+            // Decision 0042: the packet is kept with the idea; follow-ups read it.
+            if let packet {
+                idea.researchPacket = packet
+                idea.researchedAt = .now
+            }
             litSpheres = Set(Sphere.phase3Panel)
             AISpend.lastRealityCheckUSD = spentUSD
             applied.realityCheck.actualCostUSD = spentUSD

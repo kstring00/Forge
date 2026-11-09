@@ -51,6 +51,10 @@ struct IdeaExport: Codable {
     /// Optional so old exports import.
     var titleEdited: Bool? = nil
     var proofMoves: [ProofMove]? = nil
+    /// Decisions 0041, 0042. Optional so old exports import.
+    var launchPlan: LaunchPlan? = nil
+    var researchPacket: ResearchPacket? = nil
+    var researchedAt: Date? = nil
 }
 
 struct TriageExport: Codable {

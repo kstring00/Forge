@@ -10,6 +10,8 @@ final class AppEnvironment {
     let speech: SpeechCapture
     /// Reality Checks run here so they survive navigation and Home can narrate them.
     let realityChecks: RealityCheckCenter
+    /// Decision 0041: launch plans, built here so they survive navigation.
+    let plans: PlanBuilder
     /// Decision 0032: whether a check may start, and what's left. Local today, the proxy ledger later.
     let entitlements: any EntitlementService
     /// StoreKit 2: products, purchases, restore, renewals.
@@ -40,10 +42,13 @@ final class AppEnvironment {
         self.ai = ai
         self.speech = speech
         self.realityChecks = RealityCheckCenter(proxy: ai as? ProxyAIClient)
+        self.plans = PlanBuilder(proxy: ai as? ProxyAIClient)
         let entitlements = LocalEntitlements()
         self.entitlements = entitlements
         self.membership = MembershipStore(entitlements: entitlements)
         realityChecks.entitlements = entitlements
+        plans.entitlements = entitlements
+        plans.checks = realityChecks
     }
 
     /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.

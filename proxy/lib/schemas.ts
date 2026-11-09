@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const actions = [
   "expand", "summarize", "explainCriterion", "designExperiment", "nextStep", "plan",
-  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill",
+  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan",
 ] as const;
 export type Action = (typeof actions)[number];
 
@@ -171,6 +171,25 @@ export const PrefillResult = z.object({
   pivots: z.array(PivotDraft),
 });
 
+/// Decision 0041: a launch plan, two pages, built only from what Hunch knows.
+/// A "proven" line must point at a Library source; one that doesn't is moved
+/// to "unproven" by `enforceLaunchPlan`.
+export const PlanClaim = z.object({ text: z.string(), sourceID: sourceId.nullable() });
+export const PlanPhase = z.object({ title: z.string(), detail: z.string(), decide: z.string() });
+export const LaunchPlanResult = z.object({
+  oneLine: z.string(),
+  forWho: z.string(),
+  proven: z.array(PlanClaim),
+  unproven: z.array(z.string()),
+  riskiest: z.string(),
+  days1to30: PlanPhase,
+  days31to60: PlanPhase,
+  days61to90: PlanPhase,
+  customerNoun: z.string(),
+  stopRule: z.string(),
+  stewardNote: z.string().nullable(),
+});
+
 export const payloadSchemas = {
   expand: ExpandResult,
   summarize: SummarizeResult,
@@ -184,6 +203,7 @@ export const payloadSchemas = {
   runRound: RoundResult,
   realityCheck: RealityCheckResult,
   prefill: PrefillResult,
+  launchPlan: LaunchPlanResult,
 } satisfies Record<Action, z.ZodTypeAny>;
 
 /// What goes back to the app: the payload, a short rationale, and accounting.

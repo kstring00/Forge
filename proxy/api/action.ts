@@ -4,7 +4,7 @@ import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError }
 import { costUSD, round4 } from "../lib/pricing.js";
 import { ActionRequest, payloadSchemas, withRationale, type Action, type Envelope } from "../lib/schemas.js";
 import { actionInstruction, stableSystem, userTurn } from "../lib/prompts.js";
-import { enforcePitch, enforcePrefill, enforceRealityCheck, enforceRound } from "../lib/enforce.js";
+import { enforceLaunchPlan, enforcePitch, enforcePrefill, enforceRealityCheck, enforceRound } from "../lib/enforce.js";
 import { content, lens } from "../lib/content.js";
 import { callStructured } from "../lib/structured.js";
 
@@ -50,6 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === "runRound") payload = enforceRound(payload as never, known);
     if (action === "realityCheck") payload = enforceRealityCheck(payload as never, known, dropped);
     if (action === "pitch") payload = enforcePitch(payload as never, known);
+    if (action === "launchPlan") payload = enforceLaunchPlan(payload as never, known, dropped);
     if (action === "prefill") {
       payload = enforcePrefill(payload as never, known, lens(lensType).criteria.map((c) => c.key), content.explorePrompts.map((p) => p.key), dropped);
     }

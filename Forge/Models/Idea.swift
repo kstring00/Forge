@@ -72,6 +72,15 @@ public final class Idea {
 
     public var isArchived: Bool { archivedAt != nil }
 
+    /// Decision 0041: the idea's launch plan, if one was made. Stored as JSON
+    /// so the plan's shape can grow without a schema change.
+    public var launchPlanData: Data?
+
+    public var launchPlan: LaunchPlan? {
+        get { launchPlanData.flatMap { try? JSONDecoder().decode(LaunchPlan.self, from: $0) } }
+        set { launchPlanData = newValue.flatMap { try? JSONEncoder().encode($0) } }
+    }
+
     public var latestEvaluation: Evaluation? {
         evaluations.max { $0.version < $1.version }
     }

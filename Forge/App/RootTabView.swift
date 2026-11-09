@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Home · Ideas · Journal (decision 0025), the capture dock on every
+/// Home · Ideas · Sparks · Plans · Journal (decisions 0025, 0040, 0041), the capture dock on every
 /// top-level screen, and the one capture sheet.
 struct RootTabView: View {
     @Environment(AppEnvironment.self) private var env
@@ -21,6 +21,9 @@ struct RootTabView: View {
             SparksView()
                 .tabItem { Label(ForgeTab.sparks.title, systemImage: ForgeTab.sparks.symbol) }
                 .tag(ForgeTab.sparks)
+            PlansView()
+                .tabItem { Label(ForgeTab.plans.title, systemImage: ForgeTab.plans.symbol) }
+                .tag(ForgeTab.plans)
             NavigationStack {
                 JournalView(asTab: true)
                     .captureDock()

@@ -27,11 +27,13 @@ struct CardMeters: View {
         let p = evaluation.flatMap { $0.criteria.isEmpty ? nil : $0.potential }
         return tile(label: "Potential") {
             if let p {
-                Text(PotentialWord.word(p))
-                    .font(Font.custom("Fraunces-SemiBold", size: 20, relativeTo: .title3))
-                    .foregroundStyle(ForgeColor.ink)
-                    .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
-                Segments(filled: PotentialWord.segments(p), of: 5)
+                HStack(spacing: 10) {
+                    ScoreRing(value: p, size: 46)
+                    Text(PotentialWord.word(p))
+                        .font(Font.custom("Fraunces-SemiBold", size: 20, relativeTo: .title3))
+                        .foregroundStyle(ForgeColor.ink)
+                        .lineLimit(2).minimumScaleFactor(0.85).fixedSize(horizontal: false, vertical: true)
+                }
             } else if let verdict = idea.latestRealityCheck?.verdict {
                 Text(verdict.displayName)
                     .font(Font.custom("Fraunces-SemiBold", size: 18, relativeTo: .title3))
@@ -39,7 +41,7 @@ struct CardMeters: View {
                     .lineLimit(2).minimumScaleFactor(0.8)
             }
         } caption: {
-            Text(ownedByPerson ? "your score" : "the panel's view")
+            Text(p == nil ? (ownedByPerson ? "your score" : "the panel's view") : "out of 100 · \(ownedByPerson ? "your score" : "the panel's view")")
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(p.map { "Potential: \(PotentialWord.word($0)), \(ownedByPerson ? "your score" : "the panel's view"). Opens what it rests on." } ?? "Potential not scored")

@@ -13,6 +13,13 @@ struct HomeView: View {
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @Query(filter: #Predicate<Project> { $0.statusRaw == "active" }) private var activeProjects: [Project]
     @AppStorage("home.sort") private var sortRaw = HomeSort.biggestOpportunity.rawValue
+    /// Home pass (a): the status bar above and the tab bar below, and how solid the cover over the status bar is.
+    @State private var safeArea = EdgeInsets()
+    @State private var topCover: Double = 0
+    private static let scrollSpace = "home.scroll"
+    /// The window's own insets are the floor, in case the reading above comes back empty.
+    private var topInset: CGFloat { max(safeArea.top, WindowInsets.current.top) }
+    private var bottomInset: CGFloat { max(safeArea.bottom, WindowInsets.current.bottom) }
 
     private var sort: HomeSort { HomeSort(rawValue: sortRaw) ?? .biggestOpportunity }
     private var live: [Idea] { TrackCounts.live(ideas) }
@@ -50,12 +57,21 @@ struct HomeView: View {
                         }
                     }
                     .padding(ForgeSpacing.m)
-                    .padding(.bottom, ForgeSpacing.dockClearance)
+                    // The last row stops clear of the fade, the capture button and the tab bar.
+                    .padding(.bottom, HomeEdges.listBottomPadding(button: CaptureDockButton.diameter, inset: CaptureDockButton.bottomInset))
                 }
+                .tracksHomeTopCover($topCover, in: Self.scrollSpace)
             }
+            .coordinateSpace(.named(Self.scrollSpace))
             .scrollDismissesKeyboard(.interactively)
             .background(ForgeColor.canvas)
             .ignoresSafeArea(edges: .top)
+            // Read outside the line above: inside it, the top inset reads as zero.
+            .readsSafeArea($safeArea)
+            // The sky fills the top at rest; once Home scrolls, rows pass behind the canvas, not under the clock.
+            .overlay(alignment: .top) { HomeTopCover(height: topInset, amount: topCover) }
+            // Rows fade out above the tab bar and the capture button; the canvas carries on behind the bar.
+            .overlay(alignment: .bottom) { HomeBottomFade(below: bottomInset).offset(y: bottomInset) }
             .toolbar(.hidden, for: .navigationBar)
             .captureDock()
             .forgeDestinations()
@@ -101,7 +117,8 @@ struct HomeView: View {
                 }
             }
             .padding(.horizontal, ForgeSpacing.m)
-            .padding(.top, 60)
+            // Below the status bar or Dynamic Island on every phone.
+            .padding(.top, HomeEdges.headerTop(safeAreaTop: topInset))
             .padding(.bottom, ForgeSpacing.l)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

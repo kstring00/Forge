@@ -19,7 +19,7 @@ final class MembershipStore {
     private let entitlements: any EntitlementService
     private var updates: Task<Void, Never>?
     private var statusUpdates: Task<Void, Never>?
-    private var refreshes = 0
+    private var refreshing: Task<Void, Never>?
 
     init(entitlements: any EntitlementService) {
         self.entitlements = entitlements
@@ -70,9 +70,20 @@ final class MembershipStore {
     /// transaction alone: after a downgrade Apple still has the person on Pro
     /// until renewal, with Plus only in the renewal info.
     func refresh() async {
-        // Several refreshes can overlap (launch, updates, foreground); only the latest applies.
-        refreshes += 1
-        let mine = refreshes
+        // Refreshes are asked for from several places at once (a purchase, the
+        // update listeners, coming to the foreground). They run one at a time, in
+        // the order asked, so the last answer applied is the newest, and a caller
+        // returns only once its own read has been applied.
+        let previous = refreshing
+        let task = Task { [weak self] in
+            await previous?.value
+            await self?.readAndApply()
+        }
+        refreshing = task
+        await task.value
+    }
+
+    private func readAndApply() async {
         var entitled: [UInt64: Transaction] = [:]
         var jws: [String] = []
         for await result in Transaction.currentEntitlements {
@@ -95,8 +106,14 @@ final class MembershipStore {
         for (id, t) in entitled where !described.contains(id) {
             snapshots.append(Self.snapshot(t, state: .subscribed, info: nil, entitled: true))
         }
-        guard mine == refreshes else { return }
         entitlements.apply(MembershipState(entitlement: SubscriptionSnapshot.deciding(snapshots)), jws: jws)
+        // A refunded top-up stays in the history as revoked. Taking its unused
+        // checks back here as well as from the update listener means a refund is
+        // never missed (it is only ever applied once per purchase).
+        for await result in Transaction.all {
+            guard case .verified(let t) = result, t.productID == MembershipProduct.topUp5, t.revocationDate != nil else { continue }
+            entitlements.refundTopUp(transactionID: String(t.id))
+        }
     }
 
     private func statuses() async -> [Product.SubscriptionInfo.Status] {

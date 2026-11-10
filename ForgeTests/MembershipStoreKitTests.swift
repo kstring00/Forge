@@ -76,9 +76,14 @@ final class MembershipStoreKitTests: XCTestCase {
         return false
     }
 
+    /// Buys, then waits until the App Store's answer has reached the app: the plan itself,
+    /// or (for a downgrade or a change of length) the switch booked for renewal.
     private func buy(_ id: String) async {
         let outcome = await store.purchase(id)
         XCTAssertEqual(outcome, .done, "buying \(id): \(store.message ?? "")")
+        guard MembershipProduct.plan(for: id) != nil else { return }
+        let landed = await eventually { state.productID == id || state.nextProductID == id }
+        XCTAssertTrue(landed, "\(id) never showed up as the plan or as the booked switch")
     }
 
     private func latest(_ id: String) -> SKTestTransaction? {
@@ -195,6 +200,9 @@ final class MembershipStoreKitTests: XCTestCase {
 
     func testExpiryDropsToFreeCarryingOne() async throws {
         await buy(MembershipProduct.plusMonthly)
+        // Cancel first: with renewal still on, the test store renews an expired plan at once.
+        let t = try XCTUnwrap(latest(MembershipProduct.plusMonthly))
+        try session.disableAutoRenewForTransaction(identifier: t.identifier)
         try session.expireSubscription(productIdentifier: MembershipProduct.plusMonthly)
         let free = await eventually { state.plan == .free }
         XCTAssertTrue(free)
@@ -238,8 +246,8 @@ final class MembershipStoreKitTests: XCTestCase {
         session.shouldEnterBillingRetryOnRenewal = true
         await buy(MembershipProduct.plusMonthly)
         try session.forceRenewalOfSubscription(productIdentifier: MembershipProduct.plusMonthly)
-        let paused = await eventually { state.plan == .free }
-        XCTAssertTrue(paused)
+        let paused = await eventually { state.plan == .free && state.billing.hasIssue }
+        XCTAssertTrue(paused, "no grace period: the plan is paused until the payment goes through")
         XCTAssertEqual(state.billing, .retrying(productID: MembershipProduct.plusMonthly))
     }
 

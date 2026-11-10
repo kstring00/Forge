@@ -113,8 +113,9 @@ final class LocalEntitlements: EntitlementService {
     }
 
     func refundTopUp(transactionID: String) {
+        let before = ledger
         ledger.refundTopUp(transactionID: transactionID, now: now(), plan: state.plan)
-        save()
+        if ledger != before { save() }
     }
 
     func recordKnownTopUps(_ transactionIDs: [String]) {

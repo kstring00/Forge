@@ -13,8 +13,13 @@ final class MembershipStoreKitTests: XCTestCase {
     private var session: SKTestSession!
     private var entitlements: LocalEntitlements!
     private var store: MembershipStore!
+    private var rulesBefore = PlanRules.current
 
     override func setUp() async throws {
+        // The tests run inside the app, which loads the plan numbers it last saved
+        // (an older server's, say). These tests are written against the shipped defaults.
+        rulesBefore = PlanRules.current
+        PlanRules.current = PlanRules()
         // Hunch.storekit is copied into the test bundle (project.yml); fall back to looking it up by name.
         if let url = Bundle(for: Self.self).url(forResource: "Hunch", withExtension: "storekit") {
             session = try SKTestSession(contentsOf: url)
@@ -25,6 +30,9 @@ final class MembershipStoreKitTests: XCTestCase {
         session.clearTransactions()
         session.disableDialogs = true
         session.timeRate = .realTime
+        // Purchases left by hand testing or by the test before must be gone before this
+        // one starts: a leftover Pro turns "buy Plus" into a downgrade.
+        try await waitForNoPurchases()
         entitlements = LocalEntitlements(defaults: UserDefaults(suiteName: "skt-\(UUID().uuidString)")!)
         // Use the free first check and Free's own monthly one, so nothing carries in from Free.
         entitlements.commitCheck(wasFreeOnProxy: false)
@@ -35,6 +43,24 @@ final class MembershipStoreKitTests: XCTestCase {
 
     override func tearDown() async throws {
         session.clearTransactions()
+        PlanRules.current = rulesBefore
+    }
+
+    /// Clearing the test store takes a moment to reach `Transaction.currentEntitlements`.
+    private func waitForNoPurchases() async throws {
+        let deadline = Date().addingTimeInterval(15)
+        var found: String?
+        while Date() < deadline {
+            found = nil
+            for await result in Transaction.currentEntitlements {
+                if case .verified(let t) = result { found = t.productID } else { found = "an unverified purchase" }
+                break
+            }
+            if found == nil { return }
+            session.clearTransactions()
+            try? await Task.sleep(nanoseconds: 300_000_000)
+        }
+        XCTFail("The StoreKit test store still holds \(found ?? "a purchase") from an earlier run.")
     }
 
     // MARK: Helpers

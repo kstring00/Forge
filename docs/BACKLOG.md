@@ -2,7 +2,7 @@
 
 Small asks from testing, waiting for the next code change. Newest first.
 
-## Next up: the Home usability pass (brief agreed Nov 10, not started)
+## Next up: the Home usability pass (brief agreed Nov 10; part (a) built, decision 0044; part (b) next)
 
 Starts only after #38 and #39 are merged, on a new branch off main, before #30. A refinement, not a redesign: the dark matte look, the orange accent, the orbs, the three stages, the five tabs and the mic button stay. It closes the two notes below marked **(Home pass)** and the Brief-rings note.
 

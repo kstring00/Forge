@@ -223,8 +223,9 @@ struct MembershipView: View {
         case .subscribe where plan == .plus:
             if period == .yearly && store.trialEligible { return "7 days free, up to \(MembershipState.trialChecks) checks. Cancel anytime." }
             return nil
-        case .booked(let d):
-            return "Starts \(d.map(day) ?? "at your renewal"). Nothing is charged until then."
+        case .booked:
+            // The badge beside the name already says "Starts Dec 9".
+            return "Nothing is charged until then."
         case nil where plan == .free && state.plan != .free && !state.isCancelled:
             return "To go back to Free, cancel in Manage subscription. Your plan runs until \(renewalDay)."
         default:

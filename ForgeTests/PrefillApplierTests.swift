@@ -64,7 +64,12 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertTrue(e.criteria.allSatisfy(\.aiProposed))
         XCTAssertEqual(e.criterionScore(for: "A2")?.score, 2)
         XCTAssertEqual(e.criterionScore(for: "A1")?.evidence.first?.source?.id, page.id)
-        XCTAssertEqual(e.confidence, Scoring.confidence(evidenceLevels: Lenses.business.criteria.map { $0.key == "A6" ? 1 : 2 }))
+        // Decision 0037: desk research is graded by its sources. One published page is 1.4
+        // (1.0 plus 0.4), not a flat 2; A6 cites nothing and stays at 1.
+        XCTAssertEqual(e.criterionScore(for: "A1")?.deskLevel, 1.4)
+        XCTAssertEqual(e.criterionScore(for: "A6")?.deskLevel, 1.0)
+        XCTAssertEqual(e.confidence, Scoring.confidence(levels: Lenses.business.criteria.map { $0.key == "A6" ? 1.0 : 1.4 }))
+        XCTAssertEqual(e.confidence, 27)
         XCTAssertEqual(e.confidenceBreakdown.aiFoundPercent, 100, "every evidence item is an unreviewed AI find")
         XCTAssertTrue(e.allEvidence.allSatisfy { !$0.countsTowardConfidence })
         XCTAssertEqual(e.recommendation, .testRiskiestAssumption)

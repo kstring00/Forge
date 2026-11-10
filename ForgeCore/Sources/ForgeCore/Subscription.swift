@@ -72,7 +72,8 @@ extension MembershipState {
         }
         let billing: BillingStatus = switch s.renewal {
         case .inGracePeriod: .gracePeriod(until: s.gracePeriodEndsAt)
-        case .inBillingRetry: s.gracePeriodEndsAt.map { .gracePeriod(until: $0) } ?? .ok
+        // Still entitled while Apple retries the payment: the plan is on, with a payment problem to fix.
+        case .inBillingRetry: .gracePeriod(until: s.gracePeriodEndsAt)
         default: .ok
         }
         let next = s.willAutoRenew ? s.autoRenewProductID.flatMap { $0 == s.productID ? nil : $0 } : nil

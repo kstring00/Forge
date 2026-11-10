@@ -277,6 +277,11 @@ final class SubscriptionLifecycleTests: XCTestCase {
         XCTAssertEqual(p.balance(at: d(2026, 12, 15)).monthlyLeft, 10, "same checks; no new month until Apple is paid")
         XCTAssertTrue(MembershipState(entitlement: grace).statusLine(date: short).contains("Update your payment details"))
 
+        // Apple still retrying while the paid period hasn't run out: the plan is on, and the banner shows.
+        let retryingButOn = MembershipState(entitlement: sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9), renewal: .inBillingRetry))
+        XCTAssertEqual(retryingButOn.plan, .plus)
+        XCTAssertEqual(retryingButOn.billing, .gracePeriod(until: nil))
+
         let lapsed = sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9), renewal: .inBillingRetry, entitled: false)
         p.apply(lapsed, at: d(2026, 12, 25))
         XCTAssertEqual(p.state.plan, .free)

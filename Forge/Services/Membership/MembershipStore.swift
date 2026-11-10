@@ -126,9 +126,11 @@ final class MembershipStore {
     private static func snapshot(_ t: Transaction, state: Product.SubscriptionInfo.RenewalState,
                                  info: Product.SubscriptionInfo.RenewalInfo?, entitled: Bool) -> SubscriptionSnapshot {
         let renewal: SubscriptionSnapshot.Renewal
-        if state == .subscribed { renewal = .subscribed }
-        else if state == .inGracePeriod { renewal = .inGracePeriod }
-        else if state == .inBillingRetryPeriod { renewal = .inBillingRetry }
+        // A payment problem is read from the state or from the renewal info's own
+        // flag, before "subscribed": Apple can report either while it retries.
+        if state == .inGracePeriod { renewal = .inGracePeriod }
+        else if state == .inBillingRetryPeriod || info?.isInBillingRetry == true { renewal = .inBillingRetry }
+        else if state == .subscribed { renewal = .subscribed }
         else if state == .revoked { renewal = .revoked }
         else { renewal = .expired }
         return SubscriptionSnapshot(productID: t.productID, transactionID: String(t.id), purchaseDate: t.purchaseDate,

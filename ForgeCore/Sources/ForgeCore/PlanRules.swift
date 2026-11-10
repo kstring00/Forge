@@ -60,20 +60,27 @@ public struct PlanRules: Codable, Equatable, Sendable {
     public var trialChecks: Int
     /// Checks in one top-up.
     public var topUpChecks: Int
+    /// Decision 0043: the reference name of the founding offer code in App
+    /// Store Connect. Only a purchase made with this offer is "founding".
+    public var foundingOfferID: String
     public var costs: Costs
     public var fairUse: FairUse
     public var rollover: Rollover
 
-    public static let defaultMonthlyChecks = ["free": 1, "plus": 15, "pro": 60]
+    public static let defaultMonthlyChecks = ["free": 1, "plus": 15, "pro": 50]
+
+    public static let defaultFoundingOfferID = "Founding"
 
     public init(monthlyChecks: [String: Int] = PlanRules.defaultMonthlyChecks, trialChecks: Int = 5, topUpChecks: Int = 5,
-                costs: Costs = Costs(), fairUse: FairUse = FairUse(), rollover: Rollover = Rollover()) {
+                costs: Costs = Costs(), fairUse: FairUse = FairUse(), rollover: Rollover = Rollover(),
+                foundingOfferID: String = PlanRules.defaultFoundingOfferID) {
         self.monthlyChecks = monthlyChecks
         self.trialChecks = trialChecks
         self.topUpChecks = topUpChecks
         self.costs = costs
         self.fairUse = fairUse
         self.rollover = rollover
+        self.foundingOfferID = foundingOfferID
     }
 
     public func monthlyChecks(for plan: Plan) -> Int {
@@ -89,6 +96,7 @@ public struct PlanRules: Codable, Equatable, Sendable {
         costs = try c.decodeIfPresent(Costs.self, forKey: .costs) ?? Costs()
         fairUse = try c.decodeIfPresent(FairUse.self, forKey: .fairUse) ?? FairUse()
         rollover = try c.decodeIfPresent(Rollover.self, forKey: .rollover) ?? Rollover()
+        foundingOfferID = try c.decodeIfPresent(String.self, forKey: .foundingOfferID) ?? Self.defaultFoundingOfferID
     }
 
     /// The rules in force. The app replaces this with the proxy's on launch.

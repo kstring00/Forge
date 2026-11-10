@@ -2,10 +2,11 @@
   "monthlyChecks": {
     "free": 1,
     "plus": 15,
-    "pro": 60
+    "pro": 50
   },
   "trialChecks": 5,
   "topUpChecks": 5,
+  "foundingOfferID": "Founding",
   "rollover": {
     "enabled": true,
     "capMonths": 1

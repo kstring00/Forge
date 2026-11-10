@@ -3,3 +3,7 @@
 DEVELOPMENT_TEAM = ABCDE12345
 PROXY_URL = https:/$()/forge-proxy.vercel.app
 PROXY_TOKEN = replace-with-a-long-random-string
+// Decision 0043: keeps the check ledger in iCloud so carried-over and bought checks
+// survive a reinstall. Needs DEVELOPMENT_TEAM above. Remove the "//" from both lines to turn it on.
+// CODE_SIGN_ENTITLEMENTS = Forge/Config/Forge.entitlements
+// HUNCH_LEDGER_IN_ICLOUD = YES

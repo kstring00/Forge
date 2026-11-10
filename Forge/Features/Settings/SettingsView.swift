@@ -33,7 +33,6 @@ struct SettingsView: View {
     @State private var managingSubscription = false
     @State private var showingPrivacy = false
     @Environment(\.openURL) private var openURL
-    @AppStorage("membership.foundingPreview") private var foundingPreview = true
     @AppStorage(AppEnvironment.tightFairUseKey) private var tightFairUse = false
 
     private var liveCount: Int { ideas.filter { !$0.isArchived }.count }
@@ -45,6 +44,11 @@ struct SettingsView: View {
                 LabeledContent("Plan", value: env.entitlements.state.plan.displayName
                                + (env.entitlements.state.isTrial ? " · free trial" : "")
                                + (env.entitlements.state.founding ? " · founding member" : ""))
+                // Decision 0043: a booked switch, a cancel, or a payment problem, in plain words.
+                if env.entitlements.state.plan != .free || env.entitlements.state.billing.hasIssue {
+                    Text(env.entitlements.state.statusLine(date: { $0.formatted(.dateTime.month(.abbreviated).day()) }))
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                }
                 // Decision 0042: what can be spent, in the order it is spent.
                 let b = env.entitlements.balance
                 if b.firstFreeAvailable {
@@ -53,7 +57,7 @@ struct SettingsView: View {
                 if b.rolledOverLeft > 0 {
                     LabeledContent("Carried over", value: "\(b.rolledOverLeft) · expire \(b.expiresText)")
                 }
-                LabeledContent("This month", value: "\(b.monthlyLeft) of \(b.monthlyAllowance) · \(b.resetsText.lowercased())")
+                LabeledContent("This month", value: "\(b.monthlyLeft) of \(b.monthlyAllowance) · resets \(b.expiresText)")
                 if b.topUps > 0 {
                     LabeledContent("Extra", value: "\(b.topUps) · never expire")
                 }
@@ -172,7 +176,6 @@ struct SettingsView: View {
                     .foregroundStyle(ForgeColor.emberText)
                 Button("Give checks back") { (env.entitlements as? LocalEntitlements)?.resetForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
-                Toggle("Show the founding offer", isOn: $foundingPreview)
                 Button("Start the next cycle (test rollover)") { (env.entitlements as? LocalEntitlements)?.startNextCycleForTesting() }
                     .foregroundStyle(ForgeColor.emberText)
                 Toggle("Tight fair use (1 a day)", isOn: $tightFairUse)

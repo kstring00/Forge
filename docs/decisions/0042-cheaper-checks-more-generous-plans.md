@@ -47,6 +47,12 @@ Caching saves most when checks run within five minutes of each other (many users
 Built on its own branch after this PR merges and then #30 merges, in that order.
 - **No dollar figures in the App Store app, ever.** The cost meter and the AI cost cap stay in Settings → Developer, test builds only.
 - **Pro may run panelists on Sonnet** with no extra checks; fair-use limits cap it. The Developer cost meter shows the extra cost per check so it can be watched in the beta.
+- **Plan gating (confirmed Nov 10), kept in one config so features can move between plans:**
+  - Every plan, Free included: See the Work, the Library, pinned facts, export.
+  - Plus and Pro: panelist weights and scoring weights.
+  - Pro: build your own panel, with the model list limited to Haiku and Sonnet.
+- **Four PRs, in this order (Nov 10):** (a) saved check data, See the Work and export; (b) the Library and pinned facts; (c) weights; (d) build your own panel.
+- **The gate:** #30's ship gate, plus a check is unchanged when the user changes nothing.
 - **Reddit is paste-only**, never fetched by the server. The Library offers a one-tap Paste button and a friendly line: "Reddit doesn't let apps read posts directly. Copy the post and paste it here." Other sites are fetched through the proxy, with paste as the fallback when a site blocks it.
 
 ## Bench results (Nov 9, five sample ideas, real API)

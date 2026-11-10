@@ -30,6 +30,10 @@ protocol EntitlementService: AnyObject {
     func apply(_ state: MembershipState, jws: [String])
     /// A top-up was bought. Idempotent per transaction.
     func creditTopUp(transactionID: String, jws: String)
+    /// A top-up was refunded: its unused checks go. Idempotent per transaction.
+    func refundTopUp(transactionID: String)
+    /// Top-ups found in the App Store's history on Restore: remembered, never credited twice.
+    func recordKnownTopUps(_ transactionIDs: [String])
 }
 
 /// The ledger on this phone, in UserDefaults. Same rules the proxy will keep.
@@ -42,21 +46,33 @@ final class LocalEntitlements: EntitlementService {
 
     private let defaults: UserDefaults
     private let now: () -> Date
+    private let cloud: LedgerCloud?
     private(set) var state: MembershipState
     private(set) var ledger: CheckLedger
     private(set) var fairUse: FairUseLedger
 
-    init(defaults: UserDefaults = .standard, now: @escaping () -> Date = Date.init) {
+    init(defaults: UserDefaults = .standard, now: @escaping () -> Date = Date.init, cloud: LedgerCloud? = nil) {
         self.defaults = defaults
         self.now = now
+        self.cloud = cloud
         state = defaults.data(forKey: Self.stateKey).flatMap { try? JSONDecoder().decode(MembershipState.self, from: $0) } ?? .free
         ledger = defaults.data(forKey: Self.ledgerKey).flatMap { try? JSONDecoder().decode(CheckLedger.self, from: $0) } ?? CheckLedger()
         fairUse = defaults.data(forKey: Self.fairUseKey).flatMap { try? JSONDecoder().decode(FairUseLedger.self, from: $0) } ?? FairUseLedger()
+        // Decision 0043: after a reinstall or on a new phone, iCloud's copy brings
+        // back carried-over and bought checks, and the used free first check.
+        if let remote = cloud?.read() { ledger = ledger.merged(with: remote) }
         // Decision 0042: record the cycle we're in at launch, so a cycle with no
         // checks still carries its unused ones into the next.
-        let before = ledger
         ledger.roll(state, now: now())
-        if ledger != before { save() }
+        save()
+        cloud?.onChange = { [weak self] remote in self?.mergeFromCloud(remote) }
+    }
+
+    private func mergeFromCloud(_ remote: CheckLedger) {
+        let merged = ledger.merged(with: remote)
+        guard merged != ledger else { return }
+        ledger = merged
+        save()
     }
 
     var balance: CheckBalance { ledger.balance(state, now: now()) }
@@ -93,7 +109,17 @@ final class LocalEntitlements: EntitlementService {
     }
 
     func creditTopUp(transactionID: String, jws: String) {
-        if ledger.creditTopUp(transactionID: transactionID) { save() }
+        if ledger.creditTopUp(transactionID: transactionID, now: now(), plan: state.plan) { save() }
+    }
+
+    func refundTopUp(transactionID: String) {
+        let before = ledger
+        ledger.refundTopUp(transactionID: transactionID, now: now(), plan: state.plan)
+        if ledger != before { save() }
+    }
+
+    func recordKnownTopUps(_ transactionIDs: [String]) {
+        if ledger.recordKnownTopUps(transactionIDs) > 0 { save() }
     }
 
     #if DEBUG
@@ -108,6 +134,7 @@ final class LocalEntitlements: EntitlementService {
     }
 
     /// Settings → Developer: monthly checks back, the free first check back. Bought checks stay.
+    /// (With iCloud on, another device's copy can mark the free check used again.)
     func resetForTesting() {
         ledger.usedThisPeriod = 0
         ledger.firstFreeUsed = false
@@ -118,6 +145,7 @@ final class LocalEntitlements: EntitlementService {
     private func save() {
         if let d = try? JSONEncoder().encode(ledger) { defaults.set(d, forKey: Self.ledgerKey) }
         if let d = try? JSONEncoder().encode(state) { defaults.set(d, forKey: Self.stateKey) }
+        cloud?.write(ledger)
     }
 }
 

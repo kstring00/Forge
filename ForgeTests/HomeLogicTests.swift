@@ -214,7 +214,7 @@ final class HomeLogicTests: XCTestCase {
     func testFailureMessagesSayWhatBrokeAndWhatWasKept() {
         let research = RealityCheckRunner.failurePhase(AIError.offline, step: .research, pagesSaved: 0, spentUSD: 0)
         guard case .offline(let m1) = research else { return XCTFail("expected offline") }
-        XCTAssertTrue(m1.hasPrefix("The desk research stopped"))
+        XCTAssertTrue(m1.hasPrefix("The research stopped"))
         XCTAssertTrue(m1.contains("Nothing was saved."))
 
         let prefill = RealityCheckRunner.failurePhase(AIError.invalidResponse("The model ran out of room"), step: .prefill, pagesSaved: 6, spentUSD: 0.04)
@@ -226,7 +226,7 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertTrue(m2.contains("Settings → Spend"))
 
         let stopped = RealityCheckRunner.stoppedLine(step: .research, spentUSD: 0)
-        XCTAssertEqual(stopped, "Stopped during the desk research. Nothing was saved. Nothing was charged.")
+        XCTAssertEqual(stopped, "Stopped during the research. Nothing was saved. Nothing was charged.")
         XCTAssertFalse(RealityCheckRunner.stoppedLine(step: .prefill, spentUSD: 0.03).contains("$"))
     }
 }

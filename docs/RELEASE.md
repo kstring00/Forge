@@ -31,7 +31,7 @@ App → **Monetization** → **Subscriptions** → **Create** subscription group
 - Group localization (English U.S.): display name **Hunch Membership**, app name display
   **Use App Name**.
 
-### 2. The five subscriptions
+### 2. The four subscriptions
 
 In the group, **Create** each one. For every subscription:
 
@@ -40,20 +40,19 @@ In the group, **Create** each one. For every subscription:
 - **Localization (English U.S.):** display name and description below.
 - **Review information:** a screenshot of the Membership screen (simulator, iPhone 6.7"),
   and the review note: *"Hunch Membership. Checks are AI research on an idea the user
-  wrote. Free plan: 1 check a month. The founding product is offered only to TestFlight
-  testers."*
+  wrote. Free plan: 1 check a month. Founding members get the first year of Plus yearly
+  at $39.99 with an offer code."*
 - **Family Sharing:** off.
 
 | Reference name | Product ID | Duration | US price | Level | Display name | Description |
 |---|---|---|---|---|---|---|
-| Pro · monthly | `hunch.pro.monthly` | 1 month | $24.99 | 1 | Hunch Pro | 60 checks a month, faster answers, deeper research and exportable reports. |
-| Pro · yearly | `hunch.pro.yearly` | 1 year | $179.99 | 1 | Hunch Pro (yearly) | 60 checks a month, faster answers, deeper research and exportable reports. |
+| Pro · monthly | `hunch.pro.monthly` | 1 month | $24.99 | 1 | Hunch Pro | 50 checks a month, faster answers, deeper research and exportable reports. |
+| Pro · yearly | `hunch.pro.yearly` | 1 year | $179.99 | 1 | Hunch Pro (yearly) | 50 checks a month, faster answers, deeper research and exportable reports. |
 | Plus · monthly | `hunch.plus.monthly` | 1 month | $9.99 | 2 | Hunch Plus | 15 checks a month, unused ones carry over, and Your patterns. |
 | Plus · yearly | `hunch.plus.yearly` | 1 year | $59.99 | 2 | Hunch Plus (yearly) | 15 checks a month, unused ones carry over, and Your patterns. |
-| Plus · founding yearly | `hunch.plus.founding.yearly` | 1 year | $39.99 | 2 | Hunch Plus · founding member | Plus at the founding price, for as long as you stay subscribed. |
 
-Then in the group's **Subscription Levels**, drag so Pro (both) is level 1 and Plus (all
-three) is level 2. Same level = crossgrade; Plus → Pro = upgrade, immediate; Pro → Plus =
+Then in the group's **Subscription Levels**, drag so Pro (both) is level 1 and Plus (both)
+is level 2. Same level = crossgrade; Plus → Pro = upgrade, immediate; Pro → Plus =
 downgrade, at the next renewal. The app already handles all three.
 
 ### 3. The free trial on Plus yearly
@@ -65,14 +64,44 @@ group only. The app caps trial users at 5 checks (`MembershipState.trialChecks`)
 
 No introductory offer on any other product.
 
-### 4. The founding offer
+### 4. The founding offer: first year at the founding price
 
-Keep `hunch.plus.founding.yearly` as its own product, as `docs/PRICING.md` says. The App
-Store cannot hide a product from some users, so the app does: it shows the founding price
-only in TestFlight builds (`MembershipStore.showsFoundingOffer`), and later only to
-accounts the proxy flags as testers. Before App Store launch, decide whether to keep it
-(existing founding subscribers keep their price as long as they stay) or stop offering it
-by removing it from sale; removing it from sale never cancels existing subscribers.
+Decision 0043 §4. **Don't create a founding product.** Apple's Edit Subscription sheet
+lists every product in the group to every subscriber, so anyone could pick it; and taking
+a product off sale later would also stop founders' renewals. Founders get an **offer code**
+on Plus yearly instead: **$39.99 for the first year, then $59.99.**
+
+`hunch.plus.yearly` → **Subscription Prices** → **Offer Codes** → **Create**:
+
+- Reference name: exactly `Founding`. The app shows "founding member" only when the
+  purchase carries this name (StoreKit reports an offer code by its reference name, not by
+  the code typed). The name the app looks for is `foundingOfferID` in
+  `proxy/config/hunch.ts`; change both together.
+- Customer eligibility: **New**, **Expired** and **Existing** subscribers.
+- Offer: **Pay up front**, duration **1 year**, price **$39.99** (let App Store Connect fill
+  the other countries).
+- Codes: a **custom code** (for example `FOUNDERS`) with a redemption limit about the size
+  of the tester list, or **one-time codes**, one per tester (valid up to six months).
+
+Send each tester the code with: open Hunch → the plan screen → **Redeem a code**. (Or the
+App Store's redemption link.) Codes can only be redeemed once the app is **Ready for
+Sale**, and TestFlight purchases are test purchases, so testers redeem after the App Store
+launch. To try the flow before launch, App Store Connect makes one-time **sandbox codes**
+(redeemed from the Sandbox Apple Account settings, iOS 16.3 or later). The app shows "founding member" for that first year; the
+renewal after it is a regular year of Plus.
+
+### 4b. Billing Grace Period (turn it on)
+
+Off by default. Without it, a failed renewal pauses the plan at once; with it, the person
+keeps the plan while Apple retries the payment, and the app shows its "update payment"
+banner (decision 0043). It is one setting for the whole app, not per product.
+
+App → **Subscriptions** (sidebar) → **Billing Grace Period** → **Set Up Billing Grace
+Period**:
+
+- Duration: **16 days** (the choices are 3, 16 or 28).
+- Eligible subscribers: **All Renewals** (so a trial turning paid is covered too).
+- Environment: **Sandbox** first; switch to **Production and Sandbox** before launch.
 
 ### 5. The top-up
 
@@ -108,7 +137,7 @@ App → **Monetization** → **In-App Purchases** → **Create**:
 ### 8. Ship the products with a build
 
 The first subscriptions must be submitted for review **together with an app version**:
-on the version page, **In-App Purchases and Subscriptions** → **+** → select all six.
+on the version page, **In-App Purchases and Subscriptions** → **+** → select all five (four subscriptions and the top-up).
 After that, prices can change in App Store Connect without an app update.
 
 ### Later (with the proxy ledger, #16)

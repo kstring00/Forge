@@ -20,6 +20,6 @@ final class RulesFixtureTests: XCTestCase {
         XCTAssertEqual(Plan.allCases.map(\.monthlyChecks), [2, 20, 80])
         XCTAssertEqual(MembershipState.trialChecks, 7)
         XCTAssertEqual(MembershipProduct.topUpChecks, 6)
-        XCTAssertEqual(PlanRules(monthlyChecks: [:]).monthlyChecks(for: .pro), 60, "a plan the server leaves out keeps its default")
+        XCTAssertEqual(PlanRules(monthlyChecks: [:]).monthlyChecks(for: .pro), 50, "a plan the server leaves out keeps its default")
     }
 }

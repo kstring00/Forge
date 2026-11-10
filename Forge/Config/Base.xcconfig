@@ -9,4 +9,7 @@ IPHONEOS_DEPLOYMENT_TARGET = 17.0
 PROXY_URL =
 PROXY_TOKEN =
 
+// The check ledger's copy in iCloud (decision 0043). Off until Local.xcconfig turns it on.
+HUNCH_LEDGER_IN_ICLOUD = NO
+
 #include? "Local.xcconfig"

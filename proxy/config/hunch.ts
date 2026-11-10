@@ -33,11 +33,15 @@ export default {
   /// and product names are set in App Store Connect, not here.
   rules: {
     /// Checks a month on each plan.
-    monthlyChecks: { free: 1, plus: 15, pro: 60 },
+    monthlyChecks: { free: 1, plus: 15, pro: 50 },
     /// Plus's 7-day trial is capped at this many checks.
     trialChecks: 5,
     /// Checks in one $2.99 top-up.
     topUpChecks: 5,
+    /// Decision 0043: the reference name of the founding offer code in App Store
+    /// Connect (Plus yearly, first year at the founding price). The app shows
+    /// "founding member" only for a purchase made with this offer.
+    foundingOfferID: "Founding",
     /// Unused monthly checks carry into the next cycle, up to capMonths of allowance.
     rollover: { enabled: true, capMonths: 1 },
     /// What each thing costs, in checks. Only research costs.

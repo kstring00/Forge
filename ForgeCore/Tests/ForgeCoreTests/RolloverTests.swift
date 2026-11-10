@@ -70,7 +70,7 @@ final class RolloverTests: XCTestCase {
         let pro = plan(.pro, anchor: d(2026, 10, 20))
         let b1 = up.balance(pro, now: d(2026, 10, 21), calendar: cal)
         XCTAssertEqual(b1.rolledOverLeft, 12)
-        XCTAssertEqual(b1.monthlyLeft, 60)
+        XCTAssertEqual(b1.monthlyLeft, 50)
         up.roll(pro, now: d(2026, 10, 21), calendar: cal)
 
         // Downgrade Pro → Plus at renewal: at most Plus's 15 carry.

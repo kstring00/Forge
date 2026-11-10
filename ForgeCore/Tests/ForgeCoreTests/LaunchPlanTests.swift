@@ -41,7 +41,7 @@ final class LaunchPlanTests: XCTestCase {
         l.usedThisPeriod = 0
         l.roll(s, now: now, calendar: cal)
         l.usedThisPeriod = 13
-        l.topUps = 5
+        l.creditTopUp(transactionID: "t1", checks: 5)
         XCTAssertTrue(l.canSpend(3, s, now: now, calendar: cal))
         l.spend(3, s, now: now, calendar: cal)
         XCTAssertEqual(l.usedThisPeriod, 15)

@@ -5,6 +5,7 @@ import SwiftData
 /// top-level screen, and the one capture sheet.
 struct RootTabView: View {
     @Environment(AppEnvironment.self) private var env
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var ideas: [Idea]
     @Query private var checks: [RealityCheck]
 
@@ -35,6 +36,10 @@ struct RootTabView: View {
         .forgeAnimation(ForgeMotion.settle, value: env.tab)
         .sheet(isPresented: $env.showingMembership) { MembershipView() }
         .task { await env.membership.start() }
+        // Decision 0043: a plan changed in Settings or Apple's sheet shows up on return.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await env.membership.refresh() } }
+        }
         .task { await env.refreshRules() }
         .sheet(item: $env.capture) { request in
             CaptureSheet(autoStartVoice: request == .voice)

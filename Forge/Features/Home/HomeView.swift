@@ -97,6 +97,7 @@ struct HomeView: View {
                     }
                     // Decision 0032: the checks pill, always on Home.
                     ChecksPill().padding(.top, 4)
+                    BillingIssueBanner()
                 }
             }
             .padding(.horizontal, ForgeSpacing.m)

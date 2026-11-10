@@ -37,6 +37,7 @@ targets:
         excludes:
           - "Config/Info.plist"
           - "Config/Local.xcconfig.example"
+          - "Config/Forge.entitlements"
           - "**/README.md"
     configFiles:
       Debug: Forge/Config/Base.xcconfig
@@ -57,14 +58,14 @@ targets:
     platform: iOS
     sources:
       - path: ForgeTests
+      # Decision 0043: SKTestSession(configurationFileNamed: "Hunch") reads it from the test bundle.
+      - path: Hunch.storekit
+        buildPhase: resources
     dependencies:
       - target: Forge
     settings:
       base:
         GENERATE_INFOPLIST_FILE: "YES"
-
-fileGroups:
-  - Hunch.storekit
 
 schemes:
   Forge:

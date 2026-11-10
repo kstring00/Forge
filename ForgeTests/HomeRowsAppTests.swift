@@ -49,6 +49,7 @@ final class HomeRowsAppTests: XCTestCase {
     func testAPersonalIdeaIsNeverCalledUnchecked() {
         let hobby = Idea(originalText: "Learn to weld well enough to build a gate")
         hobby.lensType = .growth
+        store.context.insert(hobby)
         XCTAssertEqual(HomeRowState.of(hobby), .personal)
         XCTAssertEqual(HomeRowState.of(hobby, failed: true), .personal)
     }

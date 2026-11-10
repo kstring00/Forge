@@ -7,8 +7,8 @@ import ForgeCore
 /// checks pill and settings; the three stages, which filter the list; one
 /// "Your next move" card with the only filled orange button; then the ideas
 /// as compact rows that open in place. Capture is the mic button.
+@MainActor
 struct HomeView: View {
-    @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]

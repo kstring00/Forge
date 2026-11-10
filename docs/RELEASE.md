@@ -46,8 +46,8 @@ In the group, **Create** each one. For every subscription:
 
 | Reference name | Product ID | Duration | US price | Level | Display name | Description |
 |---|---|---|---|---|---|---|
-| Pro · monthly | `hunch.pro.monthly` | 1 month | $24.99 | 1 | Hunch Pro | 60 checks a month, faster answers, deeper research and exportable reports. |
-| Pro · yearly | `hunch.pro.yearly` | 1 year | $179.99 | 1 | Hunch Pro (yearly) | 60 checks a month, faster answers, deeper research and exportable reports. |
+| Pro · monthly | `hunch.pro.monthly` | 1 month | $24.99 | 1 | Hunch Pro | 50 checks a month, faster answers, deeper research and exportable reports. |
+| Pro · yearly | `hunch.pro.yearly` | 1 year | $179.99 | 1 | Hunch Pro (yearly) | 50 checks a month, faster answers, deeper research and exportable reports. |
 | Plus · monthly | `hunch.plus.monthly` | 1 month | $9.99 | 2 | Hunch Plus | 15 checks a month, unused ones carry over, and Your patterns. |
 | Plus · yearly | `hunch.plus.yearly` | 1 year | $59.99 | 2 | Hunch Plus (yearly) | 15 checks a month, unused ones carry over, and Your patterns. |
 
@@ -73,7 +73,10 @@ on Plus yearly instead: **$39.99 for the first year, then $59.99.**
 
 `hunch.plus.yearly` → **Subscription Prices** → **Offer Codes** → **Create**:
 
-- Reference name: `Founding`.
+- Reference name: exactly `Founding`. The app shows "founding member" only when the
+  purchase carries this name (StoreKit reports an offer code by its reference name, not by
+  the code typed). The name the app looks for is `foundingOfferID` in
+  `proxy/config/hunch.ts`; change both together.
 - Customer eligibility: **New**, **Expired** and **Existing** subscribers.
 - Offer: **Pay up front**, duration **1 year**, price **$39.99** (let App Store Connect fill
   the other countries).
@@ -81,9 +84,24 @@ on Plus yearly instead: **$39.99 for the first year, then $59.99.**
   of the tester list, or **one-time codes**, one per tester (valid up to six months).
 
 Send each tester the code with: open Hunch → the plan screen → **Redeem a code**. (Or the
-App Store's redemption link.) TestFlight purchases are test purchases, so testers redeem
-after the App Store launch. The app shows "founding member" for that first year; the
+App Store's redemption link.) Codes can only be redeemed once the app is **Ready for
+Sale**, and TestFlight purchases are test purchases, so testers redeem after the App Store
+launch. To try the flow before launch, App Store Connect makes one-time **sandbox codes**
+(redeemed from the Sandbox Apple Account settings, iOS 16.3 or later). The app shows "founding member" for that first year; the
 renewal after it is a regular year of Plus.
+
+### 4b. Billing Grace Period (turn it on)
+
+Off by default. Without it, a failed renewal pauses the plan at once; with it, the person
+keeps the plan while Apple retries the payment, and the app shows its "update payment"
+banner (decision 0043). It is one setting for the whole app, not per product.
+
+App → **Subscriptions** (sidebar) → **Billing Grace Period** → **Set Up Billing Grace
+Period**:
+
+- Duration: **16 days** (the choices are 3, 16 or 28).
+- Eligible subscribers: **All Renewals** (so a trial turning paid is covered too).
+- Environment: **Sandbox** first; switch to **Production and Sandbox** before launch.
 
 ### 5. The top-up
 

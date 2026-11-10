@@ -24,12 +24,14 @@ public struct SubscriptionSnapshot: Equatable, Sendable {
     public var autoRenewProductID: String?
     public var gracePeriodEndsAt: Date?
     public var familyShared: Bool
-    /// This billing period was bought with an App Store offer code (the founding offer).
-    public var offerCode: Bool
+    /// The reference name of the offer code this billing period was bought
+    /// with, as set in App Store Connect (StoreKit's `offer.id` when the offer
+    /// type is `code`). Nil without an offer code.
+    public var offerCodeID: String?
 
     public init(productID: String, transactionID: String, purchaseDate: Date, expiresAt: Date?, isTrial: Bool = false,
                 isEntitled: Bool = true, renewal: Renewal = .subscribed, willAutoRenew: Bool = true,
-                autoRenewProductID: String? = nil, gracePeriodEndsAt: Date? = nil, familyShared: Bool = false, offerCode: Bool = false) {
+                autoRenewProductID: String? = nil, gracePeriodEndsAt: Date? = nil, familyShared: Bool = false, offerCodeID: String? = nil) {
         self.productID = productID
         self.transactionID = transactionID
         self.purchaseDate = purchaseDate
@@ -41,7 +43,7 @@ public struct SubscriptionSnapshot: Equatable, Sendable {
         self.autoRenewProductID = autoRenewProductID
         self.gracePeriodEndsAt = gracePeriodEndsAt
         self.familyShared = familyShared
-        self.offerCode = offerCode
+        self.offerCodeID = offerCodeID
     }
 
     /// The one that decides the plan when there are several (the person's own
@@ -61,7 +63,7 @@ extension MembershipState {
     /// The one source of truth for the plan: Apple's current entitlement and
     /// its renewal info. Nothing entitled is Free; a failed renewal past the
     /// grace period is Free with a billing note, until the payment goes through.
-    public init(entitlement s: SubscriptionSnapshot?) {
+    public init(entitlement s: SubscriptionSnapshot?, rules: PlanRules = .current) {
         guard let s, let plan = MembershipProduct.plan(for: s.productID) else { self = .free; return }
         guard s.isEntitled else {
             self = .free
@@ -75,7 +77,8 @@ extension MembershipState {
         }
         let next = s.willAutoRenew ? s.autoRenewProductID.flatMap { $0 == s.productID ? nil : $0 } : nil
         self.init(plan: plan, isTrial: s.isTrial, anchor: s.purchaseDate, productID: s.productID, renewsAt: s.expiresAt,
-                  founding: s.productID == MembershipProduct.plusYearly && s.offerCode, transactionID: s.transactionID,
+                  founding: s.productID == MembershipProduct.plusYearly && s.offerCodeID != nil && s.offerCodeID == rules.foundingOfferID,
+                  transactionID: s.transactionID,
                   willAutoRenew: s.willAutoRenew, nextProductID: next, billing: billing, familyShared: s.familyShared)
     }
 

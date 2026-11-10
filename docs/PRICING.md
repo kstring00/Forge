@@ -12,7 +12,7 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 |---|---|---|---|---|
 | Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel, including the Library |
 | Plus | $9.99 | $59.99 | 15 | Your patterns |
-| Pro | $24.99 | $179.99 | 60 (leaning 50, decided after the bench) | Everything in Plus, faster answers (priority), deep research |
+| Pro | $24.99 | $179.99 | 50 (set Nov 10; easier to raise after the beta than to lower) | Everything in Plus, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
 - Founding members (TestFlight testers): **first year at the founding price.** An App Store offer code on Plus yearly: $39.99 for the first year, then $59.99 (decision 0043 §4). There is no founding product.
@@ -54,6 +54,22 @@ Consumable: `hunch.topup.5` $2.99.
 - Real cost per check by speed (Settings → Spend). Plus must keep ≥70% margin after Apple's 15%.
 - How many testers would take the founding offer, first year at $39.99 (ask at the end of the beta; real purchases only start at App Store launch).
 
-## Economics (estimates)
+## Economics (measured Nov 9, decision 0042)
 
-Plus at $9.99 → ≈ $8.49 after Apple (Small Business Program, 15%). Typical use ≈ 8 checks × ≈ $0.20 = $1.60 → ≈ $6.90/month margin. 500 subscribers ≈ $3,400/month; 1,000 ≈ $6,900/month. Prices can change in App Store Connect without an app update.
+A check costs about **$0.168** on the bench (five sample ideas, real API): research about $0.10 (five web searches and reading the results), scoring about $0.005, the Brief about $0.06 to $0.07. Research is most of the cost and the next thing to cut. Included follow-ups (a launch plan, a re-score) cost about $0.013 to $0.023 each and are not in the figures below.
+
+| Plan | After Apple's 15% | Use in a month | AI cost | Left |
+|---|---|---|---|---|
+| Plus, $9.99 | $8.49 | Typical, 8 checks | $1.34 | **$7.15** |
+| Plus, $9.99 | $8.49 | Heavy, all 15 | $2.52 | **$5.97** (70%) |
+| Pro, $24.99 | $21.24 | Heavy, all 50 | $8.40 | **$12.84** (60%) |
+
+- A month with a full carry-over can reach 30 checks on Plus or 100 on Pro, but only after a month with none used, so the average stays at or under the allowance.
+- At typical use, 500 Plus subscribers leave about $3,600 a month and 1,000 about $7,150.
+- Prices can change in App Store Connect without an app update; allowances change in `proxy/config/hunch.ts`.
+
+## Open product questions
+
+- **What Plus sells.** With "Argue it out" gone, Plus is 15 checks a month (carried over) and Your patterns. Is that enough reason to pay? Rule for the beta: if the median tester uses under 5 checks a month, Plus drops to 10.
+- **Who Pro is for.** Likeliest: people who evaluate other people's ideas (coaches, consultants, accelerators).
+- **The name.** Hunch is a working name; it collides with dating apps.

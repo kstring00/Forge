@@ -118,7 +118,7 @@ final class MembershipStore {
                                     expiresAt: t.expirationDate, isTrial: isIntroductory(t), isEntitled: entitled,
                                     renewal: renewal, willAutoRenew: info?.willAutoRenew ?? true,
                                     autoRenewProductID: info?.autoRenewPreference, gracePeriodEndsAt: info?.gracePeriodExpirationDate,
-                                    familyShared: t.ownershipType == .familyShared, offerCode: isOfferCode(t))
+                                    familyShared: t.ownershipType == .familyShared, offerCodeID: offerCodeID(t))
     }
 
     // MARK: Buying
@@ -225,10 +225,13 @@ final class MembershipStore {
         return t.offerType == .introductory
     }
 
-    /// Decision 0043: founders redeem an offer code on Plus yearly.
-    private static func isOfferCode(_ t: Transaction) -> Bool {
-        if #available(iOS 17.2, *) { return t.offer?.type == .code }
-        return t.offerType == .code
+    /// Decision 0043: founders redeem an offer code on Plus yearly. For an
+    /// offer code, StoreKit's offer id is the offer's reference name from App
+    /// Store Connect (not the code the person typed); ForgeCore matches it
+    /// against `PlanRules.foundingOfferID`.
+    private static func offerCodeID(_ t: Transaction) -> String? {
+        if #available(iOS 17.2, *) { return t.offer?.type == .code ? t.offer?.id : nil }
+        return t.offerType == .code ? t.offerID : nil
     }
 
     // MARK: Prices

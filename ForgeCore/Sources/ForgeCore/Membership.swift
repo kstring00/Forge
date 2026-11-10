@@ -116,7 +116,8 @@ public struct MembershipState: Codable, Equatable, Sendable {
     public var productID: String?
     /// When the current billing period ends (the transaction's expiration date).
     public var renewsAt: Date?
-    /// Plus yearly bought with the founding offer code: true for that first
+    /// Plus yearly bought with the founding offer code (matched by the offer's
+    /// reference name, `PlanRules.foundingOfferID`): true for that first
     /// (discounted) year only; the renewal after it is a regular year.
     public var founding: Bool
     /// The entitled transaction, recorded with every grant and carry.

@@ -16,7 +16,7 @@ final class MembershipTests: XCTestCase {
     }
 
     func testPlansAndProducts() {
-        XCTAssertEqual(Plan.allCases.map(\.monthlyChecks), [1, 15, 60])
+        XCTAssertEqual(Plan.allCases.map(\.monthlyChecks), [1, 15, 50])
         XCTAssertTrue(Plan.free.includes(.whatIf), "Sparks are free on every plan")
         XCTAssertTrue(Plan.free.includes(.library), "the Library is your own work, on every plan")
         XCTAssertFalse(Plan.plus.includes(.priority))

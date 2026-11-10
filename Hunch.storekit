@@ -39,7 +39,7 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "60 checks a month, faster answers, deeper research and exportable reports.",
+              "description": "50 checks a month, faster answers, deeper research and exportable reports.",
               "displayName": "Hunch Pro",
               "locale": "en_US"
             }
@@ -60,7 +60,7 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "60 checks a month, faster answers, deeper research and exportable reports.",
+              "description": "50 checks a month, faster answers, deeper research and exportable reports.",
               "displayName": "Hunch Pro (yearly)",
               "locale": "en_US"
             }

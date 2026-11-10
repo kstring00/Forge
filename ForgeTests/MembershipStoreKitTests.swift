@@ -83,7 +83,7 @@ final class MembershipStoreKitTests: XCTestCase {
         await buy(MembershipProduct.proMonthly)
         XCTAssertEqual(state.plan, .pro)
         XCTAssertEqual(state.productID, MembershipProduct.proMonthly)
-        XCTAssertEqual(balance.monthlyLeft, 60)
+        XCTAssertEqual(balance.monthlyLeft, 50)
         XCTAssertEqual(balance.rolledOverLeft, 12, "Plus's unused carry, up to Plus's 15")
     }
 
@@ -147,9 +147,9 @@ final class MembershipStoreKitTests: XCTestCase {
     func testAYearlyPlanGetsMonthlyChecks() async {
         session.timeRate = .monthlyRenewalEveryThirtySeconds
         await buy(MembershipProduct.proYearly)
-        for _ in 0..<60 { entitlements.commitCheck(wasFreeOnProxy: false) }
+        for _ in 0..<50 { entitlements.commitCheck(wasFreeOnProxy: false) }
         XCTAssertEqual(balance.monthlyLeft, 0)
-        let fresh = await eventually(45) { balance.monthlyLeft == 60 }
+        let fresh = await eventually(45) { balance.monthlyLeft == 50 }
         XCTAssertTrue(fresh, "a new month's checks without a renewal")
     }
 

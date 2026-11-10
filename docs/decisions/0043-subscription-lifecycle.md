@@ -62,7 +62,7 @@ Not the cause: (a) levels wrong or tied, and (b) a product in another group. Bot
 - **No founding product.** `hunch.plus.founding.yearly` is removed from `Hunch.storekit` and the app, and is never created in App Store Connect.
 - **Testers get an offer code on Plus yearly:** $39.99 for the first year, then $59.99. The promise is "first year at the founding price".
 - **Redeeming:** testers use **Redeem a code** at the bottom of the plan screen, or Apple's redemption link.
-- **Display:** the app shows "founding member" while the first, discounted year runs: Plus yearly bought with an offer code.
+- **Display:** the app shows "founding member" while the first, discounted year runs. It matches the offer by name, not "any offer code": StoreKit reports an offer code by its App Store Connect reference name (`Transaction.offer.id`, or `offerID` before iOS 17.2), and the app compares it with `foundingOfferID` in the config (`Founding`).
 - **Setup:** steps are in `RELEASE.md` §4.
 
 The analysis behind it:
@@ -101,7 +101,7 @@ The approved rules apply throughout: carried checks are spent first, then this m
 3. **Upgrade** (immediate, Plus → Pro; decided Nov 9): carried-over and unused checks move over **together**, capped at the old plan's allowance (× the carry setting), and expire at the end of the new cycle like any carried check. The new allowance starts now; cycles follow the new billing date. At a renewal, carried checks still expire as usual.
    - Carried checks are spent before this month's. So whenever some carried checks are left, none of this month's have been used, and this month's unused ones already fill a one-month cap.
    - With today's setting (`capMonths: 1`), the result is therefore the same as before. The rule changes the outcome only if the carry cap is raised.
-   - Tested both ways: `testCarriedChecksMoveWithAnUpgrade`.
+   - Tested both ways: `testCarriedChecksMoveWithAnUpgrade` and `testFiveCarriedPlusSixUnusedMoveAsEleven`.
 4. **Downgrade** (booked): nothing changes until renewal. At renewal, up to the new plan's allowance carries.
 5. **Undo a booked downgrade:** nothing changes, and no events are recorded.
 6. **Monthly ↔ yearly:** at the switch date the anchor moves; rollover works as at a renewal.
@@ -131,9 +131,22 @@ The approved rules apply throughout: carried checks are spent first, then this m
 - **It's off until signing is set up.** It needs the iCloud key-value entitlement, which needs a development team. Turn it on with one line in `Local.xcconfig`; see `Local.xcconfig.example`. Without it, nothing changes.
 - **Events:** every grant, carry, expiry, spend, top-up and refund is recorded with its transaction ID (`CheckLedger.events`, the latest 1,000). With them, #22's server can rebuild a balance and then follow App Store Server Notifications.
 
+## Follow-up decisions (Nov 10, with chat Claude's review)
+
+- **Pro is 50 checks a month**, set in the config, the app's defaults and the store descriptions. It is easier to raise an allowance after the beta than to lower one.
+- **A refunded plan is an expiry:** Free, carrying 1 check. Confirmed.
+- **A payment that fails past the grace period** pauses the plan (Free) until Apple is paid; then a fresh month starts and at most 1 check carries. Confirmed.
+- **Top-ups after a reinstall without iCloud** are not given back by Restore, until #22 counts on the server. Confirmed.
+- **Billing Grace Period is opt-in** in App Store Connect, one setting for the whole app. `RELEASE.md` §4b says how to turn it on. The payment link `https://apps.apple.com/account/billing` is Apple's documented deep link.
+- **The upgrade rule, with numbers.** A balance of 5 carried and 6 unused moves as 11 (`testFiveCarriedPlusSixUnusedMoveAsEleven`). Spending cannot produce that balance, though: carried checks are spent first, so while any are left, all 15 of this month's are unused. The same test walks every reachable balance and shows the result equals the old rule's at the one-month cap.
+- **Testing and merging:** test once on #39's branch (it contains #38), then merge #38 and #39 back to back. If #39's build is not fixed after two rounds, test and merge #38 alone.
+- **Order after #38 and #39:** #30 (folded into one bench with #38's: one folder, one runner, both reports), steady Potential, Under the Hood in four PRs, then cheaper research.
+- **The Nov 9 sources fix counts as unconfirmed** on a device until Potential is steady: two ideas scoring 4 and 17 proves nothing while one idea can move 15 to 25 points between runs.
+- **Open, for Kyle:** whether Plus monthly gets the 7-day trial too. Today only Plus yearly has it (`Hunch.storekit`, `RELEASE.md` §3), and the app offers "Try Plus free for 7 days" on the Yearly tab only. The 5-check trial cap already applies to any trial.
+
 ## 8. Tests
 
-- **ForgeCore:** 126 tests, including 26 lifecycle tests.
+- **ForgeCore:** 127 tests, including 27 lifecycle tests.
 - **Proxy:** 39 tests.
 - **App** (`ForgeTests/MembershipStoreKitTests.swift`, StoreKitTest; run with Cmd+U on the Mac): buy, trial cap, upgrade, downgrade with no new transaction then renewal into Plus, undo, monthly → yearly, accelerated renewal with carry, yearly plan getting monthly checks, cancel and resubscribe, expiry, refund, top-up refund, billing retry with and without grace, interrupted purchase, Ask to Buy.
 - **Manual:** the simulator checklist is in the PR description.

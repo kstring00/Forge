@@ -14,6 +14,13 @@ import ForgeCore
 @MainActor
 final class LedgerCloud {
     static let key = "membership.ledger.v1"
+
+    /// The iCloud copy, only when this build is set up for it (the entitlement
+    /// and `HUNCH_LEDGER_IN_ICLOUD = YES`, both in Local.xcconfig). Asking for
+    /// the key-value store without the entitlement is an error in Apple's eyes.
+    static func ifEnabled() -> LedgerCloud? {
+        (Bundle.main.object(forInfoDictionaryKey: "HunchLedgerInICloud") as? String) == "YES" ? LedgerCloud() : nil
+    }
     private let store: NSUbiquitousKeyValueStore
     private var observer: NSObjectProtocol?
     /// Called with iCloud's copy when another device (or a restore) changed it.

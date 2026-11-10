@@ -20,6 +20,8 @@ final class MembershipStore {
     private var updates: Task<Void, Never>?
     private var statusUpdates: Task<Void, Never>?
     private var refreshing: Task<Void, Never>?
+    private var reads = 0
+    private var applied = 0
 
     init(entitlements: any EntitlementService) {
         self.entitlements = entitlements
@@ -72,18 +74,49 @@ final class MembershipStore {
     func refresh() async {
         // Refreshes are asked for from several places at once (a purchase, the
         // update listeners, coming to the foreground). They run one at a time, in
-        // the order asked, so the last answer applied is the newest, and a caller
-        // returns only once its own read has been applied.
+        // the order asked, and a caller returns once its own read is applied.
+        // Nothing waits for long: a read the App Store never answers must not
+        // hold up every later one, or leave the buttons waiting for good.
         let previous = refreshing
         let task = Task { [weak self] in
-            await previous?.value
+            if let previous { await Self.wait(for: previous, upTo: 8) }
             await self?.readAndApply()
         }
         refreshing = task
-        await task.value
+        await Self.wait(for: task, upTo: 20)
+    }
+
+    /// Returns when `task` finishes or after `seconds`, whichever comes first.
+    private static func wait(for task: Task<Void, Never>, upTo seconds: Double) async {
+        let once = Once()
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            Task {
+                await task.value
+                if once.first() { done.resume() }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                if once.first() { done.resume() }
+            }
+        }
+    }
+
+    /// True for the first caller only.
+    private final class Once: @unchecked Sendable {
+        private let lock = NSLock()
+        private var used = false
+        func first() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            if used { return false }
+            used = true
+            return true
+        }
     }
 
     private func readAndApply() async {
+        reads += 1
+        let mine = reads
         var entitled: [UInt64: Transaction] = [:]
         var jws: [String] = []
         for await result in Transaction.currentEntitlements {
@@ -106,6 +139,9 @@ final class MembershipStore {
         for (id, t) in entitled where !described.contains(id) {
             snapshots.append(Self.snapshot(t, state: .subscribed, info: nil, entitled: true))
         }
+        // A slow read that comes back after a newer one has been applied is out of date.
+        guard mine > applied else { return }
+        applied = mine
         entitlements.apply(MembershipState(entitlement: SubscriptionSnapshot.deciding(snapshots)), jws: jws)
         // A refunded top-up stays in the history as revoked. Taking its unused
         // checks back here as well as from the update listener means a refund is
@@ -159,7 +195,10 @@ final class MembershipStore {
         do {
             switch try await product.purchase() {
             case .success(let result):
-                await handle(result)
+                await grant(result)
+                // The purchase itself is done: free the buttons before re-reading the plan.
+                purchasing = nil
+                await refresh()
                 return .done
             case .pending:
                 message = "Waiting for approval. Your plan starts as soon as it's approved."
@@ -224,6 +263,11 @@ final class MembershipStore {
     /// finishes it, then re-reads the plan. A top-up is credited once per
     /// transaction ID, however often it is delivered.
     private func handle(_ result: VerificationResult<Transaction>) async {
+        await grant(result)
+        await refresh()
+    }
+
+    private func grant(_ result: VerificationResult<Transaction>) async {
         guard case .verified(let t) = result else {
             message = "The App Store couldn't verify that purchase, so nothing changed."
             return
@@ -236,7 +280,6 @@ final class MembershipStore {
             }
         }
         await t.finish()
-        await refresh()
     }
 
     private static func isIntroductory(_ t: Transaction) -> Bool {

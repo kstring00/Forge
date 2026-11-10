@@ -74,6 +74,9 @@
 	<key>UIUserInterfaceStyle</key>
 	<string>Automatic</string>
 	<!-- Decision 0043: on iOS 18 and later, bought top-ups stay in the App Store history, so Restore can recognise them. -->
+	<!-- Decision 0043: YES (from Local.xcconfig) once the iCloud key-value entitlement is set up. -->
+	<key>HunchLedgerInICloud</key>
+	<string>$(HUNCH_LEDGER_IN_ICLOUD)</string>
 	<key>SKIncludeConsumableInAppPurchaseHistory</key>
 	<true/>
 </dict>

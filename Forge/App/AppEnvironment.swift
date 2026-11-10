@@ -45,7 +45,7 @@ final class AppEnvironment {
         self.speech = speech
         self.realityChecks = RealityCheckCenter(proxy: ai as? ProxyAIClient)
         self.plans = PlanBuilder(proxy: ai as? ProxyAIClient)
-        let entitlements = LocalEntitlements(cloud: LedgerCloud())
+        let entitlements = LocalEntitlements(cloud: LedgerCloud.ifEnabled())
         self.entitlements = entitlements
         self.membership = MembershipStore(entitlements: entitlements)
         realityChecks.entitlements = entitlements

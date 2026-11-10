@@ -82,7 +82,15 @@ struct HomeView: View {
             // Read outside the line above: inside it, the top inset reads as zero.
             .readsSafeArea($safeArea)
             // The sky fills the top at rest; once Home scrolls, rows pass behind the canvas, not under the clock.
-            .overlay(alignment: .top) { HomeTopCover(height: topInset, amount: topCover) }
+            // The overlay is laid out inside the safe area even though the list runs above it (seen on
+            // the Mac, Nov 10: the cover sat one status bar too low). A clear layer stretched to the
+            // top of the screen carries the cover, so it starts at the very top either way.
+            .overlay {
+                Color.clear
+                    .overlay(alignment: .top) { HomeTopCover(height: topInset, amount: topCover) }
+                    .ignoresSafeArea(edges: .top)
+                    .allowsHitTesting(false)
+            }
             // Rows fade out above the tab bar and the capture button; the canvas carries on behind the bar.
             .overlay(alignment: .bottom) { HomeBottomFade(below: bottomInset).offset(y: bottomInset) }
             .toolbar(.hidden, for: .navigationBar)

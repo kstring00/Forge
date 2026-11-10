@@ -45,9 +45,17 @@ struct KnowSomethingSheet: View {
             .navigationTitle("I know something")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave).fontWeight(.semibold)
+                // Once what they wrote is saved, the only thing left is to close:
+                // the re-score finished, changed nothing, or hit the daily limit.
+                if saved != nil && !running {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }.fontWeight(.semibold)
+                    }
+                } else {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(running) }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save and re-score") { saveThenConfirm() }.disabled(!canSave || saved != nil).fontWeight(.semibold)
+                    }
                 }
             }
             .onAppear { focused = true }
@@ -72,6 +80,11 @@ struct KnowSomethingSheet: View {
         try? context.save()
         saved = source
         guard idea.latestEvaluation != nil else { dismiss(); return }
+        // Decision 0042: re-scoring is included, under a quiet daily limit.
+        guard env.entitlements.canUse(.rescore, ideaID: idea.id) else {
+            message = FollowUp.rescore.limitMessage
+            return
+        }
         confirming = true
     }
 
@@ -81,8 +94,11 @@ struct KnowSomethingSheet: View {
         running = true
         defer { running = false }
         do {
-            let envelope = try await env.ai.perform(.prefill, context: AIContext.make(for: idea), expecting: PrefillResult.self)
+            // Decision 0042: the panelists score again on the scoring model; no new research, no Brief.
+            let envelope = try await env.ai.perform(.rescore, context: AIContext.make(for: idea), expecting: RescoreResult.self)
             if let cost = envelope.costUSD { AISpend.record(cost) }
+            env.entitlements.recordUse(.rescore, ideaID: idea.id)
+            CostMeterStore.recordFollowUp(.rescore, envelope)
             let touched = envelope.payload.criteria.filter { $0.sourceIDs.contains(source.id) }
             guard !touched.isEmpty else {
                 message = "Saved as verified. The panel did not find a criterion it changes; you can attach it yourself in the Lab."

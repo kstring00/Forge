@@ -76,6 +76,18 @@ public final class Idea {
     /// so the plan's shape can grow without a schema change.
     public var launchPlanData: Data?
 
+    /// Decision 0042: the research packet from this idea's latest check, and
+    /// when it ran. Everything done on the idea afterwards (a launch plan,
+    /// bringing it up to date, a re-score, the Tank) reads this instead of
+    /// searching again. Only a fresh re-check replaces it.
+    public var researchPacketData: Data?
+    public var researchedAt: Date?
+
+    public var researchPacket: ResearchPacket? {
+        get { researchPacketData.flatMap { try? JSONDecoder().decode(ResearchPacket.self, from: $0) } }
+        set { researchPacketData = newValue.flatMap { try? JSONEncoder().encode($0) } }
+    }
+
     public var launchPlan: LaunchPlan? {
         get { launchPlanData.flatMap { try? JSONDecoder().decode(LaunchPlan.self, from: $0) } }
         set { launchPlanData = newValue.flatMap { try? JSONEncoder().encode($0) } }

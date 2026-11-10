@@ -13,7 +13,7 @@ struct RealityCheckButton: View {
     var compact = false
     /// A small capsule for list rows: "To the panel".
     var pill = false
-    var pillTitle = "To the panel"
+    var pillTitle = "To the panel · \(PlanRules.label(checks: PlanRules.current.costs.check))"
     /// The one-line cost disclosure under the primary button; off on cards (decision 0036).
     var showsDisclosure = true
     @Environment(\.modelContext) private var context
@@ -55,7 +55,8 @@ struct RealityCheckButton: View {
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Button { tap() } label: {
-                PrimaryButtonLabel(title: failure == nil ? "Get the panel's take" : "Try again")
+                // Decision 0042: every button states its cost.
+                PrimaryButtonLabel(title: failure == nil ? "Get the panel's take · \(PlanRules.label(checks: PlanRules.current.costs.check))" : "Try again")
             }
             .buttonStyle(.plain)
             .disabled(runner.isRunning)

@@ -1,0 +1,26 @@
+{
+  "monthlyChecks": {
+    "free": 1,
+    "plus": 15,
+    "pro": 60
+  },
+  "trialChecks": 5,
+  "topUpChecks": 5,
+  "rollover": {
+    "enabled": true,
+    "capMonths": 1
+  },
+  "costs": {
+    "check": 1,
+    "freshRecheck": 1,
+    "launchPlan": 0,
+    "launchPlanUpdate": 0,
+    "rescore": 0,
+    "tank": 0
+  },
+  "fairUse": {
+    "launchPlansPerIdeaPerDay": 3,
+    "rescoresPerIdeaPerDay": 10,
+    "tankRunsPerIdeaPerDay": 3
+  }
+}

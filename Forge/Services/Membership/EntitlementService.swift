@@ -22,6 +22,10 @@ protocol EntitlementService: AnyObject {
     func canSpend(_ checks: Int, inFlight: Int) -> Bool
     /// A plan arrived: spend its checks. Failed runs never call this.
     func spend(_ checks: Int)
+    /// Decision 0042: whether an included follow-up on this idea is under today's fair-use limit.
+    func canUse(_ followUp: FollowUp, ideaID: UUID) -> Bool
+    /// An included follow-up arrived. Failed runs never call this.
+    func recordUse(_ followUp: FollowUp, ideaID: UUID)
     /// The App Store's current entitlement, with the signed transactions behind it.
     func apply(_ state: MembershipState, jws: [String])
     /// A top-up was bought. Idempotent per transaction.
@@ -34,17 +38,25 @@ protocol EntitlementService: AnyObject {
 final class LocalEntitlements: EntitlementService {
     static let ledgerKey = "membership.ledger"
     static let stateKey = "membership.state"
+    static let fairUseKey = "membership.fairUse"
 
     private let defaults: UserDefaults
     private let now: () -> Date
     private(set) var state: MembershipState
     private(set) var ledger: CheckLedger
+    private(set) var fairUse: FairUseLedger
 
     init(defaults: UserDefaults = .standard, now: @escaping () -> Date = Date.init) {
         self.defaults = defaults
         self.now = now
         state = defaults.data(forKey: Self.stateKey).flatMap { try? JSONDecoder().decode(MembershipState.self, from: $0) } ?? .free
         ledger = defaults.data(forKey: Self.ledgerKey).flatMap { try? JSONDecoder().decode(CheckLedger.self, from: $0) } ?? CheckLedger()
+        fairUse = defaults.data(forKey: Self.fairUseKey).flatMap { try? JSONDecoder().decode(FairUseLedger.self, from: $0) } ?? FairUseLedger()
+        // Decision 0042: record the cycle we're in at launch, so a cycle with no
+        // checks still carries its unused ones into the next.
+        let before = ledger
+        ledger.roll(state, now: now())
+        if ledger != before { save() }
     }
 
     var balance: CheckBalance { ledger.balance(state, now: now()) }
@@ -66,6 +78,13 @@ final class LocalEntitlements: EntitlementService {
         save()
     }
 
+    func canUse(_ followUp: FollowUp, ideaID: UUID) -> Bool { fairUse.canUse(followUp, ideaID: ideaID, now: now()) }
+
+    func recordUse(_ followUp: FollowUp, ideaID: UUID) {
+        fairUse.record(followUp, ideaID: ideaID, now: now())
+        if let d = try? JSONEncoder().encode(fairUse) { defaults.set(d, forKey: Self.fairUseKey) }
+    }
+
     func apply(_ state: MembershipState, jws: [String]) {
         guard state != self.state else { return }
         self.state = state
@@ -78,6 +97,16 @@ final class LocalEntitlements: EntitlementService {
     }
 
     #if DEBUG
+    /// Settings → Developer: pretend this cycle ended, so the next one starts now
+    /// and this cycle's unused checks carry over (decision 0042, F).
+    func startNextCycleForTesting() {
+        let cal = Calendar.current
+        ledger.periodStart = cal.date(byAdding: .month, value: -1, to: ledger.periodStart) ?? ledger.periodStart
+        if let end = ledger.periodEnd { ledger.periodEnd = cal.date(byAdding: .month, value: -1, to: end) }
+        ledger.roll(state, now: now())
+        save()
+    }
+
     /// Settings → Developer: monthly checks back, the free first check back. Bought checks stay.
     func resetForTesting() {
         ledger.usedThisPeriod = 0
@@ -97,4 +126,7 @@ extension CheckBalance {
     var line: String { line(resets: resetsAt.formatted(.dateTime.month(.abbreviated).day())) }
     /// "resets Dec 1"
     var resetsText: String { "Resets \(resetsAt.formatted(.dateTime.month(.abbreviated).day()))" }
+    /// "19 checks left · 4 carried over expire Dec 3"
+    var pillLine: String { pillLine(resets: resetsAt.formatted(.dateTime.month(.abbreviated).day())) }
+    var expiresText: String { resetsAt.formatted(.dateTime.month(.abbreviated).day()) }
 }

@@ -95,22 +95,17 @@ public struct LaunchPlan: Codable, Equatable, Sendable {
     }
 }
 
-/// Decision 0041: what a plan costs. Included in Pro (with the other reports);
-/// on Free and Plus a new plan is 3 checks and bringing one up to date is 1.
-/// The device's free first check is for a panel take, never a plan.
+/// What a plan costs (decision 0042): included on every plan once the idea
+/// has been checked, new or brought up to date, under the fair-use limit.
+/// The numbers live in `PlanRules`.
 public enum PlanCost {
-    public static let newPlan = 3
-    public static let refresh = 1
-
-    public static func checks(on plan: Plan, refreshing: Bool) -> Int {
-        if plan.includes(.reports) { return 0 }
-        return refreshing ? refresh : newPlan
+    public static func checks(on plan: Plan, refreshing: Bool, rules: PlanRules = .current) -> Int {
+        (refreshing ? FollowUp.launchPlanUpdate : .launchPlan).cost(rules)
     }
 
-    /// "Included in Pro", "3 checks", "1 check".
-    public static func label(on plan: Plan, refreshing: Bool) -> String {
-        let n = checks(on: plan, refreshing: refreshing)
-        return n == 0 ? "Included in Pro" : "\(n) \(n == 1 ? "check" : "checks")"
+    /// "Included", or "1 check" if the rules ever charge for it.
+    public static func label(on plan: Plan, refreshing: Bool, rules: PlanRules = .current) -> String {
+        PlanRules.label(checks: checks(on: plan, refreshing: refreshing, rules: rules))
     }
 }
 
@@ -154,15 +149,11 @@ extension CheckLedger {
         return balance(state, now: now, calendar: calendar).total - inFlight >= checks
     }
 
-    /// Spend `checks` at once: monthly first, then bought ones. Called only
+    /// Spend `checks` at once: carried-over, monthly, then bought. Called only
     /// when what they paid for arrived.
     public mutating func spend(_ checks: Int, _ state: MembershipState, now: Date, calendar: Calendar = .current) {
         roll(state, now: now, calendar: calendar)
-        for _ in 0..<max(0, checks) {
-            if usedThisPeriod < state.monthlyAllowance { usedThisPeriod += 1 }
-            else if topUps > 0 { topUps -= 1 }
-            else { usedThisPeriod += 1 }
-        }
+        for _ in 0..<max(0, checks) { _ = spendOne(state) }
     }
 }
 

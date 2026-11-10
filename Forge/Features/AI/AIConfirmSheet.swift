@@ -115,7 +115,7 @@ extension AIConfirmSheet.Content {
 
     static let rescore = Self(kind: "Re-score",
                               title: "Re-score what this touches?",
-                              whatHappens: "What you wrote is already saved as verified by you. The panel re-reads the Library and re-scores only the criteria it touches, in a new version.",
-                              duration: "Takes one to two minutes.",
-                              sendTitle: "Send to the panel")
+                              whatHappens: "What you wrote is already saved as verified by you. The panelists score again from this idea's saved research and what you logged, and change only the criteria it touches, in a new version. Included: no check is used and nothing is searched again.",
+                              duration: "Takes under a minute.",
+                              sendTitle: "Send to the panel · Included")
 }

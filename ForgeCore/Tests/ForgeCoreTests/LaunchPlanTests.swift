@@ -23,14 +23,15 @@ final class LaunchPlanTests: XCTestCase {
                    rationale: "", createdAt: d(2026, 11, 1), basis: basis)
     }
 
-    func testAPlanCostsThreeChecksARefreshOneAndProIncludesThem() {
-        XCTAssertEqual(PlanCost.checks(on: .free, refreshing: false), 3)
-        XCTAssertEqual(PlanCost.checks(on: .plus, refreshing: false), 3)
-        XCTAssertEqual(PlanCost.checks(on: .plus, refreshing: true), 1)
-        XCTAssertEqual(PlanCost.checks(on: .pro, refreshing: false), 0)
-        XCTAssertEqual(PlanCost.label(on: .pro, refreshing: true), "Included in Pro")
-        XCTAssertEqual(PlanCost.label(on: .plus, refreshing: false), "3 checks")
-        XCTAssertEqual(PlanCost.label(on: .plus, refreshing: true), "1 check")
+    func testPlansAreIncludedOnEveryPlan() {
+        for plan in Plan.allCases {
+            XCTAssertEqual(PlanCost.checks(on: plan, refreshing: false), 0)
+            XCTAssertEqual(PlanCost.checks(on: plan, refreshing: true), 0)
+            XCTAssertEqual(PlanCost.label(on: plan, refreshing: false), "Included")
+        }
+        let charging = PlanRules(costs: .init(launchPlan: 3, launchPlanUpdate: 1))
+        XCTAssertEqual(PlanCost.label(on: .plus, refreshing: false, rules: charging), "3 checks", "the number comes from the rules")
+        XCTAssertEqual(PlanCost.label(on: .plus, refreshing: true, rules: charging), "1 check")
     }
 
     func testSpendingThreeChecksTakesMonthlyFirstThenBought() {

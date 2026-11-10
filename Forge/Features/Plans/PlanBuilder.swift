@@ -36,7 +36,7 @@ final class PlanBuilder {
 
     /// Checks this idea's plan costs now: a new plan or bringing one up to date.
     func cost(for idea: Idea) -> Int { PlanCost.checks(on: membershipPlan, refreshing: idea.launchPlanData != nil) }
-    /// "3 checks", "1 check", "Included in Pro".
+    /// "Included" (decision 0042), or a number of checks if the rules charge.
     func costLabel(for idea: Idea) -> String { PlanCost.label(on: membershipPlan, refreshing: idea.launchPlanData != nil) }
 
     func canAfford(_ idea: Idea) -> Bool {
@@ -51,8 +51,14 @@ final class PlanBuilder {
             return
         }
         let checksToSpend = cost(for: idea)
+        // Decision 0042: included, under a quiet daily limit per idea.
+        let kind: FollowUp = idea.launchPlanData != nil ? .launchPlanUpdate : .launchPlan
+        if let e = entitlements, !e.canUse(kind, ideaID: id) {
+            failures[id] = kind.limitMessage
+            return
+        }
         guard canAfford(idea) else {
-            failures[id] = "This plan needs \(checksToSpend) \(checksToSpend == 1 ? "check" : "checks"), and there aren't enough left. Plans are included in Pro."
+            failures[id] = "This plan needs \(checksToSpend) \(checksToSpend == 1 ? "check" : "checks"), and there aren't enough left."
             return
         }
         failures[id] = nil
@@ -70,10 +76,12 @@ final class PlanBuilder {
             do {
                 let envelope = try await proxy.perform(.launchPlan, context: ctx, options: options, expecting: LaunchPlanResult.self)
                 AISpend.record(envelope.costUSD ?? 0)
+                CostMeterStore.recordFollowUp(kind, envelope)
                 idea.launchPlan = Self.plan(from: envelope.payload, rationale: envelope.rationale, basis: basis)
                 idea.touch()
                 try? context.save()
                 self?.entitlements?.spend(checksToSpend)
+                self?.entitlements?.recordUse(kind, ideaID: id)
                 self?.running.remove(id)
             } catch {
                 self?.running.remove(id)

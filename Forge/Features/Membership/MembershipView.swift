@@ -31,20 +31,19 @@ struct MembershipView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: ForgeSpacing.m) {
                 hero
-                statusCard
+                statusLine
                 periodToggle
-                plusCard
-                proCard
-                freeCard
+                planCard(.free)
+                planCard(.plus)
+                planCard(.pro)
                 topUpRow
-                promises
                 legal
             }
             .padding(.horizontal, 20)
             .padding(.bottom, ForgeSpacing.xxl)
         }
         .background(alignment: .top) {
-            SkyHeader().frame(height: 340).ignoresSafeArea()
+            SkyHeader().frame(height: 300).ignoresSafeArea()
         }
         .background(ForgeColor.canvas)
         .overlay(alignment: .bottom) { banner }
@@ -53,10 +52,10 @@ struct MembershipView: View {
         .task { await store.load() }
     }
 
-    // MARK: Hero
+    // MARK: Top
 
     private var hero: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark").font(.system(.body, weight: .semibold)).foregroundStyle(.white)
@@ -69,49 +68,27 @@ struct MembershipView: View {
                     .accessibilityLabel("Restore purchases")
             }
             .padding(.top, ForgeSpacing.m)
-            Text("Hunch Plus").forgeLabel().foregroundStyle(.white.opacity(0.85)).padding(.top, ForgeSpacing.xl)
-            Text("Stop guessing which idea is worth it")
+            Text("Choose your plan")
                 .font(Font.custom("Fraunces-SemiBold", size: 34, relativeTo: .largeTitle))
-                .foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(ForgeColor.ink)
                 .shadow(color: .black.opacity(0.3), radius: 8, y: 2)
-            Text("Less than a couple of coffees a month, against months lost on the wrong idea.")
-                .font(.system(.body)).foregroundStyle(ForgeColor.ink.opacity(0.9))
+                .padding(.top, ForgeSpacing.l)
+            Text("A check is one idea researched by the panel. Everything you do yourself is free.")
+                .font(.subheadline).foregroundStyle(ForgeColor.ink.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
                 .shadow(color: .black.opacity(0.3), radius: 6, y: 1)
         }
-        .padding(.bottom, ForgeSpacing.s)
     }
 
-    // MARK: Where you are
-
-    private var statusCard: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            HStack {
-                Text(statusLabel).forgeLabel()
-                Spacer()
-                Text(balance.resetsText).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("\(balance.monthlyLeft) of \(balance.monthlyAllowance)").font(ForgeType.numeralMedium).foregroundStyle(ForgeColor.ink)
-                Text(state.plan == .free ? "free \(balance.monthlyAllowance == 1 ? "check" : "checks") left this month" : "checks left this month")
-                    .font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(ForgeColor.line)
-                    Capsule().fill(ForgeColor.ember)
-                        .frame(width: geo.size.width * Double(balance.monthlyLeft) / Double(max(1, balance.monthlyAllowance)))
-                }
-            }
-            .frame(height: 5)
-            if balance.topUps > 0 {
-                Text("+\(balance.topUps) extra \(balance.topUps == 1 ? "check" : "checks"), used after these. They never expire.")
-                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            if balance.firstFreeAvailable {
-                Text("Your first check on this phone is free and doesn't count.").font(.footnote).foregroundStyle(ForgeColor.emberText)
-            }
+    /// One line: your plan and what's left. The breakdown lives in Settings.
+    private var statusLine: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(statusLabel).forgeLabelSmall()
+            Text(balance.pillLine).font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(ForgeSpacing.cardPadding)
+        .padding(ForgeSpacing.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
         .accessibilityElement(children: .combine)
@@ -146,105 +123,136 @@ struct MembershipView: View {
 
     // MARK: Plans
 
-    private var plusCard: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            HStack(alignment: .top) {
-                Text("Plus").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+    /// One card per plan: name, price, one line, one button. Your plan says so.
+    private func planCard(_ plan: Plan) -> some View {
+        let current = state.plan == plan
+        return VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(plan.displayName).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                if current {
+                    Text("Your plan").font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.canvas)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(ForgeColor.ink, in: Capsule())
+                }
                 Spacer()
-                priceBlock(plusID, otherLine: period == .yearly
-                           ? "\(store.perMonth(plusID)) a month · or \(store.price(MembershipProduct.plusMonthly)) monthly"
-                           : "or \(store.price(plusYearlyID)) a year\(store.showsFoundingOffer ? " as a founding member" : "")")
+                Text(priceLine(plan)).font(.system(.headline)).foregroundStyle(ForgeColor.ink)
             }
-            Text("15 checks a month. About 15 ideas looked at properly.")
-                .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
-            VStack(alignment: .leading, spacing: 8) {
-                check("Argue it out with the panel when you disagree")
-                check("Your patterns: learn where your instincts are right")
-                check("The Library: every source, ask it anything")
+            Text(what(plan)).font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let note = note(plan) {
+                Text(note).font(.footnote).foregroundStyle(ForgeColor.emberText).fixedSize(horizontal: false, vertical: true)
             }
-            primaryButton(plusTitle, id: plusID, emphasised: true)
-            Text(plusFinePrint).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
+            action(plan, current: current)
         }
         .padding(ForgeSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember, lineWidth: 1.5))
-        .overlay(alignment: .topLeading) {
-            Text(founding ? "Founding member price" : "Most people pick this")
-                .font(.system(.footnote, weight: .semibold)).foregroundStyle(.white)
-                .padding(.horizontal, 10).padding(.vertical, 3)
-                .background(ForgeColor.ember, in: Capsule())
-                .offset(x: 16, y: -12)
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous)
+            .strokeBorder(current ? ForgeColor.ink.opacity(0.6) : ForgeColor.line, lineWidth: current ? 1.5 : 1))
+    }
+
+    private func productID(_ plan: Plan) -> String? {
+        switch plan {
+        case .free: nil
+        case .plus: plusID
+        case .pro: proID
         }
-        .padding(.top, 12)
     }
 
-    private var plusTitle: String {
-        if state.productID == plusID { return "Your plan · Manage" }
-        if state.plan == .plus { return "Switch to \(period == .yearly ? "yearly" : "monthly")" }
-        if state.plan == .pro { return "Switch to Plus" }
-        if founding { return "Join as a founding member" }
-        if period == .yearly && store.trialEligible { return "Try Plus free for 7 days" }
-        return "Choose Plus"
+    private func priceLine(_ plan: Plan) -> String {
+        guard let id = productID(plan) else { return "Free" }
+        return "\(store.price(id)) / \(period == .yearly ? "year" : "month")"
     }
 
-    private var plusFinePrint: String {
-        if founding { return "\(store.price(plusID)) a year, kept for as long as you stay subscribed. Cancel anytime in Settings." }
-        if period == .yearly && store.trialEligible && state.plan == .free {
-            return "Then \(store.price(plusID)) a year. Up to \(MembershipState.trialChecks) checks during the trial. Cancel anytime in Settings."
+    private func what(_ plan: Plan) -> String {
+        switch plan {
+        case .free:
+            "\(Plan.free.monthlyChecks) \(Plan.free.monthlyChecks == 1 ? "check" : "checks") a month. Launch plans and re-scores on checked ideas are included."
+        case .plus:
+            "\(Plan.plus.monthlyChecks) checks a month, and unused ones carry over. Shows where your instincts are right."
+        case .pro:
+            "\(Plan.pro.monthlyChecks) checks a month, faster answers and deeper research."
         }
-        return "\(store.price(plusID)) a \(period == .yearly ? "year" : "month"). Cancel anytime in Settings."
     }
 
-    private var proCard: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            HStack(alignment: .top) {
-                Text("Pro").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                Spacer()
-                priceBlock(proID, otherLine: period == .yearly ? "or \(store.price(MembershipProduct.proMonthly)) monthly" : "or \(store.price(MembershipProduct.proYearly)) a year")
+    /// One short line only when it matters: a trial, a founding price, a switch that waits for renewal.
+    private func note(_ plan: Plan) -> String? {
+        switch plan {
+        case .plus:
+            if state.plan == .pro { return "You keep Pro until \(renewalDay), then Plus starts. You're never charged twice." }
+            if founding && state.plan == .free { return "Founding member price, kept as long as you stay subscribed." }
+            if period == .yearly && store.trialEligible && state.plan == .free { return "7 days free, up to \(MembershipState.trialChecks) checks. Cancel anytime." }
+            return nil
+        case .free:
+            return state.plan != .free ? "To go back to Free, cancel in Manage subscription. Your paid plan runs until \(renewalDay)." : nil
+        case .pro:
+            return nil
+        }
+    }
+
+    @ViewBuilder
+    private func action(_ plan: Plan, current: Bool) -> some View {
+        if current {
+            if plan != .free {
+                HStack(spacing: ForgeSpacing.l) {
+                    // Same plan, other billing period: offer the switch.
+                    if let id = productID(plan), state.productID != id {
+                        Button(store.purchasing == id ? "Switching…" : "Switch to \(period == .yearly ? "yearly" : "monthly")") {
+                            Task { await store.purchase(id) }
+                        }
+                        .disabled(store.purchasing != nil)
+                    }
+                    Button("Manage subscription") { managing = true }
+                }
+                .font(.subheadline.weight(.medium)).foregroundStyle(ForgeColor.emberText)
             }
-            Text("60 checks a month, launch plans included, faster answers and deeper research. For when ideas are your job.")
-                .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
-            primaryButton(proTitle, id: proID, emphasised: false)
-        }
-        .padding(ForgeSpacing.cardPadding)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
-    }
-
-    private var proTitle: String {
-        if state.productID == proID { return "Your plan · Manage" }
-        if state.plan == .pro { return "Switch to \(period == .yearly ? "yearly" : "monthly")" }
-        if state.plan == .plus { return "Upgrade to Pro" }
-        return "Choose Pro"
-    }
-
-    private var freeCard: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            HStack {
-                Text("Free").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                Spacer()
-                Text(state.plan == .free ? "Your plan" : "$0").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
-            }
-            Text("1 check a month, each with its Sparks. Catching ideas, your steps and the Journal are free forever.")
-                .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+        } else if plan == .free {
             if state.plan != .free {
-                Button("To go back to Free, cancel in Manage subscription") { managing = true }
-                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                Button("Manage subscription") { managing = true }
+                    .font(.subheadline.weight(.medium)).foregroundStyle(ForgeColor.emberText)
             }
+        } else if let id = productID(plan) {
+            // The one orange button is the plan most people should pick next.
+            let emphasised = (plan == .plus && state.plan == .free) || (plan == .pro && state.plan == .plus)
+            Button { Task { await store.purchase(id) } } label: {
+                Group {
+                    if store.purchasing == id { ProgressView().tint(emphasised ? .white : ForgeColor.ink) } else { Text(buttonTitle(plan)) }
+                }
+                .font(.system(.body, weight: .semibold))
+                .foregroundStyle(emphasised ? .white : ForgeColor.ink)
+                .frame(maxWidth: .infinity).frame(minHeight: 48)
+                .background(emphasised ? ForgeColor.ember : ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(emphasised ? Color.clear : ForgeColor.line))
+            }
+            .buttonStyle(.plain)
+            .disabled(store.purchasing != nil)
         }
-        .padding(ForgeSpacing.cardPadding)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
+    }
+
+    private func buttonTitle(_ plan: Plan) -> String {
+        switch plan {
+        case .plus:
+            if state.plan == .pro { return "Switch to Plus on \(renewalDay)" }
+            if founding { return "Join as a founding member" }
+            if period == .yearly && store.trialEligible && state.plan == .free { return "Try Plus free for 7 days" }
+            return "Choose Plus"
+        case .pro:
+            return state.plan == .plus ? "Upgrade to Pro" : "Choose Pro"
+        case .free:
+            return ""
+        }
+    }
+
+    /// "Dec 9", or "your renewal" before the App Store has said.
+    private var renewalDay: String {
+        state.renewsAt.map { $0.formatted(.dateTime.month(.abbreviated).day()) } ?? "your renewal"
     }
 
     private var topUpRow: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Busy month?").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
-                Text("\(MembershipProduct.topUpChecks) extra checks, never expire").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            Spacer()
+            Text("Need a few more? \(MembershipProduct.topUpChecks) extra checks, never expire.")
+                .font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
             Button { Task { await store.purchase(MembershipProduct.topUp5) } } label: {
                 Group {
                     if store.purchasing == MembershipProduct.topUp5 { ProgressView() } else { Text(store.price(MembershipProduct.topUp5)) }
@@ -258,78 +266,22 @@ struct MembershipView: View {
             .disabled(store.purchasing != nil)
             .accessibilityLabel("Buy \(MembershipProduct.topUpChecks) extra checks for \(store.price(MembershipProduct.topUp5))")
         }
-        .padding(ForgeSpacing.cardPadding)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
-    }
-
-    private var promises: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            promise("Your ideas, steps and Journal are always yours, on every plan.")
-            promise("If a check fails partway, it doesn't count.")
-            promise("Unused monthly checks reset; extra checks you buy never expire.")
-        }
-        .padding(.top, ForgeSpacing.s)
+        .padding(.horizontal, 4)
     }
 
     private var legal: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("Subscriptions renew automatically at the price shown unless cancelled at least 24 hours before the period ends. Payment is charged to your Apple ID. Manage or cancel in your Apple account settings. Checks use AI: your idea text is sent to a model through Hunch's server.")
+            Text("Subscriptions renew automatically unless cancelled at least 24 hours before the period ends. Payment is charged to your Apple ID; manage or cancel in your Apple account settings. A check that fails doesn't count.")
                 .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: ForgeSpacing.l) {
                 Button("Terms") { openURL(LegalLinks.terms) }
                 Button("Privacy") {
                     if let url = LegalLinks.privacy { openURL(url) } else { showingPrivacy = true }
                 }
-                if state.plan != .free { Button("Manage subscription") { managing = true } }
             }
             .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.emberText).underline()
         }
-        .padding(.top, ForgeSpacing.m)
-    }
-
-    // MARK: Pieces
-
-    private func priceBlock(_ id: String, otherLine: String) -> some View {
-        VStack(alignment: .trailing, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(store.price(id)).font(.system(.title3, weight: .semibold)).foregroundStyle(ForgeColor.ink)
-                Text(id.hasSuffix("yearly") ? "/ year" : "/ month").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            Text(otherLine).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
-        }
-    }
-
-    private func check(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark").font(.system(.footnote, weight: .bold)).foregroundStyle(ForgeColor.emberText).padding(.top, 2)
-            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private func promise(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Circle().fill(ForgeColor.ember).frame(width: 6, height: 6).padding(.top, 7)
-            Text(text).font(.subheadline).foregroundStyle(ForgeColor.ink).fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private func primaryButton(_ title: String, id: String, emphasised: Bool) -> some View {
-        let current = state.productID == id
-        return Button {
-            if current { managing = true } else { Task { await store.purchase(id) } }
-        } label: {
-            Group {
-                if store.purchasing == id { ProgressView().tint(emphasised ? .white : ForgeColor.ink) } else { Text(title) }
-            }
-            .font(.system(.body, weight: .semibold))
-            .foregroundStyle(emphasised && !current ? .white : ForgeColor.ink)
-            .frame(maxWidth: .infinity).frame(height: 52)
-            .background(emphasised && !current ? ForgeColor.ember : ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(emphasised && !current ? Color.clear : ForgeColor.line))
-        }
-        .buttonStyle(.plain)
-        .disabled(store.purchasing != nil)
+        .padding(.top, ForgeSpacing.s)
     }
 
     @ViewBuilder
@@ -383,7 +335,7 @@ struct ChecksPill: View {
         Button { env.showingMembership = true } label: {
             HStack(spacing: 6) {
                 Image(systemName: "circle.hexagonpath").font(.system(.footnote, weight: .semibold))
-                Text(env.entitlements.balance.line).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                Text(env.entitlements.balance.pillLine).font(.system(.footnote, weight: .medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 Image(systemName: "chevron.right").font(.system(.footnote, weight: .bold)).opacity(0.7)
             }
             .foregroundStyle(.white)
@@ -391,6 +343,6 @@ struct ChecksPill: View {
             .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(env.entitlements.balance.line). Opens plans and checks.")
+        .accessibilityLabel("\(env.entitlements.balance.pillLine). Opens plans and checks.")
     }
 }

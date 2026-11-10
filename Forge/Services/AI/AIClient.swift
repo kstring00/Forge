@@ -17,6 +17,7 @@ public enum AIAction: String, Codable, CaseIterable, Sendable {
     case realityCheck      // §6D: desk research with four verdicts; the costliest action
     case prefill           // §0A: five Spheres pre-fill the whole Lab from the Library
     case launchPlan        // decision 0041: a short launch plan from what Hunch knows
+    case rescore           // decision 0042: the panelists score again from the saved packet; no research, no Brief
 }
 
 public enum AIError: Error, Equatable, Sendable {
@@ -46,6 +47,8 @@ public struct AIContext: Codable, Sendable {
     /// The user's own track record against the panel, kept by FORGE (§5).
     /// Under 80 words; the user reads, edits and resets it in Settings.
     public var aboutUser: String?
+    /// Decision 0042: the check's shared research, findings tied to Library sources.
+    public var packet: PacketSnapshot?
     public var spheres: [Sphere] = Sphere.phase3Panel
 
     public init(ideaID: UUID, originalText: String, title: String, lens: LensType? = nil) {
@@ -54,6 +57,20 @@ public struct AIContext: Codable, Sendable {
         self.title = title
         self.lens = lens
     }
+}
+
+/// The research packet as the proxy reads it: each finding with the id of
+/// the Library source for its page (nil when no source has that address).
+public struct PacketSnapshot: Codable, Sendable {
+    public struct Finding: Codable, Sendable {
+        public var section: ResearchPacket.Section
+        public var text: String
+        public var url: String
+        public var sourceID: UUID?
+    }
+    public var researchedAt: String?
+    public var findings: [Finding]
+    public var gaps: [String]
 }
 
 public struct ScoredCriterionSnapshot: Codable, Sendable {
@@ -86,7 +103,16 @@ public struct AIEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
         public var cacheWriteTokens: Int
         public var webSearches: Int
     }
+    /// Decision 0042: what each model call cost (a check's prefill is scoring,
+    /// then the Brief). Absent from older proxies and from canned clients.
+    public struct Stage: Codable, Sendable {
+        public var stage: String
+        public var model: String
+        public var costUSD: Double
+        public var usage: Usage
+    }
     public var payload: Payload
+    public var stages: [Stage]?
     /// List items the proxy removed for failing the contract or lacking a source, by list.
     public var dropped: [String: Int]?
     public var rationale: String

@@ -213,6 +213,9 @@ enum VaultImporter {
         idea.pivotTypeRaw = x.pivotType
         idea.titleEdited = x.titleEdited ?? false
         idea.proofMoves = x.proofMoves ?? []
+        idea.launchPlan = x.launchPlan
+        idea.researchPacket = x.researchPacket
+        idea.researchedAt = x.researchedAt
         idea.archivedAt = x.archivedAt
         idea.createdAt = x.createdAt
         idea.updatedAt = x.updatedAt

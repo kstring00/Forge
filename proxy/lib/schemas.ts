@@ -2,10 +2,11 @@
 // Structured outputs guarantee the shape; the clamps in `enforce.ts` guarantee
 // the honesty rules (desk research never exceeds rung 2, no source → cantTell).
 import { z } from "zod";
+import { packetSections } from "./packet.js";
 
 export const actions = [
   "expand", "summarize", "explainCriterion", "designExperiment", "nextStep", "plan",
-  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan",
+  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan", "rescore",
 ] as const;
 export type Action = (typeof actions)[number];
 
@@ -45,6 +46,19 @@ export const AIContext = z.object({
   constraints: z.array(z.string()).default([]),
   stewardCharter: z.string().nullable().optional(),
   aboutUser: z.string().nullable().optional(),
+  /// The check's shared research (decision 0042): findings with the Library
+  /// source each came from. When present, Library pages arrive without their
+  /// text; the packet is what the panel reads.
+  packet: z.object({
+    researchedAt: z.string().nullable().optional(),
+    findings: z.array(z.object({
+      section: z.enum(packetSections),
+      text: z.string(),
+      url: z.string(),
+      sourceID: uuid.nullable(),
+    })).default([]),
+    gaps: z.array(z.string()).default([]),
+  }).nullable().optional(),
   spheres: z.array(sphere).default([...["investor", "customer", "builder", "strategist", "skeptic"]] as z.infer<typeof sphere>[]),
 });
 export type AIContextT = z.infer<typeof AIContext>;
@@ -171,6 +185,17 @@ export const PrefillResult = z.object({
   pivots: z.array(PivotDraft),
 });
 
+/// Decision 0042: a check runs in two calls. The five panelists score on the
+/// scoring model; the brief model writes the Brief from the packet and
+/// those scores. The proxy merges them into one PrefillResult for the app.
+export const ScoreResult = PrefillResult.pick({
+  criteria: true, projection: true, projectionLow: true, projectionHigh: true, projectionBasis: true,
+  estimate: true, panel: true, crossfire: true,
+});
+export const BriefResult = PrefillResult.pick({
+  title: true, realityCheck: true, explorations: true, riskiestAssumption: true, nextMove: true, draftedAssets: true, pivots: true,
+});
+
 /// Decision 0041: a launch plan, two pages, built only from what Hunch knows.
 /// A "proven" line must point at a Library source; one that doesn't is moved
 /// to "unproven" by `enforceLaunchPlan`.
@@ -204,6 +229,8 @@ export const payloadSchemas = {
   realityCheck: RealityCheckResult,
   prefill: PrefillResult,
   launchPlan: LaunchPlanResult,
+  /// After a logged conversation: the panelists score again from the saved packet. No research, no Brief.
+  rescore: ScoreResult,
 } satisfies Record<Action, z.ZodTypeAny>;
 
 /// What goes back to the app: the payload, a short rationale, and accounting.

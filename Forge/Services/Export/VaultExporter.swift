@@ -49,7 +49,10 @@ enum VaultExporter {
             realityChecks: idea.realityChecks.sorted { $0.createdAt < $1.createdAt }.map(export),
             project: idea.project.map(export),
             titleEdited: idea.titleEdited,
-            proofMoves: idea.proofMoves.isEmpty ? nil : idea.proofMoves
+            proofMoves: idea.proofMoves.isEmpty ? nil : idea.proofMoves,
+            launchPlan: idea.launchPlan,
+            researchPacket: idea.researchPacket,
+            researchedAt: idea.researchedAt
         )
     }
 

@@ -1,7 +1,7 @@
 // The honesty rules, enforced on the server regardless of what the model wrote.
 import { content } from "./content.js";
 import type { z } from "zod";
-import type { LaunchPlanResult, PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
+import type { LaunchPlanResult, PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult, ScoreResult } from "./schemas.js";
 
 const ceiling = content.deskResearchRungCeiling;
 
@@ -57,12 +57,13 @@ export function enforceRealityCheck(r: z.infer<typeof RealityCheckResult>, known
   };
 }
 
-export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[], dropped: Record<string, number> = {}): z.infer<typeof PrefillResult> {
+/// The panelists' part of a check, or a re-score (decision 0042): scores
+/// clamped, sources only the app sent, no source means an assumption, and the
+/// verdict rules of a round.
+export function enforceScore(p: z.infer<typeof ScoreResult>, known: Set<string>, lensKeys: string[]): z.infer<typeof ScoreResult> {
   const round = enforceRound({ verdicts: p.panel, crossfire: p.crossfire }, known);
   return {
     ...p,
-    realityCheck: enforceRealityCheck(p.realityCheck, known, dropped),
-    explorations: p.explorations.filter((e) => promptKeys.includes(e.promptKey)).map((e) => ({ ...e, sourceIDs: knownOnly(e.sourceIDs, known) })),
     criteria: p.criteria
       .filter((c) => lensKeys.includes(c.key))
       .map((c) => {
@@ -71,14 +72,23 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
         const evidenceLevel = sourceIDs.length === 0 ? Math.min(1, clamp(c.evidenceLevel, 0, ceiling)) : clamp(c.evidenceLevel, 0, ceiling);
         return { ...c, score: clamp(c.score, 1, 5), evidenceLevel, sourceIDs };
       }),
-    title: shortTitle(p.title),
     estimate: enforceEstimate(p.estimate ?? null, known),
-    riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
     // A range is low to high, never negative, and never one-sided.
     projectionLow: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.min(p.projectionLow, p.projectionHigh)) : null,
     projectionHigh: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.max(p.projectionLow, p.projectionHigh)) : null,
     panel: round.verdicts,
     crossfire: round.crossfire,
+  };
+}
+
+export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[], dropped: Record<string, number> = {}): z.infer<typeof PrefillResult> {
+  return {
+    ...p,
+    ...enforceScore(p, known, lensKeys),
+    realityCheck: enforceRealityCheck(p.realityCheck, known, dropped),
+    explorations: p.explorations.filter((e) => promptKeys.includes(e.promptKey)).map((e) => ({ ...e, sourceIDs: knownOnly(e.sourceIDs, known) })),
+    title: shortTitle(p.title),
+    riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
     pivots: enforcePivots(p.pivots ?? [], known, lensKeys),
   };
 }

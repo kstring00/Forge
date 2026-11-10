@@ -71,12 +71,13 @@ evidence rules server-side, and runs desk research for Reality Checks.
 
 ## Models and cost
 
-Haiku 5.5 does the desk research (`/api/research`): reading pages is most of the
-tokens and needs little judgment. It uses the basic web tools (`web_search_20250305`,
-`web_fetch_20250910`); dynamic filtering is documented for Opus and Sonnet, and Sonnet
-gets it if `FORGE_RESEARCH_MODEL` points there. Sonnet 5.5 runs the Spheres: the
-prefill and every action with a verdict. Haiku 5.5 also runs expand, summarize, next
-step and criterion explanations.
+Every model is set in one file, `config/hunch.ts` (decision 0042); change it and
+push to redeploy, no app update. Today: Haiku 5.5 does the desk research
+(`/api/research`, basic web tools `web_search_20250305` and `web_fetch_20250910`) and
+the five panelists' scoring; Sonnet 5.5 writes the Brief, the next step and the
+What-ifs on every check, and the launch plans; Haiku 5.5 also runs expand, summarize,
+next step and criterion explanations. `FORGE_MODEL_<ROLE>` on Vercel overrides one
+role for a test.
 
 A Reality Check targets 10 to 20 cents:
 

@@ -10,23 +10,26 @@ Pay for the panel's thinking, never for your own work. Capture, the Vault, steps
 
 | Plan | Monthly | Yearly | Checks / month | Includes |
 |---|---|---|---|---|
-| Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel |
-| Plus | $9.99 | $59.99 | 15 | Argue it out (fair use 30/mo), Your patterns, the Library |
-| Pro | $24.99 | $179.99 | 60 | Everything in Plus, launch plans included, faster answers (priority), deep research |
+| Free | $0 | $0 | 1 (plus the one free first check per device) | Everything that isn't the panel, including the Library |
+| Plus | $9.99 | $59.99 | 15 | Your patterns |
+| Pro | $24.99 | $179.99 | 60 (leaning 50, decided after the bench) | Everything in Plus, faster answers (priority), deep research |
 | Top-up | $2.99 one-time | — | +5 extra | Consumable, never expires, available on any plan |
 
 - Founding members (TestFlight testers): Plus yearly at $39.99, kept for as long as they stay subscribed.
 - Plus has a 7-day free trial (introductory offer), capped at 5 checks during the trial.
 - "Within the hour" checks (Batch API, if built) count as half a check.
 - A failed or stopped check never counts.
+- **Unused monthly checks roll over** (decision 0042), up to one month's allowance, and expire at the end of the cycle they rolled into. Spending order: the free first check, carried-over, this month's, then extra (bought, never expire).
 
-**Launch plans** (decision 0041). A short plan built from what Hunch knows about one idea: what's proven and what isn't, the first 90 days in three blocks that each end in a decision rule, the money as price × customers × share, when to stop; exported as a PDF. **Included in Pro.** On Free and Plus a new plan is **3 checks** and bringing one up to date is **1**. The device's free first check never pays for a plan. A plan that fails costs nothing. One plan is one Sonnet call with no web research, about $0.05–0.15, so 3 checks (about $2 of Plus) leaves a wide margin; Pro's cost is bounded by the same fair use as its checks until the proxy ledger counts plans.
+**What costs a check** (decision 0042). Researching an idea is the only thing that costs: the panel's first look is 1 check, and a fresh re-check (new web research on an idea already checked) is 1. Everything done on a checked idea is **included on every plan**: a launch plan, bringing it up to date, re-scoring after a logged conversation, and the Tank. Included follow-ups sit under a quiet daily limit per idea (3 plans, 10 re-scores, 3 Tank runs); reaching it shows a friendly line, never the paywall. Every number here lives in `proxy/config/hunch.ts` (`rules`), which the app loads at launch.
+
+**Launch plans** (decisions 0041, 0042). A short plan built from what Hunch knows about one idea: what's proven and what isn't, the first 90 days in three blocks that each end in a decision rule, the money as price × customers × share, when to stop; exported as a PDF. **Included on every plan** once the idea has been checked (it was 3 checks on Free and Plus before decision 0042). It reads the idea's saved research packet, so it never searches; one plan is one Sonnet call, about $0.03–0.06.
 
 **Sparks are free on every plan** (decision 0040). Every check comes back with two or three "What if…" ideas, strong idea or weak. They ride in the same call as the rest of the panel's take, roughly half a cent each check, paid from margin. Running the panel on an idea made from a Spark costs a check, like any idea.
 
 ## Checks, not credits
 
-The user-facing unit is a **check** (one idea looked at properly). Retire "credits" in the UI. Monthly checks reset on the renewal date; top-up checks never expire and are used only after monthly checks run out. Show "N of 15 checks left · resets Dec 1" on Home's pill, the confirm sheet and Settings.
+The user-facing unit is a **check** (one idea looked at properly). Retire "credits" in the UI. Monthly checks renew on the renewal date (unused ones roll over, above); top-up checks never expire and are used only after monthly checks run out. Show "N of 15 checks left · resets Dec 1" on Home's pill, the confirm sheet and Settings.
 
 ## Products (App Store Connect)
 

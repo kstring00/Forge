@@ -48,8 +48,8 @@ In the group, **Create** each one. For every subscription:
 |---|---|---|---|---|---|---|
 | Pro · monthly | `hunch.pro.monthly` | 1 month | $24.99 | 1 | Hunch Pro | 60 checks a month, faster answers, deeper research and exportable reports. |
 | Pro · yearly | `hunch.pro.yearly` | 1 year | $179.99 | 1 | Hunch Pro (yearly) | 60 checks a month, faster answers, deeper research and exportable reports. |
-| Plus · monthly | `hunch.plus.monthly` | 1 month | $9.99 | 2 | Hunch Plus | 15 checks a month, What-if ideas, Argue it out and the Library. |
-| Plus · yearly | `hunch.plus.yearly` | 1 year | $59.99 | 2 | Hunch Plus (yearly) | 15 checks a month, What-if ideas, Argue it out and the Library. |
+| Plus · monthly | `hunch.plus.monthly` | 1 month | $9.99 | 2 | Hunch Plus | 15 checks a month, unused ones carry over, and Your patterns. |
+| Plus · yearly | `hunch.plus.yearly` | 1 year | $59.99 | 2 | Hunch Plus (yearly) | 15 checks a month, unused ones carry over, and Your patterns. |
 | Plus · founding yearly | `hunch.plus.founding.yearly` | 1 year | $39.99 | 2 | Hunch Plus · founding member | Plus at the founding price, for as long as you stay subscribed. |
 
 Then in the group's **Subscription Levels**, drag so Pro (both) is level 1 and Plus (all

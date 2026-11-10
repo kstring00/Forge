@@ -295,6 +295,14 @@ public struct CheckBalance: Equatable, Sendable {
     }
 }
 
+/// A paid cycle as it stood when the plan dropped to Free.
+public struct LapsedCycle: Codable, Equatable, Sendable {
+    public var end: Date
+    public var allowance: Int
+    public var used: Int
+    public var wasTrial: Bool
+}
+
 /// One bought top-up and how many of its checks are left. Spent oldest first,
 /// so a refund takes back only that purchase's unused checks.
 public struct TopUpLot: Codable, Equatable, Sendable {
@@ -385,6 +393,10 @@ public struct CheckLedger: Codable, Equatable, Sendable {
     public var periodEnd: Date?
     /// The plan this cycle ran on, to tell an upgrade from a renewal.
     public var periodPlan: Plan?
+    /// The last paid cycle, kept when the plan drops to Free, in case that
+    /// drop turns out to be the moment between a period ending and its
+    /// renewal arriving (see `roll`).
+    public var lapsedPaid: LapsedCycle?
     /// Bought checks, per purchase, oldest first.
     public private(set) var topUpLots: [TopUpLot]
     /// The most recent `eventLimit` changes, oldest first.
@@ -408,6 +420,7 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         self.periodWasTrial = periodWasTrial
         self.periodEnd = periodEnd
         self.periodPlan = nil
+        self.lapsedPaid = nil
         self.topUpLots = topUps > 0 ? [TopUpLot(transactionID: Self.legacyLot, checks: topUps, remaining: topUps)] : []
         self.topUps = topUps
         self.events = []
@@ -426,6 +439,7 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         periodWasTrial = try c.decodeIfPresent(Bool.self, forKey: .periodWasTrial) ?? false
         periodEnd = try c.decodeIfPresent(Date.self, forKey: .periodEnd)
         periodPlan = try c.decodeIfPresent(Plan.self, forKey: .periodPlan)
+        lapsedPaid = try c.decodeIfPresent(LapsedCycle.self, forKey: .lapsedPaid)
         events = try c.decodeIfPresent([LedgerEvent].self, forKey: .events) ?? []
         let saved = try c.decodeIfPresent(Int.self, forKey: .topUps) ?? 0
         var lots = try c.decodeIfPresent([TopUpLot].self, forKey: .topUpLots) ?? []
@@ -481,7 +495,24 @@ public struct CheckLedger: Codable, Equatable, Sendable {
         let cycle = CheckPeriod.cycle(containing: now, for: state, calendar: calendar)
         if cycle.start != periodStart {
             let started = periodStart != .distantPast
-            let carried = carry(into: state, newStart: cycle.start, rules: rules)
+            var carried = carry(into: state, newStart: cycle.start, rules: rules)
+            // A renewal can reach the phone a moment (or, offline, a while) after
+            // the old period ends; until it does the App Store lists no plan. That
+            // gap is not a cancel: when the next paid period starts exactly where
+            // the last one ended, the carry is worked out as for any renewal, less
+            // anything spent in the gap. A plan that really lapsed and came back
+            // later starts a new period at a new time, and stays an expiry.
+            if started, (periodPlan ?? .free) != .free, state.plan == .free {
+                lapsedPaid = LapsedCycle(end: periodEnd ?? cycle.start, allowance: allowanceThisPeriod ?? 0, used: usedThisPeriod, wasTrial: periodWasTrial)
+            }
+            if state.plan != .free {
+                if let gap = lapsedPaid, periodPlan == .free, let anchor = state.anchor,
+                   abs(anchor.timeIntervalSince(gap.end)) <= 60, rules.rollover.enabled, !gap.wasTrial, !state.isTrial {
+                    let asRenewal = min(max(0, gap.allowance - gap.used), min(gap.allowance, state.monthlyAllowance) * max(0, rules.rollover.capMonths))
+                    carried = max(carried, max(0, asRenewal - usedThisPeriod - rolledOverUsed))
+                }
+                lapsedPaid = nil
+            }
             if started {
                 // Everything that could have carried and didn't: carried checks
                 // at the end of their cycle, and unused ones past the cap.

@@ -98,6 +98,7 @@ The approved rules apply throughout: carried checks are spent first, then this m
 
 1. **New subscription:** a fresh cycle from the purchase; Free's unused check carries (Free's cap is 1).
 2. **Renewal:** the new transaction starts a cycle; unused checks carry.
+   - **A gap at renewal is not a cancel** (found on the Mac, Nov 9). For a moment at renewal, or longer if the phone is offline, the App Store lists no plan: the old period is over and the renewal has not arrived. When the next paid period starts exactly where the last one ended, the carry is worked out as for any renewal, less anything spent in the gap. Before this fix the gap acted as a cancel and 10 unused checks became 1. `testAGapAtRenewalDoesNotWipeTheCarry`.
 3. **Upgrade** (immediate, Plus → Pro; decided Nov 9): carried-over and unused checks move over **together**, capped at the old plan's allowance (× the carry setting), and expire at the end of the new cycle like any carried check. The new allowance starts now; cycles follow the new billing date. At a renewal, carried checks still expire as usual.
    - Carried checks are spent before this month's. So whenever some carried checks are left, none of this month's have been used, and this month's unused ones already fill a one-month cap.
    - With today's setting (`capMonths: 1`), the result is therefore the same as before. The rule changes the outcome only if the carry cap is raised.
@@ -146,7 +147,7 @@ The approved rules apply throughout: carried checks are spent first, then this m
 
 ## 8. Tests
 
-- **ForgeCore:** 127 tests, including 27 lifecycle tests.
+- **ForgeCore:** 128 tests, including 28 lifecycle tests.
 - **Proxy:** 39 tests.
 - **App** (`ForgeTests/MembershipStoreKitTests.swift`, StoreKitTest; run with Cmd+U on the Mac): buy, trial cap, upgrade, downgrade with no new transaction then renewal into Plus, undo, monthly → yearly, accelerated renewal with carry, yearly plan getting monthly checks, cancel and resubscribe, expiry, refund, top-up refund, billing retry with and without grace, interrupted purchase, Ask to Buy.
 - **Manual:** the simulator checklist is in the PR description.

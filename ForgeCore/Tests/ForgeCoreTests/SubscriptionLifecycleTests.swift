@@ -86,6 +86,45 @@ final class SubscriptionLifecycleTests: XCTestCase {
         XCTAssertEqual(p.balance(at: d(2026, 12, 11)).rolledOverLeft, 9, "carried ones go first")
     }
 
+    /// 2b. Found on the Mac (Nov 9): for a moment at renewal the App Store lists no plan, the old
+    /// period over and the new one not yet delivered. That gap must not act as a cancel, which
+    /// would keep 1 check of the 10 unused. A plan that really lapsed and came back later still does.
+    func testAGapAtRenewalDoesNotWipeTheCarry() {
+        var p = phone()
+        p.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9)), at: d(2026, 11, 9))
+        p.use(5, at: d(2026, 11, 20))
+        p.apply(nil, at: d(2026, 12, 9).addingTimeInterval(1))
+        XCTAssertEqual(p.balance(at: d(2026, 12, 9).addingTimeInterval(2)).plan, .free, "for that moment the phone sees no plan")
+        p.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 12, 9)), at: d(2026, 12, 9).addingTimeInterval(5))
+        var b = p.balance(at: d(2026, 12, 9).addingTimeInterval(6))
+        XCTAssertEqual(b.rolledOverLeft, 10, "the renewal starts where the last period ended: a normal renewal")
+        XCTAssertEqual(b.monthlyLeft, 15)
+
+        // A check spent during the gap comes off what carries.
+        var spent = phone()
+        spent.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9)), at: d(2026, 11, 9))
+        spent.use(5, at: d(2026, 11, 20))
+        spent.apply(nil, at: d(2026, 12, 9).addingTimeInterval(1))
+        spent.use(2, at: d(2026, 12, 9).addingTimeInterval(2))
+        spent.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 12, 9)), at: d(2026, 12, 9).addingTimeInterval(5))
+        XCTAssertEqual(spent.balance(at: d(2026, 12, 9).addingTimeInterval(6)).rolledOverLeft, 8)
+
+        // A downgrade landing after the same gap: Pro's unused, capped at Plus's 15.
+        var down = phone()
+        down.apply(sub(MembershipProduct.proMonthly, from: d(2026, 11, 9), next: MembershipProduct.plusMonthly), at: d(2026, 11, 9))
+        down.apply(nil, at: d(2026, 12, 9).addingTimeInterval(1))
+        down.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 12, 9)), at: d(2026, 12, 9).addingTimeInterval(5))
+        b = down.balance(at: d(2026, 12, 9).addingTimeInterval(6))
+        XCTAssertEqual(b.rolledOverLeft, 15)
+
+        // Cancelled, expired, and bought again three days later: an expiry, as decided.
+        var back = phone()
+        back.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 11, 9), autoRenew: false), at: d(2026, 11, 9))
+        back.apply(nil, at: d(2026, 12, 9).addingTimeInterval(1))
+        back.apply(sub(MembershipProduct.plusMonthly, from: d(2026, 12, 12)), at: d(2026, 12, 12))
+        XCTAssertEqual(back.balance(at: d(2026, 12, 12)).rolledOverLeft, 1)
+    }
+
     /// 3. Upgrade Plus → Pro: immediate; up to Plus's 15 carry; Pro's 50 start now; cycles follow the new billing date.
     /// Checks carried in from last month move with the upgrade (decision 0043).
     func testUpgradeIsImmediate() {

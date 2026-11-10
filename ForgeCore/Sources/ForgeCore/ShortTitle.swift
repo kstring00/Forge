@@ -1,10 +1,11 @@
 import Foundation
 
-/// Every idea has a short name, 2 to 5 words, separate from the words the
+/// Every idea has a short name, 2 to 7 words, separate from the words the
 /// person said. Captured ideas get one from their first clause; the panel
 /// proposes a better one with the Brief; the person can always rename it.
 public enum ShortTitle {
-    public static let maxWords = 5
+    /// Seven since the Home pass (decision 0044): five cut "Weekend site care for RV parks" short.
+    public static let maxWords = 7
     public static let untitled = "Untitled idea"
 
     private static let leading = [
@@ -14,9 +15,11 @@ public enum ShortTitle {
     ]
     private static let trailing: Set<String> = [
         "that", "which", "who", "to", "for", "and", "or", "a", "an", "the", "of", "with", "my", "me", "in", "on", "at", "by", "so", "but",
+        "along", "from", "into", "onto", "about", "near", "across", "between", "through", "without", "per", "via", "as", "than",
+        "their", "your", "our", "his", "her", "its", "is", "are", "when", "where", "while",
     ]
 
-    /// From the person's words: the first clause, filler stripped, at most five words.
+    /// From the person's words: the first clause, filler stripped, at most seven words.
     public static func make(from text: String) -> String {
         let line = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.first { !$0.isEmpty } ?? ""
         guard !line.isEmpty else { return untitled }
@@ -36,7 +39,7 @@ public enum ShortTitle {
         return clamp(line) ?? untitled
     }
 
-    /// A proposed title, trimmed to at most five words with no dangling joiner.
+    /// A proposed title, trimmed to at most seven words with no dangling joiner.
     /// Nil when fewer than two words survive.
     public static func clamp(_ text: String) -> String? {
         var words = text

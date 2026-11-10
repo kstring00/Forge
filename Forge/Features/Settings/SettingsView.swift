@@ -57,7 +57,7 @@ struct SettingsView: View {
                 if b.rolledOverLeft > 0 {
                     LabeledContent("Carried over", value: "\(b.rolledOverLeft) · expire \(b.expiresText)")
                 }
-                LabeledContent("This month", value: "\(b.monthlyLeft) of \(b.monthlyAllowance) · \(b.resetsText.lowercased())")
+                LabeledContent("This month", value: "\(b.monthlyLeft) of \(b.monthlyAllowance) · resets \(b.expiresText)")
                 if b.topUps > 0 {
                     LabeledContent("Extra", value: "\(b.topUps) · never expire")
                 }

@@ -106,7 +106,7 @@ final class PlanBuilder {
         o["conversationsLogged"] = String(conversations(idea))
         if let check = idea.latestRealityCheck { o["verdict"] = check.verdict.displayName }
         if let e = idea.latestEvaluation {
-            if !e.criteria.isEmpty { o["potential"] = PotentialWord.word(e.potential) }
+            if !e.criteria.isEmpty { o["potential"] = PotentialWord.wordForPlans(e.potential) }
             let risk = e.riskiestAssumption.trimmingCharacters(in: .whitespacesAndNewlines)
             if !risk.isEmpty { o["riskiestAssumption"] = risk }
             if let inputs = e.estimateInputs, let m = PlanMoney(inputs) {

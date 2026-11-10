@@ -155,7 +155,7 @@ public final class Idea {
     }
 
     /// First line of the raw text, trimmed, at most 60 characters.
-    /// 2 to 5 words from the first clause of the person's words (ShortTitle).
+    /// 2 to 7 words from the first clause of the person's words (ShortTitle).
     public static func suggestedTitle(from text: String) -> String {
         ShortTitle.make(from: text)
     }

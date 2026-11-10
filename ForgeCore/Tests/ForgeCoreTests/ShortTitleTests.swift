@@ -24,6 +24,7 @@ final class ShortTitleTests: XCTestCase {
         XCTAssertEqual(ShortTitle.clamp("Meal prep for night shift nurses with kids at home"), "Meal prep for night shift nurses")
         XCTAssertEqual(ShortTitle.clamp("A booking page for fishing charters and their guests"), "A booking page for fishing charters")
         XCTAssertEqual(ShortTitle.clamp("One two three four five six of eight"), "One two three four five six")
+        XCTAssertEqual(ShortTitle.make(from: "What if there was an app that tracked lost ID cards for clinics"), "App that tracked lost ID cards")
         for text in ["Voice notes turned into estimates for small roofing crews in Texas", "Horse boarding directory with reviews and prices for owners"] {
             let t = ShortTitle.make(from: text)
             XCTAssertLessThanOrEqual(ShortTitle.wordCount(t), 7)

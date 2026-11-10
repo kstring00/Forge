@@ -25,7 +25,9 @@ struct CaptureSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                Text(speech.isRecording ? "Listening" : "Raw thought").forgeLabel()
+                Text(speech.isRecording ? "Listening…" : "Type your idea here, or tap Speak below")
+                    .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 TextEditor(text: $text)
                     .font(ForgeType.body)

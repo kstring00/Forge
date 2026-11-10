@@ -20,7 +20,7 @@ Starts only after #38 and #39 are merged, on a new branch off main, before #30. 
 - Collapsed: the stage orb, the title (up to two lines), one plain status line, a chevron. The whole row is the tap target, at least 44 pt. Row text stays out of the mic's corner.
 - Order: the next-move idea first, as a collapsed row with a small "Next" tag; then most recently worked on.
 - Tap expands in place: description, Potential, Proof, the What-if, the idea's action (tinted or outlined, never filled), an "Open idea" link; any second action is a text link. One row open at a time.
-- Which row starts open: the idea last worked on, unless that is the next-move idea, in which case none. With only one idea, its row is open. The app remembers the open row between launches.
+- Which row starts open: the idea last worked on, unless that is the next-move idea, in which case none. With only one idea, its row is open. The app remembers the open row between launches: a row the person opened or closed by hand stays that way until they next work on a different idea, which then becomes the open one.
 - Opening scrolls the title into view, with a short spring and a light haptic; a plain fade with Reduce Motion.
 - A status line for every state an idea can be in ("Not checked yet", "Talked to 1 of 5 people", "Waiting on your decision", checking, check failed, offline…), all listed in the PR for review.
 
@@ -30,7 +30,7 @@ Starts only after #38 and #39 are merged, on a new branch off main, before #30. 
 - The lowest Potential band reads **"Unproven"** (temporary, until the Potential fix); show it in place before changing. Scoring itself doesn't change.
 - Small all-caps lines become plain sentence case, at most one small label per row or card. Internal terms ("Ruled 0 of 5", "the panel's idea") become plain words; every wording change listed in the PR. Text-size floors from #25 stay.
 
-**Titles.** New titles get up to seven words, cut at a word boundary, never ending on a connecting word ("for", "with", "of", "and"). Existing titles are left alone. Renaming by hand already exists (the title on the idea page is editable, and a renamed idea is never retitled by the panel). The panel also proposes a title with each check, asked for in 2 to 5 words by the proxy prompt; the app's own limit is what cut "Weekend site care for RV parks". Raising the app's limit to seven needs no proxy change; changing the proxy prompt needs Kyle's go-ahead first. Pin down the one-line "…" case with previews.
+**Titles.** New titles get up to seven words, cut at a word boundary, never ending on a connecting word ("for", "with", "of", "and"). Existing titles are left alone. Renaming by hand already exists (the title on the idea page is editable, and a renamed idea is never retitled by the panel). The panel also proposes a title with each check, asked for in 2 to 5 words by the proxy prompt; the app's own limit is what cut "Weekend site care for RV parks". Decided Nov 10: raise only the app's limit to seven; the proxy prompt stays as it is. A new check can still retitle an idea the person hasn't renamed, as today. Pin down the one-line "…" case with previews.
 
 **States and access.** A friendly empty Home that points at the mic; loading, failed and offline states on the row. Dynamic Type to the largest accessibility sizes with nothing clipped; VoiceOver reads a row as one item with its state; spoken values for the ring and the ladder; contrast at least 4.5 to 1; stage never by colour alone.
 

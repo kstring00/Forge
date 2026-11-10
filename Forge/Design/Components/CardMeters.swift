@@ -96,15 +96,11 @@ struct CardMeters: View {
 
 /// Potential 0–100 as a word and five segments. Never a bare number on a card.
 enum PotentialWord {
-    static func word(_ p: Int) -> String {
-        switch p {
-        case ..<20: "Long shot"
-        case ..<40: "Modest"
-        case ..<60: "Promising"
-        case ..<80: "Strong"
-        default: "Big"
-        }
-    }
+    /// Decision 0044: the lowest band reads "Unproven" (`PotentialBand` in ForgeCore).
+    static func word(_ p: Int) -> String { PotentialBand.word(p) }
+
+    /// What a launch-plan request sends. Unchanged, so plans read as before.
+    static func wordForPlans(_ p: Int) -> String { p < 20 ? "Long shot" : PotentialBand.word(p) }
 
     static func segments(_ p: Int) -> Int { min(5, max(1, p / 20 + 1)) }
 }
@@ -209,6 +205,8 @@ struct ProofLadder: View {
 /// an idea yet. Opens the Brief, where the What-if cards are.
 struct WhatIfTeaser: View {
     let idea: Idea
+    /// Home's rows: the caption in a plain sentence, not a small all-caps label.
+    var plain = false
 
     private var pivot: PivotIdea? { idea.latestRealityCheck?.pivots.first { $0.spawnedIdeaID == nil } }
 
@@ -223,8 +221,13 @@ struct WhatIfTeaser: View {
                             .foregroundStyle(ForgeColor.ink)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
-                        Text("Raises \(Lenses.criterion(pivot.fixes, in: idea.lensType ?? .business)?.title ?? pivot.fixes) · the panel's idea")
-                            .forgeLabelSmall().lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        if plain {
+                            Text("A suggestion from the panel. It would help with \((Lenses.criterion(pivot.fixes, in: idea.lensType ?? .business)?.title ?? "a weak spot").lowercased()).")
+                                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("Raises \(Lenses.criterion(pivot.fixes, in: idea.lensType ?? .business)?.title ?? pivot.fixes) · the panel's idea")
+                                .forgeLabelSmall().lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     Spacer(minLength: 4)
                     Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary).padding(.top, 3)
@@ -335,7 +338,7 @@ struct MeterExplainerSheet: View {
                         }
                     }
                 }
-                Text("Long shot is under 20 of 100, Modest under 40, Promising under 60, Strong under 80, Big above. Change any score in the idea's Lab.")
+                Text("Unproven is under 20 of 100, Modest under 40, Promising under 60, Strong under 80, Big above. Change any score in the idea's Lab.")
                     .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Not scored yet. Get the panel's take, or score it yourself in the Lab.").font(.body).foregroundStyle(ForgeColor.ink)

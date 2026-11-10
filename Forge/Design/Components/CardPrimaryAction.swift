@@ -6,16 +6,32 @@ import ForgeCore
 /// at the bottom of the card. Secondary actions are outlined and neutral.
 struct PrimaryButtonLabel: View {
     let title: String
+    /// Home pass (decision 0044): inside a Home row the action is tinted, not
+    /// filled, so the next-move card holds the only filled orange button.
+    @Environment(\.forgeQuietActions) private var quiet
 
     var body: some View {
         Text(title)
             .font(.system(.subheadline, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(quiet ? ForgeColor.emberText : .white)
             .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.center)
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity).frame(minHeight: 44)
-            .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(ForgeColor.ember.opacity(quiet ? 0.14 : 1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(ForgeColor.ember.opacity(quiet ? 0.45 : 0)))
             .contentShape(Rectangle())
+    }
+}
+
+private struct ForgeQuietActionsKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// True where the main action should be tinted instead of filled.
+    var forgeQuietActions: Bool {
+        get { self[ForgeQuietActionsKey.self] }
+        set { self[ForgeQuietActionsKey.self] = newValue }
     }
 }
 

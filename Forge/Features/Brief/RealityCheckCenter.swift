@@ -36,6 +36,14 @@ final class RealityCheckCenter {
 
     func failure(for ideaID: UUID) -> String? { failures[ideaID] }
 
+    /// The last check stopped for lack of a connection (Home's row says so).
+    /// Known for this launch; after a relaunch, read from the saved message.
+    private(set) var offlineFailures: Set<UUID> = []
+    func isOffline(_ ideaID: UUID) -> Bool {
+        guard let message = failures[ideaID] else { return false }
+        return offlineFailures.contains(ideaID) || message.contains("you're online") || message.contains("can't be reached")
+    }
+
     /// The user has read the error. The idea goes back to showing the button.
     func dismissFailure(_ ideaID: UUID) {
         failures[ideaID] = nil
@@ -48,9 +56,10 @@ final class RealityCheckCenter {
     func record(_ phase: RealityCheckRunner.Phase, for ideaID: UUID) {
         switch phase {
         case .failed(let m), .offline(let m), .stopped(let m):
+            if case .offline = phase { offlineFailures.insert(ideaID) } else { offlineFailures.remove(ideaID) }
             failures[ideaID] = m
             failureDetails[ideaID] = runners[ideaID]?.lastFailureDetail
-        case .done: failures[ideaID] = nil; failureDetails[ideaID] = nil; unseenBriefs.insert(ideaID)
+        case .done: failures[ideaID] = nil; failureDetails[ideaID] = nil; offlineFailures.remove(ideaID); unseenBriefs.insert(ideaID)
         default: break
         }
         saveFailures()

@@ -71,7 +71,7 @@ enum LegacyCleanup {
                 s.fullText = clean(s.fullText)
                 for ch in s.chunks { ch.text = clean(ch.text) }
             }
-            // v3: every idea has a 2-to-5-word name; one the person typed is left alone.
+            // v3: every idea has a short name (2 to 7 words since decision 0044); one the person typed is left alone.
             if !idea.titleEdited && ShortTitle.wordCount(idea.title) > ShortTitle.maxWords {
                 idea.title = ShortTitle.make(from: idea.originalText)
             }

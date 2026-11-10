@@ -138,7 +138,8 @@ struct BriefSection: View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack(alignment: .top, spacing: ForgeSpacing.m - 4) {
                 StripedRingCard(value: e.potential, label: "Potential", tint: ForgeColor.ink, striped: allProposed,
-                                caption: Plain.potential + ". " + (allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment."))
+                                caption: Plain.potential + ". " + (allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment."),
+                                word: PotentialBand.word(e.potential))
                 StripedRingCard(value: e.confidence, label: "Confidence", tint: ForgeColor.ember, striped: allProposed,
                                 caption: Plain.confidence + ". From online research only. Rises when real people give time or money.")
             }
@@ -259,6 +260,8 @@ struct StripedRingCard: View {
     let tint: Color
     let striped: Bool
     let caption: String
+    /// Potential's word ("Unproven", "Promising"), shown under the ring.
+    var word: String? = nil
 
     private var fraction: Double { Double(min(max(value, 0), 100)) / 100 }
 
@@ -274,9 +277,19 @@ struct StripedRingCard: View {
                     .trim(from: 0, to: fraction)
                     .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: striped ? .butt : .round, dash: striped ? [3, 3] : []))
                     .rotationEffect(.degrees(-90))
-                Text("\(value)").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                // "4 of 100", so a 4 never reads as 4 out of 5 (as ScoreRing does everywhere else).
+                VStack(spacing: 0) {
+                    Text("\(value)").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    Text("of 100").font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundStyle(ForgeColor.inkSecondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                }
+                .padding(10)
             }
             .frame(width: 84, height: 84)
+            if let word {
+                Text(word).font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+            }
             Text(caption).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16)
@@ -285,7 +298,7 @@ struct StripedRingCard: View {
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label) \(value) out of 100\(striped ? ", proposed by the panel" : ""). \(caption)")
+        .accessibilityLabel("\(label) \(value) out of 100\(word.map { ", \($0)" } ?? "")\(striped ? ", proposed by the panel" : ""). \(caption)")
     }
 }
 

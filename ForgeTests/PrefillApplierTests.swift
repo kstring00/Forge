@@ -119,7 +119,7 @@ final class PrefillApplierTests: XCTestCase {
         var r = canned(sourceID: page.id)
         r.title = "\"Weekend RV park site care.\""
         PrefillApplier.apply(r, rationale: "", costUSD: nil, to: idea, in: store.context)
-        XCTAssertEqual(idea.title, "Weekend RV park site care", "2 to 5 words, unquoted")
+        XCTAssertEqual(idea.title, "Weekend RV park site care", "2 to 7 words, unquoted")
 
         let named = Idea(originalText: "Another idea about RV parks and their websites")
         named.title = "My RV thing"

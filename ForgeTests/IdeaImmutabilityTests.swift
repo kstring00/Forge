@@ -48,12 +48,12 @@ final class IdeaImmutabilityTests: XCTestCase {
         XCTAssertEqual(idea.originalText, "First line is the title\nSecond line is detail")
     }
 
-    func testSuggestedTitleIsTwoToFiveWords() {
+    func testSuggestedTitleIsTwoToSevenWords() {
         let long = String(repeating: "word ", count: 30)
-        XCTAssertLessThanOrEqual(ShortTitle.wordCount(Idea.suggestedTitle(from: long)), 5)
+        XCTAssertLessThanOrEqual(ShortTitle.wordCount(Idea.suggestedTitle(from: long)), 7)
         XCTAssertEqual(Idea.suggestedTitle(from: "\n\n   \n"), "Untitled idea")
         let idea = Idea(originalText: "What if there was an app that tracked lost ID cards for clinics")
-        XCTAssertEqual(idea.title, "App that tracked lost ID")
+        XCTAssertEqual(idea.title, "App that tracked lost ID cards", "seven words would end on \"for\"")
         XCTAssertFalse(idea.titleEdited)
     }
 

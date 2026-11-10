@@ -42,7 +42,11 @@ final class MembershipStoreKitTests: XCTestCase {
     }
 
     override func tearDown() async throws {
+        // Leave the simulator's test store as hand testing expects it: no purchases,
+        // and Apple's purchase sheet showing again (these tests turn it off).
         session.clearTransactions()
+        session.resetToDefaultState()
+        session.disableDialogs = false
         PlanRules.current = rulesBefore
     }
 

@@ -214,7 +214,12 @@ struct MembershipView: View {
             if state.plan == .free { return "Current" }
             return state.isCancelled ? "From \(renewalDay)" : nil
         }
-        return option.badge(date: day)
+        // A plan with a button already says what tapping does ("Upgrade now",
+        // "Switch on Dec 9"); the tag is for plans without one.
+        switch option {
+        case .upgradeNow, .switchesOn, .subscribe: return nil
+        default: return option.badge(date: day)
+        }
     }
 
     /// One short line only when it matters: a trial, a booked switch, going back to Free.

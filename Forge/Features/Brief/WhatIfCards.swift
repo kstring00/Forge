@@ -80,7 +80,9 @@ enum PivotActions {
     /// reasoning and first test go in its notes so nothing is lost.
     @discardableResult
     static func spawn(_ pivot: PivotIdea, from parent: Idea, check: RealityCheck, in context: ModelContext) -> Idea {
-        if let existing = spawnedIdea(for: pivot, of: parent) { return existing }
+        // The caller may hold the card as it was before the first tap; the saved one knows.
+        let saved = check.pivots.first { $0.id == pivot.id } ?? pivot
+        if let existing = spawnedIdea(for: saved, of: parent) ?? spawnedIdea(for: pivot, of: parent) { return existing }
         let child = Idea(originalText: pivot.whatIf, origin: .pivoted)
         child.pivotType = pivot.pivotType
         child.lensType = parent.lensType

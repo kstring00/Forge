@@ -97,7 +97,7 @@ final class RulingActionsTests: XCTestCase {
         let x = try XCTUnwrap(ruling.resultingExperiment)
         XCTAssertTrue(x.hypothesis.contains("Five interviews"))
         XCTAssertFalse(x.test.isEmpty)
-        XCTAssertTrue(x.metric.contains("rung 2"), "A2 sits at rung 1, so the card aims one rung up: \(x.metric)")
+        XCTAssertTrue(x.metric.contains("proof level 2"), "A2 sits at proof level 1, so the card aims one level up: \(x.metric)")
         XCTAssertEqual(x.timeboxDays, 7)
         let d = try XCTUnwrap(ruling.resultingDecision)
         XCTAssertEqual(d.expectedBy, Calendar.current.date(byAdding: .day, value: 7, to: now))

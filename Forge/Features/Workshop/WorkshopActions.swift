@@ -70,7 +70,9 @@ enum WorkshopActions {
         d.project = project
         context.insert(d)
         if let idea = project.idea {
-            let earned = max(RungInference.rungForConversation(text), rung ?? 0)
+            // The sheet shows what the words suggest and lets the person change it;
+            // what they chose is what counts, lower or higher. A conversation is never below 3.
+            let earned = rung.map { max(3, $0) } ?? RungInference.rungForConversation(text)
             FieldEvidence.record(.init(text: text, rung: earned, audioFileName: audioFileName), kind: "Conversation", on: idea, project: project, from: from, now: now)
         }
         project.idea?.touch()

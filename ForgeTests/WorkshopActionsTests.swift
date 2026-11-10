@@ -199,6 +199,27 @@ final class WorkshopActionsTests: XCTestCase {
         XCTAssertEqual(e.projection.verifiedUnits, 1, "a rung-4 verified payment counts toward the projection")
     }
 
+    /// The sheet's "Counts as" menu is the person's call: lowering it sticks.
+    func testThePersonsPickDecidesWhatAConversationCountsAs() throws {
+        let context = try makeContext()
+        let idea = Idea(originalText: "A website retainer for Texas RV parks")
+        context.insert(idea)
+        let e = idea.beginEvaluation(lens: .business)
+        try e.set(key: "A2", score: 2, evidenceLevel: 2)
+        let project = WorkshopActions.convert(idea, with: .init(name: "P", desiredOutcome: "", nextStep: "Talk to five park owners"), in: context)
+        WorkshopActions.setNextStep(project, "Talk to five park owners", target: 5, criterionKey: "A2")
+
+        // The words read as a payment; the person says it was only a conversation.
+        let words = "He said he paid the last web guy a deposit and got burned."
+        XCTAssertEqual(RungInference.rungForConversation(words), 4)
+        WorkshopActions.logConversation(project, whatHappened: words, rung: 3, in: context)
+        XCTAssertEqual(e.criterionScore(for: "A2")?.evidenceLevel, 3)
+
+        // Raising it works as before.
+        WorkshopActions.logConversation(project, whatHappened: "Nice chat, and he handed me a check.", rung: 4, in: context)
+        XCTAssertEqual(e.criterionScore(for: "A2")?.evidenceLevel, 4)
+    }
+
     func testFinishingAStepRecordsTheReportAtTheRungTheUserConfirmed() throws {
         let context = try makeContext()
         let idea = Idea(originalText: "x")

@@ -107,7 +107,9 @@ enum ProjectCleanup {
             kept.nextStepCount = old.nextStepCount
             kept.nextStepDueAt = old.nextStepDueAt
             kept.nextStepMoves = old.nextStepMoves
-        } else if let step = old.nextStep, step != kept.nextStep {
+        } else if let step = old.nextStep, let keptStep = kept.nextStep, same(step, keptStep) {
+            // The same step in both: conversations logged on either were logged toward it.
+            // A different step's count says nothing about this one, so it is not added.
             kept.nextStepCount += old.nextStepCount
         }
         if kept.desiredOutcome.isEmpty { kept.desiredOutcome = old.desiredOutcome }

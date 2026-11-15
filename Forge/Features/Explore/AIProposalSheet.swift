@@ -18,7 +18,7 @@ struct AIProposalSheet: View {
                         Text("Proposed by AI").forgeLabel()
                     }
                     Text("Nothing is saved until you accept. Your original text never changes either way.")
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
 
                     if proposal.kind == .expand {

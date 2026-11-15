@@ -175,6 +175,8 @@ public struct PrefillResult: Codable, Sendable {
         public var title: String
         public var body: String
     }
+    /// The idea's name in 2 to 5 words. Optional so an older proxy's answer still decodes.
+    public var title: String?
     public var realityCheck: RealityCheckResult
     public var explorations: [ExplorationDraft]
     public var criteria: [CriterionDraft]
@@ -184,11 +186,69 @@ public struct PrefillResult: Codable, Sendable {
     public var projectionLow: Double?
     public var projectionHigh: Double?
     public var projectionBasis: String?
+    /// Decision 0037: the Investor's bottom-up inputs. Optional so an older proxy's answer still decodes.
+    public var estimate: EstimateDraft?
+
+    public struct EstimateDraft: Codable, Sendable {
+        public struct Input: Codable, Sendable {
+            public var low: Double
+            public var high: Double
+            public var basis: String
+            public var sourceID: UUID?
+        }
+        public var price: Input
+        public var reachable: Input
+        public var conversion: Input
+    }
     public var riskiestAssumption: RiskiestAssumptionDraft
     public var nextMove: NextMoveDraft
     public var draftedAssets: DraftedAssets
     public var panel: [RoundResult.VerdictDraft]
     public var crossfire: [RoundResult.CrossfireDraft]
+    /// "What if…" pivots (decision 0024). Optional so an older proxy's answer still decodes.
+    public var pivots: [PivotDraft]?
+
+    public struct PivotDraft: Codable, Sendable {
+        public var whatIf: String
+        public var pivotType: PivotType
+        /// The key of the criterion the change raises.
+        public var fixes: String
+        public var why: String
+        public var firstTest: String
+        public var sourceIDs: [UUID]
+    }
+}
+
+/// Decision 0041: the launch plan as the proxy returns it. "proven" lines
+/// always carry a source id the app sent (the proxy moves the rest to
+/// "unproven").
+public struct LaunchPlanResult: Codable, Sendable {
+    public struct Claim: Codable, Sendable {
+        public var text: String
+        public var sourceID: UUID?
+    }
+    public struct Phase: Codable, Sendable {
+        public var title: String
+        public var detail: String
+        public var decide: String
+    }
+    public var oneLine: String
+    public var forWho: String
+    public var proven: [Claim]
+    public var unproven: [String]
+    public var riskiest: String
+    public var days1to30: Phase
+    public var days31to60: Phase
+    public var days61to90: Phase
+    public var customerNoun: String
+    public var stopRule: String
+    public var stewardNote: String?
+}
+
+/// Decision 0042: what a re-score returns that the app uses: the criteria.
+/// (The proxy also sends the panel's verdicts and the estimate.)
+public struct RescoreResult: Codable, Sendable {
+    public var criteria: [PrefillResult.CriterionDraft]
 }
 
 /// Sugar so each action names its payload type in one place.
@@ -207,6 +267,8 @@ public extension AIAction {
         case .pitch: "PitchResult"
         case .realityCheck: "RealityCheckResult"
         case .prefill: "PrefillResult"
+        case .launchPlan: "LaunchPlanResult"
+        case .rescore: "RescoreResult"
         }
     }
 }

@@ -26,6 +26,14 @@ public enum Scoring {
         return normalize(mean, from: 0...5)
     }
 
+    /// Decision 0037: from graded levels (desk levels are fractional, 1.0 to 2.0).
+    public static func confidence(levels: [Double]) -> Int {
+        guard !levels.isEmpty else { return 0 }
+        let mean = levels.map { min(max($0, 0), 5) }.reduce(0, +) / Double(levels.count)
+        let t = mean / 5
+        return min(100, max(0, Int((t * 100).rounded())))
+    }
+
     /// Maps a value in `from` onto 0...100, rounded to nearest, clamped.
     public static func normalize(_ value: Double, from range: ClosedRange<Int>) -> Int {
         let lo = Double(range.lowerBound), hi = Double(range.upperBound)

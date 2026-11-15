@@ -8,6 +8,10 @@ import ForgeCore
 public final class Idea {
     public var id: UUID = UUID()
     public var title: String = ""
+    /// The person renamed it; the panel's proposed title never overwrites theirs.
+    public var titleEdited: Bool = false
+    /// Decision 0037: every change in proof from the world, newest last.
+    public var proofMoves: [ProofMove] = []
     public private(set) var originalText: String = ""
     public var aiSummary: String?
     public var aiSummaryConfirmed: Bool = false
@@ -68,6 +72,27 @@ public final class Idea {
 
     public var isArchived: Bool { archivedAt != nil }
 
+    /// Decision 0041: the idea's launch plan, if one was made. Stored as JSON
+    /// so the plan's shape can grow without a schema change.
+    public var launchPlanData: Data?
+
+    /// Decision 0042: the research packet from this idea's latest check, and
+    /// when it ran. Everything done on the idea afterwards (a launch plan,
+    /// bringing it up to date, a re-score, the Tank) reads this instead of
+    /// searching again. Only a fresh re-check replaces it.
+    public var researchPacketData: Data?
+    public var researchedAt: Date?
+
+    public var researchPacket: ResearchPacket? {
+        get { researchPacketData.flatMap { try? JSONDecoder().decode(ResearchPacket.self, from: $0) } }
+        set { researchPacketData = newValue.flatMap { try? JSONEncoder().encode($0) } }
+    }
+
+    public var launchPlan: LaunchPlan? {
+        get { launchPlanData.flatMap { try? JSONDecoder().decode(LaunchPlan.self, from: $0) } }
+        set { launchPlanData = newValue.flatMap { try? JSONEncoder().encode($0) } }
+    }
+
     public var latestEvaluation: Evaluation? {
         evaluations.max { $0.version < $1.version }
     }
@@ -81,6 +106,8 @@ public final class Idea {
     public func archive() {
         archivedAt = Date()
         stage = .archived
+        // Decision 0025: an archived idea's project leaves Reality with it. Launched stays launched.
+        if let project, project.status == .active || project.status == .paused { project.status = .archived }
     }
 
     public func unarchive() {
@@ -99,6 +126,9 @@ public final class Idea {
             for old in previous.criteria {
                 let score = CriterionScore(key: old.key, score: old.score, evidenceLevel: old.evidenceLevel, note: old.note)
                 score.peopleAtRung = old.peopleAtRung
+                score.aiProposed = old.aiProposed
+                score.deskLevel = old.deskLevel
+                score.deskSourceCount = old.deskSourceCount
                 for ev in old.evidence {
                     score.evidence.append(Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text, source: ev.source))
                 }
@@ -109,6 +139,7 @@ public final class Idea {
             evaluation.recommendationRaw = previous.recommendationRaw
             evaluation.nextStepText = previous.nextStepText
             evaluation.projectionPricePerUnit = previous.projectionPricePerUnit
+            evaluation.estimateInputs = previous.estimateInputs
             evaluation.projectionUnitsYearOne = previous.projectionUnitsYearOne
             evaluation.projectionRecurringPerMonth = previous.projectionRecurringPerMonth
             evaluation.impactWho = previous.impactWho
@@ -124,16 +155,8 @@ public final class Idea {
     }
 
     /// First line of the raw text, trimmed, at most 60 characters.
+    /// 2 to 7 words from the first clause of the person's words (ShortTitle).
     public static func suggestedTitle(from text: String) -> String {
-        let firstLine = text
-            .split(whereSeparator: \.isNewline)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .first { !$0.isEmpty } ?? "Untitled idea"
-        if firstLine.count <= 60 { return firstLine }
-        let cut = firstLine.prefix(60)
-        if let lastSpace = cut.lastIndex(of: " ") {
-            return String(cut[..<lastSpace]) + "…"
-        }
-        return String(cut) + "…"
+        ShortTitle.make(from: text)
     }
 }

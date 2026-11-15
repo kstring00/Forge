@@ -1,7 +1,7 @@
 // The honesty rules, enforced on the server regardless of what the model wrote.
 import { content } from "./content.js";
 import type { z } from "zod";
-import type { PitchResult, PrefillResult, RoundResult, RealityCheckResult } from "./schemas.js";
+import type { LaunchPlanResult, PitchResult, PivotDraft, PrefillResult, RoundResult, RealityCheckResult, ScoreResult } from "./schemas.js";
 
 const ceiling = content.deskResearchRungCeiling;
 
@@ -57,12 +57,13 @@ export function enforceRealityCheck(r: z.infer<typeof RealityCheckResult>, known
   };
 }
 
-export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[], dropped: Record<string, number> = {}): z.infer<typeof PrefillResult> {
+/// The panelists' part of a check, or a re-score (decision 0042): scores
+/// clamped, sources only the app sent, no source means an assumption, and the
+/// verdict rules of a round.
+export function enforceScore(p: z.infer<typeof ScoreResult>, known: Set<string>, lensKeys: string[]): z.infer<typeof ScoreResult> {
   const round = enforceRound({ verdicts: p.panel, crossfire: p.crossfire }, known);
   return {
     ...p,
-    realityCheck: enforceRealityCheck(p.realityCheck, known, dropped),
-    explorations: p.explorations.filter((e) => promptKeys.includes(e.promptKey)).map((e) => ({ ...e, sourceIDs: knownOnly(e.sourceIDs, known) })),
     criteria: p.criteria
       .filter((c) => lensKeys.includes(c.key))
       .map((c) => {
@@ -71,7 +72,7 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
         const evidenceLevel = sourceIDs.length === 0 ? Math.min(1, clamp(c.evidenceLevel, 0, ceiling)) : clamp(c.evidenceLevel, 0, ceiling);
         return { ...c, score: clamp(c.score, 1, 5), evidenceLevel, sourceIDs };
       }),
-    riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
+    estimate: enforceEstimate(p.estimate ?? null, known),
     // A range is low to high, never negative, and never one-sided.
     projectionLow: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.min(p.projectionLow, p.projectionHigh)) : null,
     projectionHigh: p.projectionLow != null && p.projectionHigh != null ? Math.max(0, Math.max(p.projectionLow, p.projectionHigh)) : null,
@@ -80,7 +81,65 @@ export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<stri
   };
 }
 
+export function enforcePrefill(p: z.infer<typeof PrefillResult>, known: Set<string>, lensKeys: string[], promptKeys: string[], dropped: Record<string, number> = {}): z.infer<typeof PrefillResult> {
+  return {
+    ...p,
+    ...enforceScore(p, known, lensKeys),
+    realityCheck: enforceRealityCheck(p.realityCheck, known, dropped),
+    explorations: p.explorations.filter((e) => promptKeys.includes(e.promptKey)).map((e) => ({ ...e, sourceIDs: knownOnly(e.sourceIDs, known) })),
+    title: shortTitle(p.title),
+    riskiestAssumption: { ...p.riskiestAssumption, sourceIDs: knownOnly(p.riskiestAssumption.sourceIDs, known) },
+    pivots: enforcePivots(p.pivots ?? [], known, lensKeys),
+  };
+}
+
+/// Decision 0024: at most three pivots, each raising a real criterion of the
+/// lens, phrased as a "What if…", citing only known sources.
+export function enforcePivots(pivots: z.infer<typeof PivotDraft>[], known: Set<string>, lensKeys: string[]): z.infer<typeof PivotDraft>[] {
+  return pivots
+    .filter((x) => lensKeys.includes(x.fixes) && x.whatIf.trim().length > 0)
+    .slice(0, 3)
+    .map((x) => {
+      const t = x.whatIf.trim();
+      const whatIf = /^what if/i.test(t) ? t : `What if ${t.charAt(0).toLowerCase()}${t.slice(1)}`;
+      return { ...x, whatIf: whatIf.endsWith("?") || whatIf.endsWith(".") ? whatIf : whatIf + "?", sourceIDs: knownOnly(x.sourceIDs, known) };
+    });
+}
+
 /// A pitch may only claim evidence it can point at.
 export function enforcePitch(p: z.infer<typeof PitchResult>, known: Set<string>): z.infer<typeof PitchResult> {
   return { pitches: p.pitches.map((x) => ({ ...x, groundedIn: knownOnly(x.groundedIn, known) })) };
+}
+
+/// At most five words, no wrapping quotes or end punctuation; null under two words.
+export function shortTitle(t: string | null | undefined): string | null {
+  if (!t) return null;
+  const words = t.replace(/["“”.!?…:;]/g, " ").split(/\s+/).filter(Boolean).slice(0, 5);
+  return words.length >= 2 ? words.join(" ") : null;
+}
+
+type EstimateT = NonNullable<z.infer<typeof PrefillResult>["estimate"]>;
+/// Decision 0037: low ≤ high, nothing negative, conversion a fraction, and a
+/// sourceID only if the app sent that source (otherwise it is an assumption).
+export function enforceEstimate(e: EstimateT | null, known: Set<string>): EstimateT | null {
+  if (!e) return null;
+  const fix = (x: EstimateT["price"], max = Infinity) => {
+    const a = Math.min(Math.max(0, x.low), max), b = Math.min(Math.max(0, x.high), max);
+    return { low: Math.min(a, b), high: Math.max(a, b), basis: x.basis, sourceID: x.sourceID && known.has(x.sourceID) ? x.sourceID : null };
+  };
+  return { price: fix(e.price), reachable: fix(e.reachable), conversion: fix(e.conversion, 1) };
+}
+
+/// Decision 0041: "proven" means a source the app sent says so. A line with
+/// no known source is a belief and moves to "unproven". Four of each at most.
+export function enforceLaunchPlan(p: z.infer<typeof LaunchPlanResult>, known: Set<string>, dropped: Record<string, number> = {}): z.infer<typeof LaunchPlanResult> {
+  const proven: z.infer<typeof LaunchPlanResult>["proven"] = [];
+  const moved: string[] = [];
+  for (const c of p.proven) {
+    if (c.sourceID && known.has(c.sourceID)) proven.push(c);
+    else moved.push(c.text);
+  }
+  if (moved.length) dropped["launchPlan.provenWithoutSource"] = moved.length;
+  const unproven = [...new Set([...p.unproven, ...moved].map((t) => t.trim()).filter(Boolean))];
+  return { ...p, proven: proven.slice(0, 4), unproven: unproven.slice(0, 4) };
 }

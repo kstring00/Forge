@@ -77,32 +77,42 @@ final class RealityCheckRunner {
     func run(on idea: Idea, in context: ModelContext, advantages: [String] = [], constraints: [String] = []) async {
         guard !isRunning else { return }
         guard let proxy else {
-            phase = .offline("The Reality Check needs the AI proxy, which isn't configured yet.")
+            phase = .offline("The panel can't be reached from this build of Hunch. Your idea is saved; try again later.")
             return
         }
+        #if DEBUG
+        // The developer's own cap, Debug only. App Store builds are limited by the
+        // check allowance and the server's daily ceiling, never by a dollar figure.
         if AISpend.wouldExceed(estimate: estimate.upperBound) {
             phase = .overCeiling(estimate: estimate.upperBound, remaining: AISpend.remainingUSD())
             return
         }
+        #endif
         litSpheres = []
         spentUSD = 0
         savedThisRun = []
         var step = Step.research
         var pagesSaved = 0
+        var wasFree = false
         do {
             // 1. Research, one turn per call.
             var messages: [JSONValue]? = nil
             var gathered: [ResearchResponse.Source] = []
             var notes = ""
+            var packet: ResearchPacket?
+            var researchTokens = CostMeter.Tokens()
             for turn in 1...Self.maxResearchTurns {
                 phase = .researching(turn: turn, sources: gathered.count)
                 let r = try await proxy.research(ideaID: idea.id, title: idea.title, originalText: idea.originalText,
                                                  advantages: advantages, constraints: constraints, messages: messages)
                 spendRecord(r.costUSD)
+                researchTokens = researchTokens + CostMeterStore.tokens(r.usage)
+                if turn == 1, r.freeCheck == true { wasFree = true }
                 try Task.checkCancellation()
                 gathered.append(contentsOf: r.sources)
                 if !r.notes.isEmpty { notes = r.notes }
-                phase = .researching(turn: turn, sources: gathered.filter { $0.kind == "fetched" }.count)
+                if let p = r.packet { packet = p }
+                phase = .researching(turn: turn, sources: gathered.filter { $0.kind == "fetched" || $0.kind == "noted" }.count)
                 if r.status == "done" { break }
                 messages = r.messages
             }
@@ -114,18 +124,27 @@ final class RealityCheckRunner {
             step = .prefill
             phase = .prefilling
             startLighting()
-            let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea), expecting: PrefillResult.self)
+            // Decision 0042: the panel reads this check's packet, not the pages again.
+            let envelope = try await proxy.perform(.prefill, context: AIContext.make(for: idea, packet: packet, researchedAt: .now), expecting: PrefillResult.self)
             stopLighting()
+            let researchUSD = spentUSD
             spendRecord(envelope.costUSD ?? 0)
             try Task.checkCancellation()
 
             // 3. Records.
             phase = .applying
             let applied = PrefillApplier.apply(envelope.payload, rationale: envelope.rationale, costUSD: spentUSD, to: idea, in: context)
+            // Decision 0042: the packet is kept with the idea; follow-ups read it.
+            if let packet {
+                idea.researchPacket = packet
+                idea.researchedAt = .now
+            }
             litSpheres = Set(Sphere.phase3Panel)
             AISpend.lastRealityCheckUSD = spentUSD
+            CostMeterStore.recordCheck(researchUSD: researchUSD, researchTokens: researchTokens, prefill: envelope)
             applied.realityCheck.actualCostUSD = spentUSD
             applied.realityCheck.droppedFindings = envelope.dropped?.values.reduce(0, +) ?? 0
+            applied.realityCheck.wasFree = wasFree
             try? context.save()
             phase = .done
         } catch is CancellationError {
@@ -150,9 +169,18 @@ final class RealityCheckRunner {
     static let trippedLine = "The panel tripped on one of its findings. Nothing you saved was lost. Try again."
 
     /// What the proxy or the model said, kept behind Details.
+    /// What a developer needs, kept behind Details; never in the message itself.
     static func failureDetail(_ error: Error) -> String? {
-        if let ai = error as? AIError, case .invalidResponse(let d) = ai { return d }
-        return nil
+        guard let ai = error as? AIError else { return nil }
+        switch ai {
+        case .invalidResponse(let d): return d
+        case .notConfigured: return "The server refused the request (401/403/503). In development: PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and ANTHROPIC_API_KEY."
+        case .server(let s): return "The server answered \(s). Vercel → Logs has the detail."
+        case .rateLimited: return "429 from the server's rate limiter."
+        case .resting: return "429: the device's daily limit or the day's spend ceiling (decision 0021)."
+        case .staleAttestation: return "401 attest_unknown_key: the server had no record of this device's key."
+        default: return nil
+        }
     }
 
     /// Stop keeps nothing: the pages this run saved go back out of the Library.
@@ -167,8 +195,8 @@ final class RealityCheckRunner {
 
     /// What Stop leaves behind: the step it stopped in, and that the spend is in Settings.
     static func stoppedLine(step: Step, spentUSD: Double) -> String {
-        let at = step == .research ? "during the desk research" : "before the Brief was written"
-        let spent = spentUSD > 0 ? " What the proxy had already done is counted in Settings → Spend." : " Nothing was charged."
+        let at = step == .research ? "during the research" : "before the Brief was written"
+        let spent = spentUSD > 0 ? " It doesn't count against your checks." : " Nothing was charged."
         return "Stopped \(at). Nothing was saved.\(spent)"
     }
 
@@ -178,7 +206,7 @@ final class RealityCheckRunner {
     /// it rather than quietly going back to idle. No prices: Settings → Spend
     /// has those.
     static func failurePhase(_ error: Error, step: Step, pagesSaved: Int, spentUSD: Double) -> Phase {
-        let what = step == .research ? "The desk research stopped" : "The panel stopped before the Brief"
+        let what = step == .research ? "The research stopped" : "The panel stopped before the Brief"
         let kept = pagesSaved > 0
             ? " \(pagesSaved) \(pagesSaved == 1 ? "source it found is" : "sources it found are") saved in the Library."
             : " Nothing was saved."
@@ -189,19 +217,20 @@ final class RealityCheckRunner {
         }
         switch ai {
         case .offline:
-            return .offline("\(what): the connection to the proxy dropped or timed out.\(kept)\(spent) Try again when you're online.")
+            return .offline("\(what): the connection dropped or timed out.\(kept) Try again when you're online.")
         case .notConfigured:
-            return .failed("\(what): the proxy refused the request. Check PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and that ANTHROPIC_API_KEY is set.\(kept)")
+            return .failed("\(what): Hunch couldn't reach the panel just now.\(kept) Try again in a little while.")
         case .rateLimited:
-            return .failed("\(what): the proxy is rate limiting. Try again in a minute.\(kept)\(spent)")
+            return .failed("\(what): the panel is busy. Try again in a minute.\(kept)")
         case .resting(let line):
+            // Decision 0021: the server's own polite line ("The panel is resting until tomorrow.").
             return .failed("\(line)\(kept)")
         case .staleAttestation:
-            return .failed("\(what): this device had to re-register with the proxy. Try again.\(kept)")
+            return .failed("\(what): this phone had to check in with Hunch again. Try once more.\(kept)")
         case .invalidResponse:
             return .failed("\(trippedLine)\(kept)\(spent)")
         case .server(let s):
-            return .failed("\(what): the proxy answered with status \(s).\(kept)\(spent) Vercel → Logs has the detail.")
+            return .failed("\(what): something went wrong on Hunch's side (\(s)).\(kept) Try again in a little while.")
         }
     }
 

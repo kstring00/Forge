@@ -3,6 +3,8 @@ import SwiftData
 
 /// Capture in seconds: type, paste, or speak. A voice transcript stays
 /// editable until Save (decision 0005); after Save the text never changes.
+/// Opens with the keyboard up and "What's your hunch?" in the field; the big
+/// mic is the other way in (decision 0025).
 struct CaptureSheet: View {
     var autoStartVoice = false
     @Environment(\.modelContext) private var context
@@ -23,12 +25,25 @@ struct CaptureSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                Text(speech.isRecording ? "Listening" : "Raw thought").forgeLabel()
+                Text(speech.isRecording ? "Listening…" : "Type your idea here, or tap Speak below")
+                    .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 TextEditor(text: $text)
                     .font(ForgeType.body)
                     .scrollContentBackground(.hidden)
                     .padding(ForgeSpacing.s)
+                    .overlay(alignment: .topLeading) {
+                        if text.isEmpty && !speech.isRecording {
+                            Text("What's your hunch?")
+                                .font(ForgeType.originalText)
+                                .foregroundStyle(ForgeColor.inkSecondary)
+                                .padding(.horizontal, ForgeSpacing.s + 5)
+                                .padding(.top, ForgeSpacing.s + 8)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
                     .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous)
@@ -44,35 +59,47 @@ struct CaptureSheet: View {
 
                 if let errorText {
                     Text(errorText)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                 }
 
-                HStack(spacing: ForgeSpacing.m) {
+                HStack(alignment: .center, spacing: ForgeSpacing.m) {
                     PasteButton(payloadType: String.self) { strings in
                         guard let pasted = strings.first, !pasted.isEmpty else { return }
                         append(pasted)
                     }
                     .buttonBorderShape(.capsule)
-                    .labelStyle(.titleAndIcon)
+                    .labelStyle(.iconOnly)
                     .tint(ForgeColor.ink)
                     .disabled(speech.isRecording)
 
                     Spacer()
-
                     voiceButton
+                    Spacer()
+
+                    Button { save() } label: {
+                        Text("Save")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(canSave ? .white : ForgeColor.inkSecondary)
+                            .padding(.horizontal, ForgeSpacing.l).frame(height: 44)
+                            .background(canSave ? ForgeColor.ember : ForgeColor.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(canSave ? Color.clear : ForgeColor.line))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSave)
+                    .accessibilityLabel("Save")
                 }
                 .padding(.top, ForgeSpacing.xs)
 
                 Text(usedVoice
                      ? "Fix any transcription mistakes now. After you save, this text never changes."
                      : "Saved exactly as written. You can add a title and notes later; this text never changes.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
             .padding(ForgeSpacing.m)
             .background(ForgeColor.canvas)
-            .navigationTitle("Capture")
+            .navigationTitle("New idea")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -105,17 +132,21 @@ struct CaptureSheet: View {
 
     // MARK: Voice
 
+    /// The large mic: 72 pt, ember, a stop square while listening.
     private var voiceButton: some View {
         Button {
             if speech.isRecording { stopVoice() } else { Task { await startVoice() } }
         } label: {
-            Label(speech.isRecording ? "Stop" : "Speak",
-                  systemImage: speech.isRecording ? "stop.fill" : "mic.fill")
-                .font(.body.weight(.semibold))
-                .padding(.horizontal, ForgeSpacing.l)
-                .padding(.vertical, ForgeSpacing.s + 4)
-                .foregroundStyle(.white)
-                .background(ForgeColor.ember, in: Capsule())
+            VStack(spacing: 6) {
+                Image(systemName: speech.isRecording ? "stop.fill" : "mic.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 72, height: 72)
+                    .background(ForgeColor.ember, in: Circle())
+                    .scaleEffect(speech.isRecording ? 1 + CGFloat(speech.level) * 0.12 : 1)
+                    .shadow(color: ForgeColor.ember.opacity(speech.isRecording ? 0.5 : 0.3), radius: 14, y: 4)
+                Text(speech.isRecording ? "Stop" : "Speak").forgeLabelSmall()
+            }
         }
         .buttonStyle(.plain)
         .disabled(!speech.isAvailable && !speech.isRecording)
@@ -132,7 +163,7 @@ struct CaptureSheet: View {
                 .forgeAnimation(ForgeMotion.fade, value: speech.level)
                 .accessibilityHidden(true)
             Text("Speak naturally. Tap Stop when you're done, then fix anything it misheard.")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
         .padding(.horizontal, ForgeSpacing.xs)

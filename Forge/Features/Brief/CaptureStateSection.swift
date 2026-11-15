@@ -13,11 +13,9 @@ struct CaptureStateSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            // The button carries the cost line and any failure, the same on every surface.
+            // Decision 0036: the button is the journey bar's primary; this shows the run while it works.
             if runner.isRunning {
                 progress
-            } else {
-                RealityCheckButton(idea: idea)
             }
         }
     }
@@ -31,12 +29,12 @@ struct CaptureStateSection: View {
                 }
             }
             ForEach(RealityCheckCenter.narration(for: runner.phase, lit: runner.litSpheres), id: \.0) { sphere, line in
-                Text("\(sphere.displayName) · \(line)").font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
+                Text("\(sphere.displayName) · \(line)").font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
             }
-            Text(progressText).font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+            Text(progressText).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             HStack(alignment: .top) {
                 Text("Usually one to three minutes. You can leave this screen; the panel keeps working and the idea sits in Formation when it's back.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 Spacer()
                 StopCheckButton(ideaID: idea.id)
             }

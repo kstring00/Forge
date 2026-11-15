@@ -66,6 +66,81 @@ extension Idea {
     }
 }
 
+/// Home's "Your ideas" order (decision 0025). Biggest opportunity is the default.
+enum HomeSort: String, CaseIterable, Identifiable {
+    case biggestOpportunity, newest, needsThePanel, inProgress
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .biggestOpportunity: "Biggest opportunity"
+        case .newest: "Newest"
+        case .needsThePanel: "Needs the panel"
+        case .inProgress: "In progress"
+        }
+    }
+
+    /// The muted line under "Your ideas".
+    var subline: String {
+        switch self {
+        case .biggestOpportunity: "Biggest opportunity first"
+        case .newest: "Newest first"
+        case .needsThePanel: "Ideas the panel hasn't seen, first"
+        case .inProgress: "Ideas with a step in the world, first"
+        }
+    }
+
+    static func sorted(_ ideas: [Idea], by sort: HomeSort) -> [Idea] {
+        switch sort {
+        case .biggestOpportunity:
+            return ideas.sorted { a, b in
+                let ma = EstimatedReturn.sortKey(for: a), mb = EstimatedReturn.sortKey(for: b)
+                if (ma ?? -1) != (mb ?? -1) { return (ma ?? -1) > (mb ?? -1) }
+                let ca = a.latestEvaluation?.confidence ?? -1, cb = b.latestEvaluation?.confidence ?? -1
+                if ca != cb { return ca > cb }
+                return a.updatedAt > b.updatedAt
+            }
+        case .newest:
+            return ideas.sorted { $0.createdAt > $1.createdAt }
+        case .needsThePanel:
+            func rank(_ i: Idea) -> Int { i.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: i.lensType) ? 0 : 1 }
+            return ideas.sorted { (rank($0), $1.createdAt) < (rank($1), $0.createdAt) }
+        case .inProgress:
+            func rank(_ i: Idea) -> Int {
+                if let p = i.project, p.status == .active { return 0 }
+                if i.track == .reality { return 1 }
+                if i.track == .formation { return 2 }
+                return 3
+            }
+            return ideas.sorted { (rank($0), $1.updatedAt) < (rank($1), $0.updatedAt) }
+        }
+    }
+}
+
+/// Decision 0025: the one place ideas are counted and grouped by track. The
+/// pipeline nodes, Home's subline, the Ideas sections and Settings all read
+/// from here, so a count always matches the list behind it.
+enum TrackCounts {
+    /// Ideas that are not archived, in the order given.
+    static func live(_ ideas: [Idea]) -> [Idea] { ideas.filter { !$0.isArchived } }
+
+    /// Live ideas by track, in the order given. Every track has a key.
+    static func grouped(_ ideas: [Idea]) -> [Track: [Idea]] {
+        var out: [Track: [Idea]] = Dictionary(uniqueKeysWithValues: Track.allCases.map { ($0, []) })
+        for idea in live(ideas) { if let t = idea.track { out[t, default: []].append(idea) } }
+        return out
+    }
+
+    static func count(_ track: Track, in ideas: [Idea]) -> Int { grouped(ideas)[track]?.count ?? 0 }
+
+    /// Idea, Formation, Reality, in `Track.allCases` order.
+    static func counts(_ ideas: [Idea]) -> [Int] {
+        let g = grouped(ideas)
+        return Track.allCases.map { g[$0]?.count ?? 0 }
+    }
+}
+
 extension Idea {
     /// Where the idea sits on screen. A project puts it in Reality whatever the
     /// stored stage says, so the strip, the sections and the tabs agree.
@@ -73,5 +148,54 @@ extension Idea {
         if isArchived { return nil }
         if project != nil { return .reality }
         return stage.track
+    }
+}
+
+/// Decision 0036: the one primary action a card (or the idea page) offers,
+/// from the idea's state. Verb first. Orange is reserved for this button.
+enum CardAction: Equatable {
+    /// No panel yet: "Get the panel's take".
+    case getTake
+    /// The panel has spoken and no deal is taken (no project): "Hear the panel".
+    case hearPanel
+    /// A step in progress: "Log a conversation · N of M".
+    case log(count: Int, target: Int)
+    /// A test page is live: "See signups · N so far". Arrives with the launch kit (engine step 6).
+    case seeSignups(Int)
+    /// The step reached its target, or a commitment has no outcome yet: "What happened?".
+    case whatHappened
+    /// In Reality with no step set: "Set your next step".
+    case setStep
+    /// A Growth or Creative idea, judged by impact, not checked: "Make it real".
+    case makeItReal
+    /// Launched, paused or archived: no button.
+    case none
+
+    var title: String {
+        switch self {
+        case .getTake: "Get the panel's take"
+        case .hearPanel: "Hear the panel"
+        case .log(let n, let m): "Log a conversation · \(n) of \(m)"
+        case .seeSignups(let n): "See signups · \(n) so far"
+        case .whatHappened: "What happened?"
+        case .setStep: "Set your next step"
+        case .makeItReal: "Make it real"
+        case .none: ""
+        }
+    }
+
+    static func of(_ idea: Idea) -> CardAction {
+        if idea.isArchived { return .none }
+        if let project = idea.project {
+            guard project.status == .active else { return .none }
+            if project.nextStep != nil {
+                if WorkshopActions.targetReached(project) { return .whatHappened }
+                return .log(count: min(project.nextStepCount, project.effectiveTarget), target: project.effectiveTarget)
+            }
+            if WorkshopActions.openCommitment(project) != nil { return .whatHappened }
+            return .setStep
+        }
+        if idea.latestRealityCheck != nil { return .hearPanel }
+        return RealityCheckPolicy.isOffered(for: idea.lensType) ? .getTake : .makeItReal
     }
 }

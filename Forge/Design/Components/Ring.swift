@@ -29,7 +29,7 @@ struct Ring: View {
             .frame(width: size, height: size)
             if let caption {
                 Text(caption)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .multilineTextAlignment(.center)
             }

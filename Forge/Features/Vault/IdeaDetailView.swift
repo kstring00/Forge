@@ -12,8 +12,6 @@ struct IdeaDetailView: View {
     @State private var confirmingArchive = false
     @State private var converting = false
     @State private var playback = AudioPlayback()
-    /// "Not quite" expands the Brief into the full Lab; also the state for ideas with no check yet.
-    @State private var expanded = false
     @State private var showingMore = false
 
     private var offersCheck: Bool { RealityCheckPolicy.isOffered(for: idea.lensType) }
@@ -30,11 +28,22 @@ struct IdeaDetailView: View {
                     .ignoresSafeArea(edges: .top)
 
                 VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                    TextField("Title", text: $idea.title, axis: .vertical)
+                    TextField("A short name", text: Binding(get: { idea.title }, set: { idea.title = $0; idea.titleEdited = true }), axis: .vertical)
                         .font(ForgeType.ideaTitleHero)
                         .foregroundStyle(ForgeColor.ink)
                         .textFieldStyle(.plain)
                         .accessibilityLabel("Idea title")
+
+                    // Decision 0025: where it is on the way to reality, and the one thing that moves it.
+                    JourneyBar(idea: idea)
+
+                    // Decision 0023: a checked idea leads with the panel's take; the Brief is its own screen.
+                    if idea.latestRealityCheck != nil {
+                        PanelsTakeCard(idea: idea)
+                    }
+
+                    // Decision 0041: the launch plan, or the way to make one.
+                    PlanEntryCard(idea: idea)
 
                     original
 
@@ -44,9 +53,7 @@ struct IdeaDetailView: View {
 
                     metadata
 
-                    if idea.latestRealityCheck != nil && !expanded {
-                        BriefSection(idea: idea) { withAnimation(ForgeMotion.settle) { expanded = true } }
-                    } else if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
+                    if idea.latestRealityCheck == nil && idea.latestEvaluation == nil && !idea.isArchived {
                         // §6D: the check is for Business ideas (or ones with no lens yet);
                         // Growth and Creative get the Impact card (§4.0).
                         if let lens = idea.lensType, !offersCheck {
@@ -54,25 +61,9 @@ struct IdeaDetailView: View {
                         } else {
                             CaptureStateSection(idea: idea)
                         }
-                    } else {
-                        if idea.latestRealityCheck != nil {
-                            Button { withAnimation(ForgeMotion.settle) { expanded = false } } label: {
-                                Label("Back to the Brief", systemImage: "chevron.up").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
-                            }
-                            .buttonStyle(.plain)
-                        } else if offersCheck && !idea.isArchived {
-                            // Scored by hand in the Lab, never checked: the button still belongs here.
-                            CaptureStateSection(idea: idea)
-                        }
-                        LabSection(idea: idea)
-                        ExploreSection(idea: idea)
-                        makeItReal
-                    }
-
-                    if idea.latestRealityCheck != nil && !expanded || (idea.latestRealityCheck == nil && idea.latestEvaluation == nil) {
                         DisclosureGroup(isExpanded: $showingMore) {
                             VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                                if idea.latestRealityCheck == nil { ExploreSection(idea: idea) }
+                                ExploreSection(idea: idea)
                                 makeItReal
                                 tags
                                 notes
@@ -83,6 +74,13 @@ struct IdeaDetailView: View {
                         }
                         .tint(ForgeColor.inkSecondary)
                     } else {
+                        if idea.latestRealityCheck == nil && offersCheck && !idea.isArchived {
+                            // Scored by hand in the Lab, never checked: the button still belongs here.
+                            CaptureStateSection(idea: idea)
+                        }
+                        LabSection(idea: idea)
+                        ExploreSection(idea: idea)
+                        makeItReal
                         tags
                         notes
                     }
@@ -136,14 +134,14 @@ struct IdeaDetailView: View {
     private var metadata: some View {
         HStack(spacing: ForgeSpacing.m) {
             Menu {
-                Button("No lens yet") { idea.lensType = nil }
+                Button("Not sure yet") { idea.lensType = nil }
                 ForEach(LensType.allCases) { lens in
                     Button(lens.displayName) { idea.lensType = lens }
                 }
             } label: {
-                pill(idea.lensType?.displayName ?? "Choose a lens", tint: ForgeColor.lensTint(idea.lensType))
+                pill(idea.lensType.map { "\($0.displayName) idea" } ?? Plain.lens, tint: ForgeColor.lensTint(idea.lensType))
             }
-            .accessibilityLabel("Lens")
+            .accessibilityLabel("Kind of idea (lens)")
 
             Menu {
                 ForEach(Track.allCases) { track in
@@ -161,8 +159,8 @@ struct IdeaDetailView: View {
     private func pill(_ text: String, tint: Color) -> some View {
         HStack(spacing: ForgeSpacing.xs) {
             Circle().fill(tint).frame(width: 7, height: 7)
-            Text(text).font(.caption.weight(.medium))
-            Image(systemName: "chevron.down").font(.caption2)
+            Text(text).font(.footnote.weight(.medium))
+            Image(systemName: "chevron.down").font(.footnote)
         }
         .foregroundStyle(ForgeColor.ink)
         .padding(.horizontal, ForgeSpacing.m)
@@ -176,7 +174,7 @@ struct IdeaDetailView: View {
             HStack(spacing: ForgeSpacing.s) {
                 Text("Original").forgeLabel()
                 Image(systemName: "lock")
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .accessibilityLabel("Cannot be edited")
                 if idea.audioFileName != nil {
@@ -229,7 +227,7 @@ struct IdeaDetailView: View {
                             .font(ForgeType.ideaTitle)
                             .foregroundStyle(ForgeColor.ink)
                         Text("Commit to one next step and say what launched means. No evaluation required.")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
                     }
                     Spacer()
@@ -285,7 +283,7 @@ struct IdeaDetailView: View {
                 Text("Archived \(at.formatted(date: .abbreviated, time: .shortened))")
             }
         }
-        .font(.caption)
+        .font(.footnote)
         .foregroundStyle(ForgeColor.inkSecondary)
     }
 

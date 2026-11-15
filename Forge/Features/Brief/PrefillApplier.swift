@@ -39,6 +39,9 @@ enum PrefillApplier {
         check.fitNotes = clean(r.realityCheck.fitNotes)
         check.draftedAssetSourceID = asset.id
         check.demandSignals = r.realityCheck.demandSignals.map { DemandSignal(text: clean($0.text), url: $0.url, rung: $0.rung, sourceID: $0.sourceID) }
+        check.pivots = (r.pivots ?? []).map {
+            PivotIdea(whatIf: clean($0.whatIf), pivotType: $0.pivotType, fixes: $0.fixes, why: clean($0.why), firstTest: clean($0.firstTest), sourceIDs: $0.sourceIDs)
+        }
         for c in r.realityCheck.competitors {
             check.competitors.append(Competitor(name: clean(c.name), url: c.url, pricing: clean(c.pricing), positioning: clean(c.positioning),
                                                 praises: c.praises.map(clean), complaints: c.complaints.map(clean), tractionSignals: c.tractionSignals.map(clean),
@@ -70,9 +73,14 @@ enum PrefillApplier {
             try? evaluation.set(key: c.key, score: c.score, evidenceLevel: rung, note: note)
             if let score = evaluation.criterionScore(for: c.key) {
                 score.aiProposed = true
-                for s in sourcesFor(c.sourceIDs) {
+                let cited = sourcesFor(c.sourceIDs)
+                for s in cited {
                     score.evidence.append(Evidence(criterionKey: c.key, ladderRung: rung, text: note, source: s))
                 }
+                // Decision 0037: graded by how many independent sources, and of what rank.
+                let grade = DeskGrade.level(sources: cited.map { ($0.url, $0.evidenceRank) }, proposedLevel: rung)
+                score.deskLevel = grade.level
+                score.deskSourceCount = grade.independentSources
             }
         }
         evaluation.recompute()
@@ -85,6 +93,13 @@ enum PrefillApplier {
         }
         if let p = r.projection {
             evaluation.projectionSuggestion = clean("\(Projection.compact(p.pricePerUnitLow))–\(Projection.compact(p.pricePerUnitHigh)) per unit · \(p.unitsYearOneLow)–\(p.unitsYearOneHigh) units in year one. \(p.rationale)")
+        }
+        if let x = r.estimate {
+            func input(_ i: PrefillResult.EstimateDraft.Input) -> ReturnInputs.Input {
+                let s = source(i.sourceID)
+                return ReturnInputs.Input(low: i.low, high: i.high, basis: clean(i.basis), sourceID: s?.id, sourceTitle: s?.title)
+            }
+            evaluation.estimateInputs = ReturnInputs(price: input(x.price), reachable: input(x.reachable), conversion: input(x.conversion))
         }
         if let low = r.projectionLow, let high = r.projectionHigh, high > 0 {
             evaluation.projectionEstimateLow = min(low, high)
@@ -111,19 +126,26 @@ enum PrefillApplier {
         }
         idea.rounds.append(round)
 
+        // The panel's name for it, unless the person has named it themselves.
+        if !idea.titleEdited, let proposed = r.title.map(clean), let short = ShortTitle.clamp(proposed) {
+            idea.title = short
+        }
         idea.stage = .evaluate
         idea.touch()
         return Applied(realityCheck: check, evaluation: evaluation, round: round, draftedAsset: asset)
     }
 
-    /// Research pages become ai-found web Sources with chunks for citation.
+    /// Research pages become ai-found web Sources with chunks for citation:
+    /// pages fetched in full, and every page the notes cite (its claims).
     @MainActor
     static func saveResearch(_ sources: [ResearchResponse.Source], notes: String, to idea: Idea) -> [Source] {
         var saved: [Source] = []
         // Seeded with what the Library already holds, then grown as this batch is
         // saved, so two fetches of one URL in the same run save once.
         var seenURLs = Set(idea.sources.compactMap(\.url))
-        for s in sources where s.kind == "fetched" && !s.text.isEmpty && !seenURLs.contains(s.url) {
+        // Fetched pages carry their full text; "noted" sources are the claims the
+        // research notes made from one page, with that page's address.
+        for s in sources where (s.kind == "fetched" || s.kind == "noted") && !s.text.isEmpty && !seenURLs.contains(s.url) {
             seenURLs.insert(s.url)
             let source = Source(kind: .web, title: s.title.isEmpty ? s.url : s.title, fullText: s.text, sourceClass: .aiFound, url: s.url)
             for (i, chunk) in chunks(of: s.text).enumerated() {

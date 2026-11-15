@@ -4,7 +4,7 @@ import SwiftUI
 struct SparkGlyph: View {
     var body: some View {
         Image(systemName: "sparkle")
-            .font(.caption2)
+            .font(.footnote)
             .foregroundStyle(ForgeColor.spark)
             .accessibilityLabel("AI generated")
     }

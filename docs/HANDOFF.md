@@ -1,5 +1,7 @@
 # Handoff — end of Phase 3b
 
+Public name: **Hunch**. The repo, the brief and the code keep FORGE.
+
 Read with `docs/FORGE_BRIEF.md` (v4.1, the source of truth), `docs/decisions/`
 and `docs/phase-*.md`. This file holds only what those do not.
 
@@ -15,12 +17,26 @@ The developer reports results and screenshots; wait for them.
 Before 3c, these still need the developer:
 - `Cmd+U` after #9.
 - The 3b done-check: Reality Check → Looks right → a Workshop task with the drafted questions.
+- **The engine spec is `docs/ENGINE.md` (decision 0033).** It supersedes brief §6B/6C/6D where they disagree. Build order starts with `bench/`; no engine code ships without bench numbers.
+- Since decision 0040 the bottom bar is Home · Ideas · Sparks · Journal; every check asks for What-ifs and they are free on every plan (`SparksView`).
+- Decision 0042 (cost and generosity): a check is one research pass → a research packet (`proxy/lib/packet.ts`, `ResearchPacket` in ForgeCore, saved on `Idea.researchPacketData`) → SCORE on the scoring model → BRIEF on the brief model, merged by the proxy into the same `PrefillResult`. Models, effort and every plan number live in `proxy/config/hunch.ts`; the app loads `rules` from `/api/health` into `PlanRules.current`. Only research costs a check; follow-ups are included under `FairUseLedger`. `CheckLedger` rolls unused checks over. Settings → Developer shows the cost meter (`CostMeter`). `proxy/bench/` runs five sample ideas against the real API and compares two runs; `--mock` checks the wiring without a key.
+- Since decision 0041 the bar is Home · Ideas · Sparks · Plans · Journal (five, the most iOS shows before "More"). A launch plan is the proxy's `launchPlan` action, stored as JSON on `Idea.launchPlanData`, built by `PlanBuilder` (on `AppEnvironment.plans`), shown by `LaunchPlanView`, exported by `PlanPDF` from `LaunchPlanDocument` (HTML, in ForgeCore). It spends checks through `EntitlementService.spend(_:)`.
+- Since decision 0038 cards show Potential and Proof as words and shapes (`CardMeters`), the panel's best What-if (`WhatIfTeaser`), and one card design on Home and Ideas; Free sees the first What-if on each Brief.
+- Since decision 0037 cards show Potential (the panel's view) and proof as a stage, not Confidence; desk levels are graded by source rank (`DeskGrade`); `ProofMove` records each change; the estimate is bottom-up (`ReturnInputs`).
+- Since decision 0032 memberships run against `Hunch.storekit` in the simulator: `MembershipStore` (StoreKit 2), `EntitlementService` / `LocalEntitlements` (swap for the proxy ledger later), `MembershipView`, the checks pill, What-if gated to Plus. App Store Connect steps: `docs/RELEASE.md`.
+- Since decision 0030 the drafted questions are fillable: `InterviewSheet`, `Project.interviews` / `interviewQuestions`, `WorkshopActions.finishInterview` → `logConversation`.
+- Since decision 0029 text sizes have floors and scale with Dynamic Type (`ForgeType.caption/supporting/subhead`, `forgeSubhead()`, `forgeCaption()`), muted ink is lifted, and `Plain` carries the plain-language vocabulary shown beside every brand term.
+- Since decisions 0027/0028 the first check on a device is free (proxy `startCheck`, Apple's DeviceCheck bits) and the app has a first run: `WelcomeView`, `FirstCheckSheet`, `FirstRunCallout`, Settings → Developer → Replay first run (Debug).
+- Since decision 0026 `NewHunchIntent` ("Hey Siri, new hunch", Shortcuts, the Action button) opens voice capture through `QuickActions`.
+- Since decision 0025 the bottom bar is Home · Ideas · Journal; `IdeasView` lists every idea by track, `TrackCounts` is the one count, `ProjectCleanup` runs once at launch (report in Settings → Ideas), and capture is the docked ember button plus the Home Screen quick action.
+- Since decision 0024 the prefill carries `pivots`; the Brief shows them as "What if…" cards when Confidence is under 40 or the verdict is cantTell or compete, and "Make this its own idea" spawns an unchecked sibling.
+- Since decision 0023 the Brief is its own screen (`BriefView`) behind "The panel's take" card on every checked idea page and on Reality project pages; History lists every take.
 - Whether the Vercel log for `/api/action` shows `json-fallback` or `json-retry`. If it does, structured outputs are being rejected and the prefill schema should be split or shrunk so the fallback stops being the normal path. Since decision 0022 a list item that fails the contract is dropped and counted rather than failing the run.
 
 ## Open bugs and known gaps
 
 - **"I know something you don't" caps user-verified facts at rung 2.** It reuses `prefill`, whose server-side clamp is the desk ceiling. A user-verified source should be allowed above rung 2. It also re-runs the whole prefill, which is slow and costly, to re-score a few criteria.
-- **§0A step 6, "the return", is not built.** Recording "what happened" in the Workshop writes a Journal outcome but does not save it as a user-verified Source or re-score anything.
+- **§0A step 6, "the return": the source and the rung are built (decision 0020); the partial re-run of the touched Spheres, with its diff, is not yet.**
 - **Every Reality Check scores under the Business lens.** `PrefillApplier` calls `beginEvaluation(lens: .business)`. Fine until Phase 5; wrong after.
 - **A run survives navigation, not app suspension.** If iOS suspends the app mid-check, the run stops. Saved pages persist; the prefill does not resume.
 - **Re-running a Reality Check does not diff** the competitor set and verdict (§6D).

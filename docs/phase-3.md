@@ -164,6 +164,10 @@ rings and figures that open the Lab; a one-time cleanup of old prose and step ta
 the verdicts renamed on screen; the daily quote and its setting. Tests: ForgeCore
 `PatternsTests`, `QuotesTests`; app `RulingActionsTests`.
 
+**3d.1: the return** (decision 0020). Logged conversations and outcomes become
+user-verified Sources with a ladder rung from what the person did; Confidence can pass
+the desk cap; the flame, the Confidence ring and Est. return move from the same records.
+
 Still to come in 3c: re-run diffs ("Customer moved from can't tell to on track"), voice
 on "I know something you don't", and rungs above 2 from what the user reports.
 

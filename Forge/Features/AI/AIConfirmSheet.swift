@@ -17,6 +17,8 @@ struct AIConfirmSheet: View {
         /// "Takes 1 to 3 minutes."
         var duration: String
         var sendTitle = "Send"
+        /// Reality Checks: "3 of 15 checks left · resets Dec 1" (decision 0032).
+        var allowance: String? = nil
     }
 
     let content: Content
@@ -34,21 +36,26 @@ struct AIConfirmSheet: View {
                     Text("\(content.whatHappens) \(content.duration)")
                         .font(ForgeType.body).foregroundStyle(ForgeColor.ink.opacity(0.9))
                         .fixedSize(horizontal: false, vertical: true)
+                    if let allowance = content.allowance {
+                        Text("\(allowance). A check that fails or is stopped doesn't count.")
+                            .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.emberText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
 
                     if firstTime {
                         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-                            Text("Before FORGE talks to an AI").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                            Text("Before Hunch talks to an AI").font(.subheadline.weight(.semibold)).foregroundStyle(ForgeColor.ink)
                             list("What is sent", AIConsent.whatIsSent)
                             list("Never sent", AIConsent.neverSent)
-                            Text("Through \(AIConsent.proxyURL ?? "your proxy"). You can withdraw this in Settings, where the same list is shown.")
-                                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("Sent through Hunch's own server to the AI model, only when you tap Send. You can withdraw this in Settings, where the same list is shown.")
+                                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                         .padding(ForgeSpacing.m)
                         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.line))
                     } else {
-                        Text("Your idea text is sent to an AI model through your proxy.")
-                            .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Your idea text goes to an AI model through Hunch's server, only for this check.")
+                            .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
 
                     Button {
@@ -57,7 +64,7 @@ struct AIConfirmSheet: View {
                         dismiss()
                     } label: {
                         Text(content.sendTitle)
-                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                            .font(.system(.body, weight: .semibold)).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 52)
                             .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
@@ -65,7 +72,7 @@ struct AIConfirmSheet: View {
                     .padding(.top, ForgeSpacing.s)
 
                     Button("Cancel") { onDecision(false); dismiss() }
-                        .font(.system(size: 15, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(ForgeSpacing.l)
@@ -88,11 +95,12 @@ struct AIConfirmSheet: View {
 }
 
 extension AIConfirmSheet.Content {
-    static func realityCheck(ideaTitle: String) -> Self {
+    static func realityCheck(ideaTitle: String, allowance: String? = nil) -> Self {
         .init(kind: "Reality check",
               title: "Send \(ideaTitle) to the panel?",
               whatHappens: "They'll research who already does this, weigh in from five angles, and hand you one real-world next step.",
-              duration: "Takes 1 to 3 minutes.")
+              duration: "Takes 1 to 3 minutes.",
+              allowance: allowance)
     }
 
     static let expand = Self(kind: "Expand",
@@ -107,7 +115,7 @@ extension AIConfirmSheet.Content {
 
     static let rescore = Self(kind: "Re-score",
                               title: "Re-score what this touches?",
-                              whatHappens: "What you wrote is already saved as verified by you. The panel re-reads the Library and re-scores only the criteria it touches, in a new version.",
-                              duration: "Takes one to two minutes.",
-                              sendTitle: "Send to the panel")
+                              whatHappens: "What you wrote is already saved as verified by you. The panelists score again from this idea's saved research and what you logged, and change only the criteria it touches, in a new version. Included: no check is used and nothing is searched again.",
+                              duration: "Takes under a minute.",
+                              sendTitle: "Send to the panel · Included")
 }

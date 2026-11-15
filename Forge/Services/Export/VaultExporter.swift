@@ -47,7 +47,12 @@ enum VaultExporter {
             },
             rounds: idea.rounds.sorted { $0.createdAt < $1.createdAt }.map(export),
             realityChecks: idea.realityChecks.sorted { $0.createdAt < $1.createdAt }.map(export),
-            project: idea.project.map(export)
+            project: idea.project.map(export),
+            titleEdited: idea.titleEdited,
+            proofMoves: idea.proofMoves.isEmpty ? nil : idea.proofMoves,
+            launchPlan: idea.launchPlan,
+            researchPacket: idea.researchPacket,
+            researchedAt: idea.researchedAt
         )
     }
 
@@ -72,8 +77,10 @@ enum VaultExporter {
                 CriterionScoreExport(
                     id: c.id, key: c.key, score: c.score, evidenceLevel: c.evidenceLevel,
                     note: c.note, peopleAtRung: c.peopleAtRung, aiProposed: c.aiProposed,
-                    evidence: c.evidence.sorted { $0.createdAt < $1.createdAt }.map(export))
+                    evidence: c.evidence.sorted { $0.createdAt < $1.createdAt }.map(export),
+                    deskLevel: c.deskLevel, deskSourceCount: c.deskSourceCount)
             },
+            estimateInputs: e.estimateInputs,
             experiment: e.experiment.map(export)
         )
     }
@@ -120,7 +127,7 @@ enum VaultExporter {
             id: rc.id, createdAt: rc.createdAt, verdict: rc.verdictRaw, summary: rc.summary,
             demandSignals: rc.demandSignals, gapMap: rc.gapMap, fitNotes: rc.fitNotes,
             limitsNote: rc.limitsNote, costEstimate: rc.costEstimate,
-            rationale: rc.rationale, actualCostUSD: rc.actualCostUSD, droppedFindings: rc.droppedFindings, draftedAssetSourceID: rc.draftedAssetSourceID,
+            rationale: rc.rationale, actualCostUSD: rc.actualCostUSD, droppedFindings: rc.droppedFindings, pivots: rc.pivots, wasFree: rc.wasFree, draftedAssetSourceID: rc.draftedAssetSourceID,
             sourceIDs: rc.sources.map(\.id),
             competitors: rc.competitors.map {
                 CompetitorExport(id: $0.id, name: $0.name, url: $0.url, pricing: $0.pricing, positioning: $0.positioning,
@@ -144,7 +151,8 @@ enum VaultExporter {
                                 })
             },
             nextStepCaveat: p.nextStepCaveat, nextStepTarget: p.nextStepTarget, nextStepCount: p.nextStepCount,
-            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves
+            nextStepDueAt: p.nextStepDueAt, nextStepMoves: p.nextStepMoves, nextStepCriterionKey: p.nextStepCriterionKey,
+            interviewQuestions: p.interviewQuestions, interviews: p.interviews.isEmpty ? nil : p.interviews
         )
     }
 
@@ -185,7 +193,7 @@ enum VaultExporter {
         df.dateStyle = .medium
         df.timeStyle = .short
 
-        out.append("# FORGE Vault")
+        out.append("# Hunch export")
         out.append("")
         out.append("Exported \(df.string(from: doc.exportedAt)). \(doc.ideas.count) \(doc.ideas.count == 1 ? "idea" : "ideas").")
         out.append("")
@@ -314,7 +322,7 @@ enum VaultExporter {
                             recordingsFrom recordingsDir: URL = RecordingStore.directory) throws -> URL {
         let stamp = DateFormatter()
         stamp.dateFormat = "yyyy-MM-dd HHmm"
-        let folder = parent.appendingPathComponent("FORGE Export \(stamp.string(from: doc.exportedAt))", isDirectory: true)
+        let folder = parent.appendingPathComponent("Hunch Export \(stamp.string(from: doc.exportedAt))", isDirectory: true)
         let fm = FileManager.default
         if fm.fileExists(atPath: folder.path) { try fm.removeItem(at: folder) }
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)

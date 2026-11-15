@@ -49,10 +49,19 @@ final class AppAttest {
     /// attesting first if this install has not yet.
     func proof(for body: Data, attestWith proxy: ProxyAIClient) async throws -> Proof {
         if service.isSupported {
-            let keyId = try await ensureAttested(with: proxy)
             let hash = Data(SHA256.hash(data: body))
-            let assertion = try await service.generateAssertion(keyId, clientDataHash: hash)
-            return .assertion(keyId: keyId, assertion: assertion.base64EncodedString())
+            let keyId = try await ensureAttested(with: proxy)
+            do {
+                let assertion = try await service.generateAssertion(keyId, clientDataHash: hash)
+                return .assertion(keyId: keyId, assertion: assertion.base64EncodedString())
+            } catch let error as DCError where error.code == .invalidKey || error.code == .invalidInput {
+                // The keychain outlives a delete-and-reinstall; the key in the Secure Enclave does not.
+                // The remembered key is gone, so make and attest a new one, once.
+                forget()
+                let fresh = try await ensureAttested(with: proxy)
+                let assertion = try await service.generateAssertion(fresh, clientDataHash: hash)
+                return .assertion(keyId: fresh, assertion: assertion.base64EncodedString())
+            }
         }
         guard DCDevice.current.isSupported else { throw Failure.unsupported }
         let token = try await DCDevice.current.generateToken()
@@ -79,8 +88,11 @@ final class AppAttest {
         let attestation: Data
         do {
             attestation = try await service.attestKey(keyId, clientDataHash: clientDataHash)
+        } catch let error as DCError where error.code == .serverUnavailable {
+            // Apple's attestation service is unreachable: keep the key and try again later.
+            throw AIError.offline
         } catch {
-            // A key Apple will no longer attest (for example after a restore) is replaced.
+            // A key Apple will no longer attest (for example after a restore or a reinstall) is replaced.
             keychain.remove("keyId")
             throw error
         }

@@ -1,33 +1,28 @@
 import Foundation
 import ForgeCore
 
-/// Brief v4.2 §2: Home, then one tab per track.
+/// Decision 0025: Home · Ideas · Journal; decision 0040 adds Sparks, every
+/// "What if…" the panel has offered, across all ideas.
 enum ForgeTab: String, Hashable, CaseIterable {
-    case home, idea, formation, reality
+    case home, ideas, sparks, plans, journal
 
     var title: String {
         switch self {
         case .home: "Home"
-        case .idea: Track.idea.displayName
-        case .formation: Track.formation.displayName
-        case .reality: Track.reality.displayName
+        case .ideas: "Ideas"
+        case .sparks: "Sparks"
+        case .plans: "Plans"
+        case .journal: "Journal"
         }
     }
 
     var symbol: String {
         switch self {
         case .home: "house"
-        case .idea: "lightbulb"
-        case .formation: "circle.hexagonpath"
-        case .reality: "hammer"
-        }
-    }
-
-    init(_ track: Track) {
-        switch track {
-        case .idea: self = .idea
-        case .formation: self = .formation
-        case .reality: self = .reality
+        case .ideas: "lightbulb"
+        case .sparks: "sparkles"
+        case .plans: "square.stack.3d.up"
+        case .journal: "book.closed"
         }
     }
 }
@@ -47,4 +42,19 @@ enum LabRoute: Hashable {
     case round(roundID: UUID)
     /// The criteria with their evidence, from the "What's riding on it" rings.
     case criteria(ideaID: UUID)
+    /// The full Brief, from "The panel's take" (decision 0023).
+    case brief(ideaID: UUID)
+    /// Decision 0041: the idea's launch plan.
+    case plan(ideaID: UUID)
+}
+
+/// An idea id a sheet can be driven by.
+struct IdeaRef: Identifiable, Hashable {
+    let id: UUID
+}
+
+/// How capture was asked for: typing, or straight into voice.
+enum CaptureRequest: String, Identifiable {
+    case text, voice
+    var id: String { rawValue }
 }

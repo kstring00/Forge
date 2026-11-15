@@ -48,6 +48,13 @@ struct IdeaExport: Codable {
     var rounds: [RoundExport]
     var realityChecks: [RealityCheckExport]
     var project: ProjectExport?
+    /// Optional so old exports import.
+    var titleEdited: Bool? = nil
+    var proofMoves: [ProofMove]? = nil
+    /// Decisions 0041, 0042. Optional so old exports import.
+    var launchPlan: LaunchPlan? = nil
+    var researchPacket: ResearchPacket? = nil
+    var researchedAt: Date? = nil
 }
 
 struct TriageExport: Codable {
@@ -90,6 +97,7 @@ struct EvaluationExport: Codable {
     var projectionEstimateHigh: Double?
     var projectionEstimateBasis: String?
     var criteria: [CriterionScoreExport]
+    var estimateInputs: ReturnInputs? = nil
     var experiment: ExperimentExport?
 }
 
@@ -102,6 +110,8 @@ struct CriterionScoreExport: Codable {
     var peopleAtRung: Int
     var aiProposed: Bool?
     var evidence: [EvidenceExport]
+    var deskLevel: Double? = nil
+    var deskSourceCount: Int? = nil
 }
 
 struct EvidenceExport: Codable {
@@ -209,6 +219,8 @@ struct RealityCheckExport: Codable {
     var rationale: String?
     var actualCostUSD: Double?
     var droppedFindings: Int?
+    var pivots: [PivotIdea]?
+    var wasFree: Bool?
     var draftedAssetSourceID: UUID?
     var sourceIDs: [UUID]
     var competitors: [CompetitorExport]
@@ -249,6 +261,10 @@ struct ProjectExport: Codable {
     var nextStepCount: Int?
     var nextStepDueAt: Date?
     var nextStepMoves: String?
+    var nextStepCriterionKey: String?
+    // Decision 0030. Optional so old exports import.
+    var interviewQuestions: [String]?
+    var interviews: [Interview]?
 }
 
 struct MilestoneExport: Codable {

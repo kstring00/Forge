@@ -33,12 +33,14 @@ function safeEqual(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-export async function requireDevice(req: VercelRequest, rawBody: Buffer): Promise<DeviceIdentity> {
+export async function requireDevice(req: VercelRequest, body: RawBody): Promise<DeviceIdentity> {
   const keyId = header(req, "X-Forge-Key-Id");
   const assertion = header(req, "X-Forge-Assertion");
   if (keyId && assertion) {
+    // A signature over the body can only be checked against the bytes that were sent.
+    if (!body.exact) throw new HttpError(500, "raw_body_unavailable", "The proxy could not read this request as it was sent, so it cannot check the device's signature.");
     try {
-      await verifyAssertion({ keyId, assertion, clientDataHash: createHash("sha256").update(rawBody).digest(), appID: config.appID });
+      await verifyAssertion({ keyId, assertion, clientDataHash: createHash("sha256").update(body.raw).digest(), appID: config.appID });
       return { id: keyId, door: "appattest" };
     } catch (err) {
       if (err instanceof AttestError) throw new HttpError(401, `attest_${err.code}`, err.message);
@@ -74,15 +76,46 @@ export async function requireDevice(req: VercelRequest, rawBody: Buffer): Promis
   throw new HttpError(401, "unauthorized", "This proxy serves the Hunch app only. No device proof was sent.");
 }
 
-/// The exact bytes of the body, which the assertion signs. Vercel's parser is
-/// turned off on the routes that need this.
-export async function readRawBody(req: VercelRequest): Promise<Buffer> {
-  if (Buffer.isBuffer(req.body)) return req.body;
-  if (typeof req.body === "string") return Buffer.from(req.body, "utf8");
-  if (req.body && typeof req.body === "object" && Object.keys(req.body).length) return Buffer.from(JSON.stringify(req.body), "utf8");
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-  return Buffer.concat(chunks);
+export interface RawBody {
+  raw: Buffer;
+  /// True when `raw` is the bytes as they arrived. False when only an
+  /// already-parsed body was available and it was written out again: good
+  /// enough to read, useless for checking a signature.
+  exact: boolean;
+}
+
+/// The body as it was sent, which the assertion signs.
+///
+/// On Vercel the Node runtime reads the body for its helpers and puts the
+/// bytes back on the request stream; `req.body` is a parsed copy, and writing
+/// that out again would not give the same bytes (key order, escaping). So the
+/// stream is read first. In-process callers (the bench, the tests, the local
+/// test server) pass a parsed body and no stream; they use developer tokens.
+export async function readRawBody(req: VercelRequest): Promise<RawBody> {
+  const streamed = await readStream(req);
+  if (streamed?.length) return { raw: streamed, exact: true };
+  const parsed = (req as { body?: unknown }).body;
+  if (Buffer.isBuffer(parsed)) return { raw: parsed, exact: true };
+  if (typeof parsed === "string") return { raw: Buffer.from(parsed, "utf8"), exact: true };
+  if (parsed && typeof parsed === "object") return { raw: Buffer.from(JSON.stringify(parsed), "utf8"), exact: false };
+  return { raw: streamed ?? Buffer.alloc(0), exact: true };
+}
+
+/// Reads "data" until "end": the two events Vercel's runtime serves the
+/// restored body through. Null when the request is not a stream, or when
+/// nothing arrives (a stream someone else already drained).
+function readStream(req: VercelRequest): Promise<Buffer | null> {
+  const r = req as unknown as { on?: (name: string, cb: (...a: unknown[]) => void) => unknown; readableEnded?: boolean };
+  if (typeof r.on !== "function") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = [];
+    let done = false;
+    const finish = (value: Buffer | null) => { if (!done) { done = true; clearTimeout(timer); resolve(value); } };
+    const timer = setTimeout(() => finish(chunks.length ? Buffer.concat(chunks) : null), 3000);
+    r.on!("data", (chunk) => { chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : (chunk as Buffer)); });
+    r.on!("end", () => finish(Buffer.concat(chunks)));
+    r.on!("error", () => finish(null));
+  });
 }
 
 export function parseJSONBody<T>(raw: Buffer): T {

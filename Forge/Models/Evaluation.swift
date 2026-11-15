@@ -45,6 +45,8 @@ public final class Evaluation {
     public var projectionEstimateLow: Double?
     public var projectionEstimateHigh: Double?
     public var projectionEstimateBasis: String?
+    /// Decision 0037: the Investor's bottom-up inputs (price × reachable × conversion).
+    public var estimateInputs: ReturnInputs?
 
     public var idea: Idea?
     @Relationship(deleteRule: .cascade, inverse: \CriterionScore.evaluation) public var criteria: [CriterionScore] = []
@@ -87,7 +89,7 @@ public final class Evaluation {
         guard !isFinal else { return }
         let ordered = lens.criteria.compactMap { criterionScore(for: $0.key) }
         potential = Scoring.potential(scores: ordered.map(\.score))
-        confidence = Scoring.confidence(evidenceLevels: ordered.map(\.evidenceLevel))
+        confidence = Scoring.confidence(levels: ordered.map(\.effectiveLevel))
         let scored = ordered.map {
             ScoredCriterion(key: $0.key, score: $0.score, evidenceLevel: $0.evidenceLevel, peopleAtRung: $0.peopleAtRung)
         }

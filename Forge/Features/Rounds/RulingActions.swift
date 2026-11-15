@@ -218,7 +218,7 @@ enum RulingActions {
             hypothesis: verdict.evidenceNeeded.map { "Finding out: \($0)" }
                 ?? "The \(verdict.sphere.displayName) is right that \(title.lowercased()) is \(verdict.kind.displayName.lowercased()): \(verdict.reason)",
             test: step.map { "\($0.title). \($0.body)" } ?? "Find one real person this applies to and ask about what they did last time.",
-            metric: next.map { "Reaching rung \($0.level) on \(title): \($0.label)" } ?? "What you saw people do, in their words",
+            metric: next.map { "Reaching proof level \($0.level) on \(title): \($0.label)" } ?? "What you saw people do, in their words",
             cost: "Your time",
             timeboxDays: 7,
             decisionRule: "If what you find holds, record it on the Brief with I know something you don't; if it doesn't, record that too.")

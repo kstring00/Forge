@@ -7,7 +7,9 @@ import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
 import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
 import { recordUsage, refuseIfResting, startCheck } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
+import { logCache } from "../lib/cachelog.js";
 import { researchSystem } from "../lib/prompts.js";
+import { buildPacket, cleanClaim, urlsIn, type ResearchPacket } from "../lib/packet.js";
 
 /// Desk research for a Reality Check, one model turn per HTTP call so each
 /// call stays inside the function time limit. The app loops while `status`
@@ -20,7 +22,7 @@ const ResearchRequest = z.object({
   messages: z.array(z.any()).optional(),
 });
 
-/// Dynamic filtering (the _20260209 tools) is documented for Opus and Sonnet;
+/// Dynamic filtering (the _20260209 tools) is documented for the larger models, not Haiku;
 /// Haiku gets the basic tools. Either way searches and fetches are capped, and
 /// each fetched page is cut to a token budget before the model reads it.
 export function researchTools(model: string): Anthropic.ToolUnion[] {
@@ -43,12 +45,15 @@ export interface ResearchSource {
   url: string;
   title: string;
   text: string;
-  kind: "fetched" | "searchHit";
+  kind: "fetched" | "searchHit" | "noted";
   retrievedAt: string | null;
 }
 
 export interface ResearchResponse {
   status: "done" | "paused";
+  /// The shared research packet, on the turn that finishes ("done"). Every
+  /// panelist and the Brief read it instead of searching again.
+  packet?: ResearchPacket;
   messages: Anthropic.MessageParam[];
   sources: ResearchSource[];
   notes: string;
@@ -57,17 +62,15 @@ export interface ResearchResponse {
   costUSD: number;
 }
 
-export const config_ = { api: { bodyParser: false } };
-export { config_ as config };
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     requireMethod(req, "POST");
-    const raw = await readRawBody(req);
-    const device = await requireDevice(req, raw);
+    // The device's assertion signs the exact bytes of the body.
+    const body = await readRawBody(req);
+    const device = await requireDevice(req, body);
     rateLimit();
 
-    const parsed = ResearchRequest.safeParse(parseJSONBody(raw));
+    const parsed = ResearchRequest.safeParse(parseJSONBody(body.raw));
     if (!parsed.success) throw new HttpError(400, "bad_request", "Request did not match the contract.");
     const { idea, advantages, constraints } = parsed.data;
     // An opening turn is a new Reality Check; continuations ride on it.
@@ -83,19 +86,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       system: [{ type: "text", text: researchSystem(), cache_control: { type: "ephemeral" } }],
       tools: researchTools(config.researchModel),
       output_config: { effort: "medium" },
+      // Top-level cache marker: each continuation turn re-sends the turns
+      // before it, so those are read from cache instead of paid again.
+      cache_control: { type: "ephemeral" },
       messages,
     }, { timeout: 110_000, maxRetries: 1 });
 
     if (response.stop_reason === "refusal") throw new HttpError(502, "refused", "The model declined this request.");
+    logCache("research", config.researchModel, response.usage);
 
-    const sources = extractSources(response.content);
     const notes = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n\n").trim();
+    const found = extractSources(response.content);
+    const sources = [...found, ...notedSources(notes, found)];
+    console.log(JSON.stringify({
+      at: "research",
+      fetched: found.filter((x) => x.kind === "fetched").length,
+      searchHits: found.filter((x) => x.kind === "searchHit").length,
+      noted: sources.length - found.length,
+    }));
     const u = response.usage;
     const out: ResearchResponse = {
       status: response.stop_reason === "pause_turn" ? "paused" : "done",
       messages: [...messages, { role: "assistant", content: response.content }],
       sources,
       notes,
+      packet: response.stop_reason === "pause_turn" ? undefined : buildPacket(notes, found),
       model: response.model,
       usage: {
         inputTokens: u.input_tokens,
@@ -152,6 +167,39 @@ export function extractSources(blocks: Anthropic.ContentBlock[]): ResearchSource
         }
       }
     }
+  }
+  return out;
+}
+
+/// The research notes end every claim with the URL it came from. Each URL the
+/// model did not fetch in full becomes its own source holding the claims made
+/// from it, so the panel can cite the page (a review site, a pricing page, a
+/// forum) instead of the notes, and the app can grade it by what kind of page
+/// it is. The text is the researcher's summary of the page, not the page.
+export function notedSources(notes: string, found: ResearchSource[]): ResearchSource[] {
+  const fetched = new Set(found.filter((f) => f.kind === "fetched").map((f) => f.url));
+  const hits = new Map(found.filter((f) => f.kind === "searchHit").map((f) => [f.url, f]));
+  const claims = new Map<string, string[]>();
+  for (const raw of notes.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const urls = urlsIn(line);
+    if (!urls.length) continue;
+    const claim = cleanClaim(line);
+    if (claim.length < 12) continue;
+    for (const url of urls) {
+      if (fetched.has(url)) continue;
+      const list = claims.get(url) ?? [];
+      list.push(claim);
+      claims.set(url, list);
+    }
+  }
+  const out: ResearchSource[] = [];
+  for (const [url, list] of claims) {
+    const hit = hits.get(url);
+    let host = url;
+    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { continue; }
+    out.push({ url, title: hit?.title || host, text: list.map((c) => `- ${c}`).join("\n"), kind: "noted", retrievedAt: hit?.retrievedAt ?? null });
   }
   return out;
 }

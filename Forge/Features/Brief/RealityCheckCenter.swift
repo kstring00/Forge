@@ -21,6 +21,8 @@ final class RealityCheckCenter {
     private(set) var failureDetails: [UUID: String] = [:]
 
     let proxy: ProxyAIClient?
+    /// Decision 0032: asked before a check starts, told when a Brief arrives.
+    weak var entitlements: (any EntitlementService)?
     private let defaults: UserDefaults
     static let failuresKey = "realityCheck.failures"
 
@@ -34,6 +36,14 @@ final class RealityCheckCenter {
 
     func failure(for ideaID: UUID) -> String? { failures[ideaID] }
 
+    /// The last check stopped for lack of a connection (Home's row says so).
+    /// Known for this launch; after a relaunch, read from the saved message.
+    private(set) var offlineFailures: Set<UUID> = []
+    func isOffline(_ ideaID: UUID) -> Bool {
+        guard let message = failures[ideaID] else { return false }
+        return offlineFailures.contains(ideaID) || message.contains("you're online") || message.contains("can't be reached")
+    }
+
     /// The user has read the error. The idea goes back to showing the button.
     func dismissFailure(_ ideaID: UUID) {
         failures[ideaID] = nil
@@ -46,9 +56,10 @@ final class RealityCheckCenter {
     func record(_ phase: RealityCheckRunner.Phase, for ideaID: UUID) {
         switch phase {
         case .failed(let m), .offline(let m), .stopped(let m):
+            if case .offline = phase { offlineFailures.insert(ideaID) } else { offlineFailures.remove(ideaID) }
             failures[ideaID] = m
             failureDetails[ideaID] = runners[ideaID]?.lastFailureDetail
-        case .done: failures[ideaID] = nil; failureDetails[ideaID] = nil; unseenBriefs.insert(ideaID)
+        case .done: failures[ideaID] = nil; failureDetails[ideaID] = nil; offlineFailures.remove(ideaID); unseenBriefs.insert(ideaID)
         default: break
         }
         saveFailures()
@@ -59,6 +70,13 @@ final class RealityCheckCenter {
     }
 
     var isConfigured: Bool { proxy != nil }
+
+    /// Checks running now; each holds its place against the allowance.
+    var runningCount: Int { runners.values.filter(\.isRunning).count }
+
+    static func outOfChecksLine(_ b: CheckBalance) -> String {
+        "You're out of checks for now, so the panel can't look into this one yet. \(b.resetsText). Everything else still works."
+    }
 
     func runner(for ideaID: UUID) -> RealityCheckRunner {
         if let r = runners[ideaID] { return r }
@@ -85,12 +103,21 @@ final class RealityCheckCenter {
         let ideaID = idea.id
         let r = runner(for: ideaID)
         guard !r.isRunning else { return }
+        if let e = entitlements, !e.canStartCheck(inFlight: runningCount) {
+            failures[ideaID] = Self.outOfChecksLine(e.balance)
+            saveFailures()
+            return
+        }
         focusIdeaID = ideaID
         failures[ideaID] = nil
         saveFailures()
         Task { @MainActor [weak self] in
             await r.start(on: idea, in: context, advantages: advantages, constraints: constraints)
             self?.record(r.phase, for: ideaID)
+            // Only a Brief that arrived is counted; failed and stopped runs never are.
+            if case .done = r.phase {
+                self?.entitlements?.commitCheck(wasFreeOnProxy: idea.latestRealityCheck?.wasFree == true)
+            }
         }
     }
 

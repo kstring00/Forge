@@ -7,6 +7,35 @@ import { dayKey, daysEnding, store } from "./store.js";
 const keepSeconds = 400 * 86_400;
 
 export const dayTotalsKey = (day: string) => `spend:${day}`;
+export const lifetimeKey = "spend:lifetime";
+
+export async function lifetimeSpendUSD(): Promise<number> {
+  return (await store().hash(lifetimeKey)).usd ?? 0;
+}
+
+/// Who was active each day, by tier, for the owner's dashboard. Kept 45 days.
+const activeKey = (day: string, tier: "free" | "paid") => `active:${day}:${tier}`;
+const knownDevicesKey = "devices:known";
+
+/// A real device made a call. Returns true the first time this device is ever seen.
+export async function noteDevice(deviceID: string, tier: "free" | "paid", day = dayKey()): Promise<boolean> {
+  const s = store();
+  await s.addToSet(activeKey(day, tier), deviceID, 45 * 86_400);
+  const fresh = await s.addToSet(knownDevicesKey, deviceID);
+  if (fresh) await s.incrField(dayTotalsKey(day), "newDevices", 1, keepSeconds);
+  return fresh;
+}
+
+export interface ActiveDevices { total: number; free: number; paid: number }
+
+/// Distinct devices active on any of `days`. A device that was paid on any of them counts as paid.
+export async function activeDevices(days: string[]): Promise<ActiveDevices> {
+  const s = store();
+  const [free, paid] = await Promise.all((["free", "paid"] as const).map(async (tier) =>
+    new Set((await Promise.all(days.map((d) => s.members(activeKey(d, tier))))).flat())));
+  const freeOnly = [...free].filter((id) => !paid.has(id)).length;
+  return { total: freeOnly + paid.size, free: freeOnly, paid: paid.size };
+}
 
 export interface DayTotals {
   day: string;
@@ -17,6 +46,8 @@ export interface DayTotals {
   calls: number;
   /// Dollars that went on checks themselves (research and the panel's take), not follow-ups.
   checkUSD: number;
+  /// Devices seen for the first time that day.
+  newDevices: number;
 }
 
 const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
@@ -28,7 +59,11 @@ export async function addToDay(fields: Record<string, number>, day = dayKey()): 
   for (const [field, by] of Object.entries(fields)) {
     if (!by) continue;
     const next = await s.incrField(dayTotalsKey(day), field, by, keepSeconds);
-    if (field === "usd") usd = next;
+    if (field === "usd") {
+      usd = next;
+      // Everything ever spent, so a credit balance set by hand can be counted down from.
+      await s.incrField(lifetimeKey, "usd", by);
+    }
   }
   return Number.isNaN(usd) ? (await s.hash(dayTotalsKey(day))).usd ?? 0 : usd;
 }
@@ -46,6 +81,7 @@ export async function dayTotals(day: string): Promise<DayTotals> {
     freeFirstChecks: h.freeFirstChecks ?? 0,
     calls: h.calls ?? 0,
     checkUSD: round4(h.checkUSD ?? 0),
+    newDevices: h.newDevices ?? 0,
   };
 }
 

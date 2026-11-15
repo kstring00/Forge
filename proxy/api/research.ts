@@ -135,7 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       costUSD: round4(costUSD(config.researchModel, u)),
     };
-    await recordUsage(device, "research", out.costUSD);
+    await recordUsage(device, "research", out.costUSD, parsed.data.plan);
     res.status(200).json(out);
   } catch (err) {
     sendError(res, err, "research");

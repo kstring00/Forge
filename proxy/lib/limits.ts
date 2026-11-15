@@ -7,7 +7,8 @@
 // emailed once when a day reaches each mark.
 import { config } from "./env.js";
 import { sendOwnerEmail } from "./email.js";
-import { addToDay, dayTotalsKey, isCheckAction } from "./ledger.js";
+import { addToDay, dayTotalsKey, isCheckAction, noteDevice } from "./ledger.js";
+import { checkCreditAlerts } from "./credit.js";
 import { HttpError } from "./http.js";
 import { dayKey, secondsUntilTomorrow, store } from "./store.js";
 import type { DeviceIdentity } from "./auth.js";
@@ -116,7 +117,7 @@ export async function refuseIfResting(tier: Tier = "paid", startingCheck = false
 
 /// After a call: what it cost, on the device and on the day. Emails the owner
 /// the first time a day's spend reaches each mark.
-export async function recordUsage(device: DeviceIdentity, action: string, costUSD: number): Promise<void> {
+export async function recordUsage(device: DeviceIdentity, action: string, costUSD: number, plan?: Plan): Promise<void> {
   const s = store();
   const key = usageKey(device);
   await s.incrField(key, "calls", 1, ttl());
@@ -125,7 +126,12 @@ export async function recordUsage(device: DeviceIdentity, action: string, costUS
   const after = await addToDay({ calls: 1, usd: costUSD > 0 ? costUSD : 0, checkUSD: costUSD > 0 && isCheckAction(action) ? costUSD : 0 });
   await s.set(`device:seen:${device.id}`, { door: device.door, at: new Date().toISOString() });
   console.log(JSON.stringify({ at: "usage", device: device.id, door: device.door, action, costUSD }));
-  if (costUSD > 0) await alertOnCrossing(after - costUSD, after);
+  // The owner's own builds are not "devices" on the dashboard; their spend still counts.
+  if (device.door !== "dev") await noteDevice(device.id, tierOf(device, plan));
+  if (costUSD > 0) {
+    await alertOnCrossing(after - costUSD, after);
+    await checkCreditAlerts();
+  }
 }
 
 const money = (n: number) => `$${n.toFixed(2)}`;

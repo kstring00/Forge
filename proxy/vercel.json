@@ -6,10 +6,12 @@
     "api/health.ts": { "maxDuration": 10, "memory": 1024 },
     "api/attest.ts": { "maxDuration": 30, "memory": 1024 },
     "api/usage.ts": { "maxDuration": 10, "memory": 1024 },
-    "api/spend.ts": { "maxDuration": 10, "memory": 1024 }
+    "api/spend.ts": { "maxDuration": 10, "memory": 1024 },
+    "api/owner.ts": { "maxDuration": 15, "memory": 1024 }
   },
   "rewrites": [
-    { "source": "/", "destination": "/api/health" }
+    { "source": "/", "destination": "/api/health" },
+    { "source": "/owner", "destination": "/api/owner" }
   ],
   "headers": [
     { "source": "/api/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }

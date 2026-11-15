@@ -59,6 +59,8 @@ evidence rules server-side, and runs desk research for Reality Checks.
   Actions: expand, summarize, explainCriterion, designExperiment, nextStep, plan, compare,
   pivot, pitch, runRound, realityCheck, prefill. Payload shapes are in `lib/schemas.ts`
   and mirrored in `Forge/Services/AI/AIContracts.swift`.
+- `GET /owner` — the owner's dashboard (decision 0046): sign in with the owner's secret. `GET /owner?format=json`
+  with the secret as a bearer token returns the same numbers.
 - `GET /api/spend` — the owner's spend numbers (owner's secret as a bearer token).
 - `GET /api/usage?day=YYYY-MM-DD` — every device's calls and spend that day (owner's secret).
 - `POST /api/attest` — how a device registers its App Attest key (decision 0021).

@@ -18,6 +18,9 @@ export interface Store {
   hash(key: string): Promise<Record<string, number>>;
   /// Keys matching a prefix (small sets only: a day's devices).
   keys(prefix: string): Promise<string[]>;
+  /// Adds a member to a set. True when it was not there before.
+  addToSet(key: string, member: string, ttlSeconds?: number): Promise<boolean>;
+  members(key: string): Promise<string[]>;
 }
 
 class MemoryStore implements Store {
@@ -55,6 +58,15 @@ class MemoryStore implements Store {
   async keys(prefix: string): Promise<string[]> {
     return [...this.values.keys(), ...this.hashes.keys()].filter((k) => k.startsWith(prefix));
   }
+  private sets = new Map<string, { members: Set<string>; expires: number | null }>();
+  async addToSet(key: string, member: string, ttlSeconds?: number): Promise<boolean> {
+    let s = this.live(this.sets, key);
+    if (!s) { s = { members: new Set(), expires: ttlSeconds ? Date.now() + ttlSeconds * 1000 : null }; this.sets.set(key, s); }
+    const fresh = !s.members.has(member);
+    s.members.add(member);
+    return fresh;
+  }
+  async members(key: string): Promise<string[]> { return [...(this.live(this.sets, key)?.members ?? [])]; }
 }
 
 class RedisStore implements Store {
@@ -88,6 +100,12 @@ class RedisStore implements Store {
     } while (cursor !== "0");
     return out;
   }
+  async addToSet(key: string, member: string, ttlSeconds?: number): Promise<boolean> {
+    const added = await this.redis.sadd(key, member);
+    if (ttlSeconds) await this.redis.expire(key, ttlSeconds);
+    return Number(added) > 0;
+  }
+  async members(key: string): Promise<string[]> { return ((await this.redis.smembers(key)) ?? []).map(String); }
 }
 
 let shared: Store | null = null;

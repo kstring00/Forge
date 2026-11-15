@@ -152,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const fallback = modes.find((m) => m !== "structured");
     if (fallback) res.setHeader("X-Forge-Mode", fallback === "jsonRetry" ? "json-retry" : "json-fallback");
     if (Object.keys(dropped).length) console.warn(JSON.stringify({ at: `action.${action}`, dropped }));
-    await recordUsage(device, action, envelope.costUSD);
+    await recordUsage(device, action, envelope.costUSD, parsed.data.plan);
     res.status(200).json(envelope);
   } catch (err) {
     sendError(res, err, "action");

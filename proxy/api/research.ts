@@ -51,6 +51,8 @@ export interface ResearchSource {
 
 export interface ResearchResponse {
   status: "done" | "paused";
+  /// Decision 0027: true on the opening turn of a device's free first check.
+  freeCheck: boolean;
   /// The shared research packet, on the turn that finishes ("done"). Every
   /// panelist and the Brief read it instead of searching again.
   packet?: ResearchPacket;
@@ -73,8 +75,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const parsed = ResearchRequest.safeParse(parseJSONBody(body.raw));
     if (!parsed.success) throw new HttpError(400, "bad_request", "Request did not match the contract.");
     const { idea, advantages, constraints } = parsed.data;
-    // An opening turn is a new Reality Check; continuations ride on it.
-    if (parsed.data.messages?.length) await refuseIfResting(); else await startCheck(device);
+    // An opening turn is a new Reality Check; continuations ride on it. The
+    // app sends its DeviceCheck token with the opening turn so the free first
+    // check is remembered per device, not per install.
+    let freeCheck = false;
+    if (parsed.data.messages?.length) {
+      await refuseIfResting();
+    } else {
+      const h = req.headers["x-forge-device-token"];
+      const deviceToken = (Array.isArray(h) ? h[0] : h)?.trim() || null;
+      freeCheck = (await startCheck(device, device.door === "appattest" ? deviceToken : null)).free;
+    }
 
     const messages: Anthropic.MessageParam[] = parsed.data.messages?.length
       ? (parsed.data.messages as Anthropic.MessageParam[])
@@ -107,6 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const u = response.usage;
     const out: ResearchResponse = {
       status: response.stop_reason === "pause_turn" ? "paused" : "done",
+      freeCheck,
       messages: [...messages, { role: "assistant", content: response.content }],
       sources,
       notes,

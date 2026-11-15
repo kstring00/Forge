@@ -65,6 +65,9 @@ evidence rules server-side, and runs desk research for Reality Checks.
 
 ## Who may call it (decision 0021)
 
+The first Reality Check on a device is free and counts against no allowance (decision 0027). With a DeviceCheck key configured it is remembered in Apple's per-device bits, so a reinstall does not reset it; otherwise the store remembers by device id. `GET /api/usage` lists `freeChecks` per device.
+
+
 No shared secret ships in the app. A release build proves it is a genuine copy of
 Hunch with **App Attest**: once per install the app sends an attestation object for a
 Secure Enclave key to `POST /api/attest` (after fetching a one-time challenge from the

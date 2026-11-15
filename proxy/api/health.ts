@@ -36,6 +36,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         store: store().kind,
         checksPerDevicePerDay: config.checksPerDevicePerDay,
         dailySpendUSD: config.dailySpendUSD,
+        freeTierShare: config.freeTierShare,
+        alertEmail: Boolean(config.resendApiKey),
+        ownerSecret: Boolean(config.ownerSecret),
       },
     });
   } catch (err) {

@@ -111,13 +111,29 @@ export function useMemoryStore(): Store {
   return shared;
 }
 
-/// "2026-11-08" in UTC: the day usage and ceilings roll over.
-export function dayKey(d: Date = new Date()): string {
-  return d.toISOString().slice(0, 10);
+/// Where "today" and "tomorrow" are decided for ceilings and usage. A day
+/// that rolled over at UTC midnight would reset at 6 or 7 in the evening in
+/// Texas, and "resting until tomorrow" would be wrong for the people reading it.
+export function dayTimeZone(): string {
+  const tz = (process.env.FORGE_DAY_TIMEZONE ?? "").trim() || "America/Chicago";
+  try { new Intl.DateTimeFormat("en-CA", { timeZone: tz }); return tz; } catch { return "America/Chicago"; }
 }
 
-/// Seconds until the next UTC midnight, for daily keys' TTL (plus a day of slack for the admin view).
+/// "2026-11-08" in the day's time zone: when usage and ceilings roll over.
+export function dayKey(d: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: dayTimeZone(), year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+/// Seconds until the next midnight in the day's time zone, for daily keys' TTL.
 export function secondsUntilTomorrow(d: Date = new Date()): number {
-  const next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
-  return Math.max(60, Math.floor((next - d.getTime()) / 1000));
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: dayTimeZone(), hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const n = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return Math.max(60, 86_400 - (n("hour") * 3600 + n("minute") * 60 + n("second")));
+}
+
+/// The `count` days ending on `last` ("2026-11-08"), oldest first. Calendar arithmetic only.
+export function daysEnding(last: string, count: number): string[] {
+  const [y, m, d] = last.split("-").map(Number);
+  return Array.from({ length: Math.max(0, count) }, (_, i) =>
+    new Date(Date.UTC(y, m - 1, d - (count - 1 - i))).toISOString().slice(0, 10));
 }

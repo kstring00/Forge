@@ -19,6 +19,10 @@ struct SettingsView: View {
     @AppStorage(QuotesPreference.key) private var quotesRaw: String = QuotesSetting.all.rawValue
     @AppStorage(PanelMemory.noteKey) private var panelNote: String = ""
     @State private var editingNote = false
+    /// Decision 0046: the owner's key opens Settings → Spend. Entered once, by a long press on Version.
+    @State private var hasOwnerKey = OwnerAccess.hasKey
+    @State private var enteringOwnerKey = false
+    @State private var ownerKeyDraft = ""
     @State private var noteDraft = ""
     @AppStorage(AIConsent.storageKey) private var consentStamp: Double = 0
     @AppStorage(AISpend.ceilingKey) private var ceiling: Double = AISpend.defaultCeiling
@@ -164,6 +168,11 @@ struct SettingsView: View {
                 Button { sendFeedback() } label: { Label("Send feedback", systemImage: "envelope") }
                 Button { openURL(LegalLinks.terms) } label: { Label("Terms of use", systemImage: "doc.text") }
                 LabeledContent("Version", value: Self.versionString)
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 1.5) { ownerKeyDraft = ""; enteringOwnerKey = true }
+                if hasOwnerKey {
+                    NavigationLink { SpendView() } label: { Label("Spend", systemImage: "dollarsign.circle") }
+                }
             } header: {
                 Text("About")
             } footer: {
@@ -212,6 +221,25 @@ struct SettingsView: View {
         }
         .scrollContentBackground(.hidden)
         .background(ForgeColor.canvas)
+        .alert("Owner key", isPresented: $enteringOwnerKey) {
+            SecureField("Paste the key", text: $ownerKeyDraft)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            Button("Save") {
+                OwnerAccess.save(ownerKeyDraft)
+                hasOwnerKey = OwnerAccess.hasKey
+                ownerKeyDraft = ""
+            }
+            if hasOwnerKey {
+                Button("Remove the key", role: .destructive) {
+                    OwnerAccess.remove()
+                    hasOwnerKey = false
+                }
+            }
+            Button("Cancel", role: .cancel) { ownerKeyDraft = "" }
+        } message: {
+            Text("For the app's owner only. It shows what the server has spent. The key stays on this phone.")
+        }
         .navigationTitle("Settings")
         .manageSubscriptionsSheet(isPresented: $managingSubscription)
         .sheet(isPresented: $showingPrivacy) { PrivacySummarySheet() }

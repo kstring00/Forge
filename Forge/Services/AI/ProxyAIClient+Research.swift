@@ -32,12 +32,14 @@ extension ProxyAIClient {
         let advantages: [String]
         let constraints: [String]
         let messages: [JSONValue]?
+        /// Decision 0046: "free", "plus" or "pro", for the proxy's spend rules.
+        let plan: String
     }
 
     func research(ideaID: UUID, title: String, originalText: String,
                   advantages: [String], constraints: [String], messages: [JSONValue]?) async throws -> ResearchResponse {
         let body = ResearchRequest(idea: .init(id: ideaID, title: title, originalText: originalText),
-                                   advantages: advantages, constraints: constraints, messages: messages)
+                                   advantages: advantages, constraints: constraints, messages: messages, plan: PlanSignal.current())
         let data = try await post(path: "api/research", body: body, timeout: 125, withDeviceToken: messages == nil)
         do {
             return try JSONDecoder().decode(ResearchResponse.self, from: data)

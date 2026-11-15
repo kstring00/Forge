@@ -10,7 +10,7 @@ process.env.FORGE_PROXY_TOKEN = "dev-token-0123456789abcdef";
 process.env.FORGE_CHECKS_PER_DEVICE_PER_DAY = "2";
 process.env.FORGE_DAILY_SPEND_USD = "1";
 
-const { useMemoryStore } = await import("../lib/store.js");
+const { useMemoryStore, dayKey } = await import("../lib/store.js");
 const { parseAuthenticatorData, saveKey, sha256, verifyAssertion, uncompressedPoint, nonceFromCertificate } = await import("../lib/attest.js");
 const { startCheck, recordUsage, refuseIfResting, usageFor } = await import("../lib/limits.js");
 const { requireDevice } = await import("../lib/auth.js");
@@ -92,7 +92,7 @@ test("the first check on a device is free and counts against nothing; then the a
   assert.deepEqual(await startCheck(device), { free: false }, "the free check is spent for good");
   assert.deepEqual(await startCheck(device), { free: false });
   await assert.rejects(startCheck(device), (e: unknown) => e instanceof HttpError && e.status === 429 && e.code === "device_limit" && /resting until tomorrow/.test(e.message));
-  const usage = await usageFor(new Date().toISOString().slice(0, 10));
+  const usage = await usageFor(dayKey());
   assert.equal(usage.devices[0].freeChecks, 1);
   assert.equal(usage.devices[0].checks, 2, "the free one is not among the counted checks");
   // Developer tokens are neither free nor limited.
@@ -112,7 +112,7 @@ test("per-device checks and the daily spend ceiling fail politely", async () => 
   await recordUsage(device, "research", 0.6);
   await recordUsage(device, "prefill", 0.5);
   await assert.rejects(refuseIfResting(), (e: unknown) => e instanceof HttpError && e.code === "panel_resting");
-  const usage = await usageFor(new Date().toISOString().slice(0, 10));
+  const usage = await usageFor(dayKey());
   assert.equal(usage.spendUSD, 1.1);
   assert.equal(usage.devices[0].id, "key-1");
   assert.equal(usage.devices[0].checks, 2);

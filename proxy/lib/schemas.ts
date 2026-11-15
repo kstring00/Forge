@@ -67,6 +67,8 @@ export const ActionRequest = z.object({
   action: z.enum(actions),
   context: AIContext,
   options: z.record(z.string(), z.unknown()).optional(),
+  /// The plan the app is on, for the spend rules. Absent from older apps: free.
+  plan: z.enum(["free", "plus", "pro"]).optional(),
 });
 
 // Payloads. Optional fields are nullable (structured outputs require every

@@ -33,6 +33,8 @@ struct ProxyAIClient: AIClient {
         let action: String
         let context: C
         let options: [String: String]?
+        /// Decision 0046: "free", "plus" or "pro", for the proxy's spend rules.
+        let plan: String
     }
 
     private struct ErrorBody: Decodable {
@@ -49,7 +51,7 @@ struct ProxyAIClient: AIClient {
     func perform<Payload: Codable & Sendable>(
         _ action: AIAction, context: AIContext, options: [String: String]?, expecting: Payload.Type
     ) async throws -> AIEnvelope<Payload> {
-        let body = ActionRequest(action: action.rawValue, context: context, options: options)
+        let body = ActionRequest(action: action.rawValue, context: context, options: options, plan: PlanSignal.current())
         // The proxy allows an action up to 300 s (vercel.json); a prefill can take minutes.
         let data = try await post(path: "api/action", body: body, timeout: 290)
         do {

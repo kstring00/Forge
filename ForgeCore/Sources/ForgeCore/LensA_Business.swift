@@ -88,7 +88,7 @@ public enum LensA {
                 worth: "Nothing. It is just not evidence."),
             LadderRung(1, "People said it's a good idea",
                 description: "Compliments are what people give when they want the conversation to end pleasantly.",
-                worth: "Nothing. FORGE will say so plainly. Count them, then set them aside."),
+                worth: "Nothing. Hunch will say so plainly. Count them, then set them aside."),
             LadderRung(2, "People described the problem, or already pay for a workaround",
                 description: "Someone volunteered the pain before you mentioned your idea, or you can point to money or hours they already spend on a clumsy fix.",
                 worth: "The first real rung. This proves the problem is real. It does not yet prove they want your solution."),

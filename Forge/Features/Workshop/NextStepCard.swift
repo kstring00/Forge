@@ -4,7 +4,7 @@ import ForgeCore
 
 /// The next-step card, the same wherever it appears. The step in sans, never
 /// display serif; one 13 pt muted caveat; progress segments; the due date;
-/// Questions (the drafted asset) and Log a conversation.
+/// Questions (the interview sheet, decision 0030) and Log a conversation.
 ///
 /// On Home ("Home · leveled up") it is the next-move card: a 3 pt gradient top
 /// edge, the idea's title in serif, the step in 16 pt, full-width segments,
@@ -19,16 +19,28 @@ struct NextStepCard: View {
     var label = "Your next step"
     /// Shown in the top right beside the due date: "Reality".
     var context: String? = nil
+    /// The project page records "What happened?" itself (it settles rulings after); elsewhere the card does.
+    var onStepDone: (() -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
     @State private var logging = false
-    @State private var showingAsset = false
+    @State private var reporting = false
+    /// One sheet for interviews: the current draft, or a past one to read.
+    @State private var interview: InterviewRoute?
+
+    enum InterviewRoute: Identifiable {
+        case current
+        case read(Interview)
+        var id: String {
+            switch self {
+            case .current: "current"
+            case .read(let i): i.id.uuidString
+            }
+        }
+    }
 
     private var idea: Idea? { project.idea }
     private var evaluation: Evaluation? { idea?.latestEvaluation }
-    private var asset: Source? {
-        idea?.latestRealityCheck?.draftedAssetSourceID.flatMap { id in idea?.sources.first { $0.id == id } }
-    }
     private var target: Int { project.effectiveTarget }
     private var count: Int { min(project.nextStepCount, target) }
     private var overdue: Bool { project.nextStepDueAt.map { $0 < .now } ?? false }
@@ -37,31 +49,41 @@ struct NextStepCard: View {
         if let step = project.nextStep {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(label).forgeLabel().foregroundStyle(ForgeColor.emberText)
+                    Text(label).forgeLabel()
                     Spacer()
-                    Text(topRight).forgeLabel().foregroundStyle(overdue ? ForgeColor.emberText : ForgeColor.inkSecondary)
+                    Text(topRight).forgeLabel().foregroundStyle(overdue ? ForgeColor.ink : ForgeColor.inkSecondary)
                 }
                 if style == .home, let idea {
-                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                    // Decision 0025: the card opens what the panel said. The Brief when there is one, else the step.
+                    Group {
+                        if idea.latestRealityCheck != nil {
+                            NavigationLink(value: LabRoute.brief(ideaID: idea.id)) { homeHeading(idea, step) }
+                        } else {
+                            NavigationLink(value: WorkshopRoute.project(project.id)) { homeHeading(idea, step) }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(step)
+                        .font(.system(.body, weight: .medium))
+                        .foregroundStyle(ForgeColor.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(step)
-                    .font(.system(size: style == .home ? 16 : 17, weight: .medium))
-                    .foregroundStyle(ForgeColor.ink)
-                    .fixedSize(horizontal: false, vertical: true)
                 if let caveat = project.nextStepCaveat, style == .page {
                     Text(caveat)
-                        .font(.system(size: 13))
+                        .font(.system(.footnote))
                         .foregroundStyle(ForgeColor.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 progress
                 if style == .home, let evaluation { StakesPanel(evaluation: evaluation, project: project) }
                 buttons
+                if style == .page { pastInterviews }
             }
             .padding(ForgeSpacing.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
+            .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
             .overlay(alignment: .top) {
                 if style == .home {
                     // The 3 pt gradient top edge.
@@ -73,15 +95,66 @@ struct NextStepCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
             .sheet(isPresented: $logging) {
-                OutcomeSheet(title: "Log a conversation", subject: step, prompt: "What did they say or do?",
-                             footnote: "One conversation. It counts toward \(target) and lands in the Journal next to what you expected.") { happened, _ in
-                    WorkshopActions.logConversation(project, whatHappened: happened, in: modelContext)
+                QuickLogSheet(project: project)
+            }
+            .sheet(isPresented: $reporting) {
+                WhatHappenedSheet(project: project)
+            }
+            .sheet(item: $interview) { route in
+                switch route {
+                case .current: InterviewSheet(project: project)
+                case .read(let i): InterviewSheet(project: project, readOnly: i)
                 }
             }
-            .sheet(isPresented: $showingAsset) {
-                if let asset { DraftedAssetSheet(source: asset) }
+        }
+    }
+
+    /// Decision 0030: finished interviews, newest first, under the step.
+    @ViewBuilder
+    private var pastInterviews: some View {
+        let done = project.interviews.filter { !$0.isDraft }.sorted { $0.updatedAt > $1.updatedAt }
+        if !done.isEmpty {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+                Text("Conversations · \(done.count)").forgeLabel()
+                ForEach(done) { i in
+                    Button { interview = .read(i) } label: {
+                        HStack(spacing: ForgeSpacing.s) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(i.headline).font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink).lineLimit(2)
+                                Text("\(i.answeredCount) of \(i.answers.count) answered · \(i.updatedAt.formatted(date: .abbreviated, time: .omitted))\(i.rung.map { " · \(RungInference.label($0))" } ?? "")")
+                                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                        }
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the conversation")
+                }
+            }
+            .padding(.top, 4)
+        }
+    }
+
+    /// Home: the idea, the step, and the way to the panel's take and its What-ifs.
+    private func homeHeading(_ idea: Idea, _ step: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
+            IdeaSubtitle(idea: idea)
+            Text(step)
+                .font(.system(.body, weight: .medium))
+                .foregroundStyle(ForgeColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 4) {
+                Text(idea.latestRealityCheck.map { "See the panel's take · \($0.verdict.displayName)" } ?? "Open the step")
+                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.inkSecondary)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     private var topRight: String {
@@ -93,60 +166,68 @@ struct NextStepCard: View {
         return parts.joined(separator: " · ")
     }
 
+    /// The count stays on one line; what counts as a conversation is a
+    /// sentence of its own underneath, so it wraps instead of widening the page.
     private var progress: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 4) {
-                ForEach(0..<min(target, 12), id: \.self) { i in
-                    Capsule()
-                        .fill(i < count ? ForgeColor.ember : ForgeColor.line)
-                        .frame(maxWidth: style == .home ? .infinity : nil)
-                        .frame(width: style == .home ? nil : (target > 6 ? 10 : 22), height: 5)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                HStack(spacing: 4) {
+                    ForEach(0..<min(target, 12), id: \.self) { i in
+                        Capsule()
+                            .fill(i < count ? ForgeColor.ink : ForgeColor.line)
+                            .frame(maxWidth: style == .home ? .infinity : nil)
+                            .frame(width: style == .home ? nil : (target > 6 ? 10 : 22), height: 5)
+                    }
                 }
+                Text("\(count) of \(target)").forgeLabelSmall().lineLimit(1).fixedSize()
             }
-            Text(progressLine).forgeLabelSmall().lineLimit(1).fixedSize()
+            if style == .page, let moves = project.nextStepMoves {
+                Text("Counts: \(moves)")
+                    .font(.system(.footnote))
+                    .foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(count) of \(target) logged")
+        .accessibilityLabel("\(count) of \(target) logged" + (style == .page ? project.nextStepMoves.map { ". Counts: \($0)" } ?? "" : ""))
     }
 
-    private var progressLine: String {
-        var parts = ["\(count) of \(target)"]
-        if let moves = project.nextStepMoves, style == .page { parts.append(moves) }
-        return parts.joined(separator: " · ")
-    }
-
+    /// Decision 0036: one primary (orange, full width, 44 pt) from the step's state; the rest outlined and neutral.
+    @ViewBuilder
     private var buttons: some View {
-        HStack(spacing: 10) {
-            if asset != nil {
-                Button { showingAsset = true } label: {
-                    Text("Questions")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(ForgeColor.ink)
-                        .padding(.horizontal, 18).frame(height: 48)
-                        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
+        if project.status == .active {
+            let reached = WorkshopActions.targetReached(project)
+            VStack(spacing: 8) {
+                if reached {
+                    Button { stepDone() } label: { PrimaryButtonLabel(title: CardAction.whatHappened.title) }
+                        .buttonStyle(.plain)
+                } else {
+                    Button { logging = true } label: { PrimaryButtonLabel(title: CardAction.log(count: count, target: target).title) }
+                        .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Opens the drafted questions or script")
+                HStack(spacing: 8) {
+                    Button { interview = .current } label: {
+                        SecondaryButtonLabel(title: project.interviews.contains(where: \.isDraft) ? "Resume the interview" : "Questions")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the interview: who you talked to, then each question with room to answer")
+                    if reached {
+                        Button { logging = true } label: { SecondaryButtonLabel(title: "Log another") }
+                            .buttonStyle(.plain)
+                    }
+                }
             }
-            Button { logging = true } label: {
-                Text("Log a conversation")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).frame(height: 48)
-                    .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(project.status != .active)
         }
+    }
+
+    private func stepDone() {
+        if let onStepDone { onStepDone() } else { reporting = true }
     }
 }
 
-/// "What's riding on it": Potential and Confidence at 56 pt with their names,
-/// the Est. return row (the user's figure, or the Investor's range with its
-/// basis) with the verified-vs-estimate bar on Business ideas or the Impact
-/// row on Growth and Creative, and one line tying the step to the evidence it
-/// raises. Hidden when there is no evaluation.
+/// "What's riding on it": three equal columns (Potential, Proof, Est. return)
+/// split by hairlines, every label free to wrap, then the line tying the step
+/// to the evidence it raises, in serif. Hidden when there is no evaluation.
 struct StakesPanel: View {
     let evaluation: Evaluation
     let project: Project
@@ -154,48 +235,86 @@ struct StakesPanel: View {
     private var idea: Idea? { project.idea }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("What's riding on it").forgeLabelSmall()
-            HStack(alignment: .top, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("What's riding on it").forgeLabel()
+            // Three equal columns. Every label wraps instead of cutting off.
+            HStack(alignment: .top, spacing: 0) {
                 if let idea {
                     NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) {
-                        HStack(spacing: 14) {
-                            smallRing(evaluation.potential, "Potential", ForgeColor.ink)
-                            smallRing(evaluation.confidence, "Confidence", ForgeColor.ember)
-                        }
+                        ring(evaluation.potential, label: "Potential", sub: "\(PotentialWord.word(evaluation.potential)) · panel's view")
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens the criteria with their evidence")
+                    divider
+                    NavigationLink(value: LabRoute.criteria(ideaID: idea.id)) { proof(idea) }
+                        .buttonStyle(.plain)
+                    divider
                 }
-                VStack(alignment: .trailing, spacing: 6) {
-                    if let idea { EstimatedReturnRow(idea: idea, compact: false, alignment: .trailing) }
+                VStack(spacing: 10) {
+                    if let idea { EstimatedReturnRow(idea: idea, compact: false) }
                     if evaluation.lensType == .business { bar(verified: evaluation.projection.verifiedFraction) }
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 4)
             }
-            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves))
-                .font(.system(size: 13)).foregroundStyle(ForgeColor.ink.opacity(0.85))
+            Rectangle().fill(ForgeColor.line).frame(height: 1)
+            Text(NextStepPlan.ridingLine(confidence: evaluation.confidence, target: project.effectiveTarget, moves: project.nextStepMoves,
+                                         hasProof: idea.map { ProofStage.of($0).showsNumber } ?? false))
+                .font(Font.custom("Fraunces-Regular", size: 18, relativeTo: .body))
+                .foregroundStyle(ForgeColor.ink)
+                .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
-        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(ForgeColor.line))
+        .padding(18)
+        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(ForgeColor.line))
     }
 
-    private func smallRing(_ value: Int, _ name: String, _ tint: Color) -> some View {
-        VStack(spacing: 4) {
-            ZStack {
-                Circle().stroke(ForgeColor.line, lineWidth: 4)
-                Circle().trim(from: 0, to: Double(min(max(value, 0), 100)) / 100)
-                    .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                Text("\(value)").font(ForgeType.numeralSmall).foregroundStyle(ForgeColor.ink).monospacedDigit()
+    private var divider: some View {
+        Rectangle().fill(ForgeColor.line).frame(width: 1).frame(minHeight: 96).padding(.vertical, 4)
+    }
+
+    /// Proof: a ring once a person has brought something back, the
+    /// magnifier while it is only online research.
+    @ViewBuilder
+    private func proof(_ idea: Idea) -> some View {
+        let stage = ProofStage.of(idea)
+        if stage.showsNumber {
+            ring(evaluation.confidence, label: "Proof", sub: stage.cardWord)
+        } else {
+            column {
+                Image(systemName: "doc.text.magnifyingglass").font(.system(size: 30, weight: .light))
+                    .foregroundStyle(ForgeColor.ink).frame(width: 64, height: 64)
+            } label: {
+                Text("Not tested yet").forgeLabelSmall().foregroundStyle(ForgeColor.ink)
             }
-            .frame(width: 56, height: 56)
-            Text(name).forgeLabelSmall()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Proof: not tested with people yet")
+        }
+    }
+
+    private func ring(_ value: Int, label: String, sub: String) -> some View {
+        column {
+            ScoreRing(value: value, size: 64)
+        } label: {
+            Text(label).forgeLabelSmall().foregroundStyle(ForgeColor.ink)
+            Text(sub).forgeLabelSmall()
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name) \(value) out of 100")
+        .accessibilityLabel("\(label) \(value) out of 100, \(sub)")
+    }
+
+    /// A centred column: the figure, then its label lines, wrapping.
+    private func column<F: View, L: View>(@ViewBuilder figure: () -> F, @ViewBuilder label: () -> L) -> some View {
+        VStack(spacing: 10) {
+            figure()
+            VStack(spacing: 3) { label() }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 4)
+        .contentShape(Rectangle())
     }
 
     private func bar(verified: Double) -> some View {
@@ -239,8 +358,8 @@ enum NextStepPlan {
     }
 
     /// "This step is how 33 becomes a real number. Five conversations move Demand to rung 3."
-    static func ridingLine(confidence: Int, target: Int, moves: String?) -> String {
-        let first = "This step is how \(confidence) becomes a real number."
+    static func ridingLine(confidence: Int, target: Int, moves: String?, hasProof: Bool = true) -> String {
+        let first = hasProof ? "This step is how \(confidence) becomes a real number." : "This step tests it with real people."
         let countWord = spelled(target)
         let unit = target == 1 ? "conversation" : "conversations"
         if let moves = moves?.trimmingCharacters(in: .whitespacesAndNewlines), !moves.isEmpty {

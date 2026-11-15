@@ -96,7 +96,7 @@ struct ExploreSection: View {
                 }
                 Spacer(minLength: ForgeSpacing.s)
                 Image(systemName: "chevron.right")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
             .padding(ForgeSpacing.m)
@@ -124,19 +124,19 @@ struct ExploreSection: View {
             case .offline(let message), .failed(let message):
                 HStack(alignment: .top, spacing: ForgeSpacing.s) {
                     Text(message)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(ForgeColor.inkSecondary)
                     Spacer()
                     Button("OK") { controller?.dismissMessage() }
-                        .font(.caption.weight(.medium))
+                        .font(.footnote.weight(.medium))
                 }
             case .running:
                 Text("Thinking. Nothing is saved until you accept.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             default:
                 Text("AI proposals are shown in full and saved only when you accept them.")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(ForgeColor.inkSecondary)
             }
         }

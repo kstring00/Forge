@@ -1,4 +1,5 @@
 import Foundation
+import ForgeCore
 
 /// Desk research through the proxy: one web search + fetch turn per call.
 /// Loop while `status` is paused, passing `messages` back unchanged.
@@ -7,7 +8,7 @@ struct ResearchResponse: Decodable {
         let url: String
         let title: String
         let text: String
-        let kind: String          // "fetched" | "searchHit"
+        let kind: String          // "fetched" | "searchHit" | "noted"
         let retrievedAt: String?
     }
     let status: String            // "done" | "paused"
@@ -16,8 +17,12 @@ struct ResearchResponse: Decodable {
     let messages: [JSONValue]
     let sources: [Source]
     let notes: String
+    /// Decision 0042: the shared research packet, on the turn that finishes. Absent from older proxies.
+    let packet: ResearchPacket?
     let model: String
     let costUSD: Double
+    /// Decision 0042, H: tokens for the cost meter. Absent from older proxies.
+    let usage: AIEnvelope<ExpandResult>.Usage?
 }
 
 extension ProxyAIClient {

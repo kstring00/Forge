@@ -20,7 +20,7 @@ enum ImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedSchema(let v): "This export was made by a newer FORGE (schema \(v)). Update the app and try again."
+        case .unsupportedSchema(let v): "This export was made by a newer Hunch (schema \(v)). Update the app and try again."
         case .noVaultFile: "That folder doesn't contain a vault.json."
         }
     }
@@ -211,6 +211,11 @@ enum VaultImporter {
         idea.tags = x.tags
         idea.notes = x.notes
         idea.pivotTypeRaw = x.pivotType
+        idea.titleEdited = x.titleEdited ?? false
+        idea.proofMoves = x.proofMoves ?? []
+        idea.launchPlan = x.launchPlan
+        idea.researchPacket = x.researchPacket
+        idea.researchedAt = x.researchedAt
         idea.archivedAt = x.archivedAt
         idea.createdAt = x.createdAt
         idea.updatedAt = x.updatedAt
@@ -263,11 +268,14 @@ enum VaultImporter {
         evaluation.projectionEstimateLow = e.projectionEstimateLow
         evaluation.projectionEstimateHigh = e.projectionEstimateHigh
         evaluation.projectionEstimateBasis = e.projectionEstimateBasis
+        evaluation.estimateInputs = e.estimateInputs
         for c in e.criteria {
             let score = CriterionScore(key: c.key, score: c.score, evidenceLevel: c.evidenceLevel, note: c.note)
             score.id = c.id
             score.peopleAtRung = c.peopleAtRung
             score.aiProposed = c.aiProposed ?? false
+            score.deskLevel = c.deskLevel
+            score.deskSourceCount = c.deskSourceCount ?? 0
             for ev in c.evidence {
                 let item = Evidence(criterionKey: ev.criterionKey, ladderRung: ev.ladderRung, text: ev.text,
                                     source: ev.sourceID.flatMap { sources[$0] })
@@ -295,6 +303,8 @@ enum VaultImporter {
         check.rationale = rc.rationale
         check.actualCostUSD = rc.actualCostUSD
         check.droppedFindings = rc.droppedFindings ?? 0
+        check.pivots = rc.pivots ?? []
+        check.wasFree = rc.wasFree ?? false
         check.draftedAssetSourceID = rc.draftedAssetSourceID
         check.sources = rc.sourceIDs.compactMap { sources[$0] }
         for c in rc.competitors {
@@ -321,6 +331,9 @@ enum VaultImporter {
         project.nextStepCount = p.nextStepCount ?? 0
         project.nextStepDueAt = p.nextStepDueAt
         project.nextStepMoves = p.nextStepMoves
+        project.nextStepCriterionKey = p.nextStepCriterionKey
+        project.interviewQuestions = p.interviewQuestions
+        project.interviews = p.interviews ?? []
         project.launchDefinition = p.launchDefinition
         project.retrospective = p.retrospective
         project.createdAt = p.createdAt

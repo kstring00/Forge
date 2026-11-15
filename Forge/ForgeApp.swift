@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct ForgeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let container: ModelContainer
     private let environment = AppEnvironment.live
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .dark
@@ -20,6 +21,8 @@ struct ForgeApp: App {
         }
         // Records written before a rule existed: ids out of prose, targets from the step text.
         LegacyCleanup.runIfNeeded(in: container.mainContext)
+        // Decision 0025: one project per idea. Duplicates merge into the newest, orphans are archived; the report sits in Settings.
+        ProjectCleanup.runIfNeeded(in: container.mainContext)
     }
 
     var body: some Scene {

@@ -38,8 +38,8 @@ struct ConvertToProjectSheet: View {
 
                     VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
                         Text("For the Journal").forgeLabel()
-                        Text("Later, FORGE will ask what actually happened and put it next to this.")
-                            .font(.caption)
+                        Text("Later, Hunch will ask what actually happened and put it next to this.")
+                            .font(.footnote)
                             .foregroundStyle(ForgeColor.inkSecondary)
                     }
                     field("What do you believe that makes this worth doing?", text: $beliefs, prompt: "The belief, not the pitch.", lines: 3)

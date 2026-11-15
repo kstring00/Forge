@@ -9,6 +9,8 @@ export interface ModelPrice {
   cacheWrite: number;
 }
 
+/// A rate card, not a choice: which model runs each role is set in
+/// config/hunch.ts. Every model that file might name needs a row here.
 export const prices: Record<string, ModelPrice> = {
   "claude-sonnet-5-5": { input: 2.0, output: 10.0, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },

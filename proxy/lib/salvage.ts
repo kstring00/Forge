@@ -19,7 +19,7 @@ export function fillOmittedNulls(value: unknown): unknown {
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = fillOmittedNulls(v);
-    for (const k of ["sourceID", "url", "evidenceNeeded", "experiment", "sphere"]) {
+    for (const k of ["sourceID", "url", "evidenceNeeded", "experiment", "sphere", "title"]) {
       if (k in out === false && looksLikeItemWith(k, out)) out[k] = null;
     }
     return out;
@@ -35,6 +35,7 @@ function looksLikeItemWith(field: string, obj: Record<string, unknown>): boolean
     case "evidenceNeeded": return "verdict" in obj && "criterionKey" in obj;
     case "experiment": return "verdict" in obj && "competitors" in obj;
     case "sphere": return "cluster" in obj;
+    case "title": return "realityCheck" in obj && "criteria" in obj;
     default: return false;
   }
 }

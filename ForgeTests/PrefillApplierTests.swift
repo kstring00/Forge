@@ -64,7 +64,12 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertTrue(e.criteria.allSatisfy(\.aiProposed))
         XCTAssertEqual(e.criterionScore(for: "A2")?.score, 2)
         XCTAssertEqual(e.criterionScore(for: "A1")?.evidence.first?.source?.id, page.id)
-        XCTAssertEqual(e.confidence, Scoring.confidence(evidenceLevels: Lenses.business.criteria.map { $0.key == "A6" ? 1 : 2 }))
+        // Decision 0037: desk research is graded by its sources. One published page is 1.4
+        // (1.0 plus 0.4), not a flat 2; A6 cites nothing and stays at 1.
+        XCTAssertEqual(e.criterionScore(for: "A1")?.deskLevel, 1.4)
+        XCTAssertEqual(e.criterionScore(for: "A6")?.deskLevel, 1.0)
+        XCTAssertEqual(e.confidence, Scoring.confidence(levels: Lenses.business.criteria.map { $0.key == "A6" ? 1.0 : 1.4 }))
+        XCTAssertEqual(e.confidence, 27)
         XCTAssertEqual(e.confidenceBreakdown.aiFoundPercent, 100, "every evidence item is an unreviewed AI find")
         XCTAssertTrue(e.allEvidence.allSatisfy { !$0.countsTowardConfidence })
         XCTAssertEqual(e.recommendation, .testRiskiestAssumption)
@@ -106,6 +111,28 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertTrue(applied.evaluation.criteria.allSatisfy { $0.evidenceLevel <= Scoring.deskResearchRungCeiling })
     }
 
+    func testThePanelNamesTheIdeaUnlessThePersonDid() throws {
+        let idea = Idea(originalText: "If what if there was a website care service for RV parks along one corridor")
+        store.context.insert(idea)
+        let page = Source(kind: .web, title: "p", fullText: "$149/mo", sourceClass: .aiFound, url: "https://example.com")
+        idea.sources.append(page)
+        var r = canned(sourceID: page.id)
+        r.title = "\"Weekend RV park site care.\""
+        PrefillApplier.apply(r, rationale: "", costUSD: nil, to: idea, in: store.context)
+        XCTAssertEqual(idea.title, "Weekend RV park site care", "2 to 7 words, unquoted")
+
+        let named = Idea(originalText: "Another idea about RV parks and their websites")
+        named.title = "My RV thing"
+        named.titleEdited = true
+        store.context.insert(named)
+        let page2 = Source(kind: .web, title: "p", fullText: "$149/mo", sourceClass: .aiFound, url: "https://example.com/2")
+        named.sources.append(page2)
+        var r2 = canned(sourceID: page2.id)
+        r2.title = "Something the panel prefers"
+        PrefillApplier.apply(r2, rationale: "", costUSD: nil, to: named, in: store.context)
+        XCTAssertEqual(named.title, "My RV thing", "the person's name for it stays")
+    }
+
     func testUserScoringClearsTheProposalFlag() throws {
         let idea = Idea(originalText: "x")
         store.context.insert(idea)
@@ -131,6 +158,22 @@ final class PrefillApplierTests: XCTestCase {
         XCTAssertTrue(saved[0].chunks.allSatisfy { $0.text.count <= 1300 })
         XCTAssertEqual(saved[1].title, "Research notes")
         XCTAssertEqual(idea.sources.count, 2)
+    }
+
+    func testPagesTheNotesCiteBecomeGradedSources() throws {
+        let idea = Idea(originalText: "Website care for RV parks")
+        store.context.insert(idea)
+        let saved = PrefillApplier.saveResearch([
+            .init(url: "https://www.g2.com/products/campspot/reviews", title: "Campspot reviews", text: "- Owners say the widget breaks on mobile", kind: "noted", retrievedAt: nil),
+            .init(url: "https://www.reddit.com/r/RVLiving/comments/1", title: "reddit.com", text: "- An owner asks who builds park sites", kind: "noted", retrievedAt: nil),
+        ], notes: "notes", to: idea)
+        XCTAssertEqual(saved.count, 3, "two cited pages plus the notes")
+        XCTAssertEqual(saved[0].url, "https://www.g2.com/products/campspot/reviews")
+        XCTAssertEqual(saved[0].evidenceRank, .reviewed)
+        XCTAssertEqual(saved[1].evidenceRank, .discussed)
+        let grade = DeskGrade.level(sources: saved.prefix(2).map { ($0.url, $0.evidenceRank) }, proposedLevel: 2)
+        XCTAssertEqual(grade.independentSources, 2)
+        XCTAssertGreaterThan(grade.level, 1.0, "real pages lift a criterion off the floor")
     }
 
     func testSpendAccounting() {

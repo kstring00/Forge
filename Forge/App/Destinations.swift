@@ -22,6 +22,8 @@ extension View {
                 case .history(let ideaID): HistoryDestination(ideaID: ideaID)
                 case .round(let roundID): RoundDestination(roundID: roundID)
                 case .criteria(let ideaID): CriteriaDestination(ideaID: ideaID)
+                case .brief(let ideaID): BriefDestination(ideaID: ideaID)
+                case .plan(let ideaID): PlanDestination(ideaID: ideaID)
                 }
             }
     }
@@ -114,6 +116,40 @@ struct RoundDestination: View {
     }
 }
 
+struct BriefDestination: View {
+    @Query private var ideas: [Idea]
+
+    init(ideaID: UUID) {
+        _ideas = Query(filter: #Predicate<Idea> { $0.id == ideaID })
+    }
+
+    var body: some View {
+        if let idea = ideas.first {
+            BriefView(idea: idea)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
+struct PlanDestination: View {
+    @Query private var ideas: [Idea]
+
+    init(ideaID: UUID) {
+        _ideas = Query(filter: #Predicate<Idea> { $0.id == ideaID })
+    }
+
+    var body: some View {
+        if let idea = ideas.first {
+            LaunchPlanView(idea: idea)
+        } else {
+            EmptyState(symbol: "questionmark", title: "Idea not found", message: "It may have been removed.")
+                .background(ForgeColor.canvas)
+        }
+    }
+}
+
 struct CriteriaDestination: View {
     @Query private var ideas: [Idea]
 
@@ -130,7 +166,7 @@ struct CriteriaDestination: View {
                     PatternLegend(breakdown: evaluation.confidenceBreakdown)
                     CriteriaList(evaluation: evaluation)
                     Text("Each row opens the criterion: its rubric, the ladder, and the evidence behind the score. Scores change here, never from a ruling.")
-                        .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 .padding(ForgeSpacing.m)
                 .padding(.bottom, ForgeSpacing.xxl)

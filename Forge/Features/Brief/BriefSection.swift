@@ -32,7 +32,9 @@ struct BriefSection: View {
                            onHear: round.map { r in { hearing = r } },
                            onCrossfire: { crossfirePair = $0 },
                            onRule: { v, choice in withAnimation(ForgeMotion.settle) { RulingActions.rule(v, choice, on: idea, in: context) } })
+                FirstRunCallout(step: .orbs, text: "The six voices. Tap any one to hear it; a dashed line between two is an argument you can open.")
                 verdictRow(check)
+                FirstRunCallout(step: .verdict, text: "The verdict is the panel's call on the idea as stated. It's advice. Your call comes next, one voice at a time.")
                 if let round { roundLine(round) }
                 if let project = idea.project {
                     NextStepCard(project: project, context: Track.reality.displayName)
@@ -40,6 +42,11 @@ struct BriefSection: View {
                 whatWeFound(check)
                 rings(evaluation)
                 theOneThing(evaluation, check)
+                FirstRunCallout(step: .nextStep, text: "Your next step: the one thing nobody can tell from a desk. Looks right makes it your task; Not quite opens the Lab.")
+                if WhatIfPolicy.shows(confidence: evaluation.confidence, verdict: check.verdict) && !check.pivots.isEmpty {
+                    // Decision 0040: every What-if, on every plan.
+                    WhatIfCards(idea: idea, check: check, evaluation: evaluation)
+                }
                 buttons
             }
             .sheet(item: $crossfirePair) { pair in
@@ -75,7 +82,7 @@ struct BriefSection: View {
                 Spacer()
                 Text(check.createdAt.formatted(date: .abbreviated, time: .omitted)).forgeLabel()
             }
-            Text(check.verdict.explanation).font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
+            Text(check.verdict.explanation).font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.ink)
             Text(check.summary)
                 .font(ForgeType.body)
                 .foregroundStyle(ForgeColor.ink.opacity(0.85))
@@ -88,12 +95,12 @@ struct BriefSection: View {
         return NavigationLink(value: LabRoute.round(roundID: round.id)) {
             HStack(spacing: ForgeSpacing.s) {
                 Text(tally.ruled == 0 ? "Hear the panel" : tally.rulingsLine)
-                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                    .font(.system(.footnote, weight: .medium)).foregroundStyle(ForgeColor.ink)
                 if !tally.splits.isEmpty && tally.ruled == 0 {
-                    Text("· \(tally.splits.count == 1 ? "one split" : "\(tally.splits.count) splits")").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
+                    Text("· \(tally.splits.count == 1 ? "one split" : "\(tally.splits.count) splits")").font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
         }
         .buttonStyle(.plain)
@@ -107,23 +114,23 @@ struct BriefSection: View {
         return VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Text("What we found").forgeLabel()
             if lines.isEmpty {
-                Text("Nothing the desk could stand behind. The Spheres say so below.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                Text("Nothing online the panel could stand behind. It says so below.")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 HStack(alignment: .top, spacing: ForgeSpacing.s) {
                     EvidenceChip(pattern: line.1.map { EvidencePattern($0.sourceClass) } ?? .dots, size: 12).padding(.top, 3)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(line.0).font(.system(size: 14)).foregroundStyle(ForgeColor.ink)
-                        if let s = line.1 { Text(s.title).font(.caption2).foregroundStyle(ForgeColor.inkSecondary).lineLimit(1) }
+                        Text(line.0).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
+                        if let s = line.1 { Text(s.title).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).lineLimit(2) }
                     }
                 }
             }
             if check.droppedFindings > 0 {
                 Text("\(check.droppedFindings) \(check.droppedFindings == 1 ? "finding the panel offered had no source and was" : "findings the panel offered had no source and were") left out.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
-            Text(check.limitsNote).font(.caption).foregroundStyle(ForgeColor.inkSecondary).padding(.top, ForgeSpacing.xs)
+            Text(check.limitsNote).font(.footnote).foregroundStyle(ForgeColor.inkSecondary).padding(.top, ForgeSpacing.xs)
         }
     }
 
@@ -131,31 +138,33 @@ struct BriefSection: View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack(alignment: .top, spacing: ForgeSpacing.m - 4) {
                 StripedRingCard(value: e.potential, label: "Potential", tint: ForgeColor.ink, striped: allProposed,
-                                caption: allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment.")
+                                caption: Plain.potential + ". " + (allProposed ? "As proposed by the panel. Yours once you touch it." : "Your structured assessment."),
+                                word: PotentialBand.word(e.potential))
                 StripedRingCard(value: e.confidence, label: "Confidence", tint: ForgeColor.ember, striped: allProposed,
-                                caption: "Desk research only. Rises when you bring something back from the world.")
+                                caption: Plain.confidence + ". From online research only. Rises when real people give time or money.")
             }
             PatternLegend(breakdown: e.confidenceBreakdown)
+            ProofBreakdownView(idea: idea, evaluation: e).padding(.top, ForgeSpacing.s)
         }
     }
 
     private func theOneThing(_ e: Evaluation, _ check: RealityCheck) -> some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
-            Text("The one thing nobody can tell from a desk").forgeLabel()
+            Text("The one thing nobody can tell from a desk").forgeSubhead()
             Text(e.riskiestAssumption.isEmpty ? "The panel did not name a riskiest assumption." : e.riskiestAssumption)
                 .font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
             if let why = e.riskiestAssumptionConsequence, !why.isEmpty {
-                Text(why).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                Text(why).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
             }
             VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
                 Text("The human action · \(NextMove.shortLabel(e.effectiveMove))").forgeLabel()
-                Text(e.effectiveStep).font(.system(size: 15)).foregroundStyle(ForgeColor.ink)
+                Text(e.effectiveStep).font(.system(.subheadline)).foregroundStyle(ForgeColor.ink)
                 if let assetSource {
                     Button { showingAssets = true } label: {
                         HStack(spacing: ForgeSpacing.xs) {
                             SparkGlyph()
-                            Text("Drafted: \(assetSource.title)").font(.caption.weight(.medium)).foregroundStyle(ForgeColor.ink)
-                            Image(systemName: "chevron.right").font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                            Text("Drafted: \(assetSource.title)").font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.ink)
+                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -173,9 +182,9 @@ struct BriefSection: View {
             if let project = idea.project {
                 NavigationLink(value: WorkshopRoute.project(project.id)) {
                     HStack {
-                        Text("Open in \(Track.reality.displayName)").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                        Text("Open in \(Track.reality.displayName)").font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
                         Spacer()
-                        Image(systemName: "arrow.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                        Image(systemName: "arrow.right").font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     }
                     .modifier(SecondaryButtonChrome())
                 }
@@ -191,7 +200,13 @@ struct BriefSection: View {
                     .buttonStyle(.plain)
             }
             Text("Looks right accepts the pass as-is and the next move becomes your step in \(Track.reality.displayName). Not quite opens the full Lab, one tap per correction. The third saves what you know as verified and re-scores only what it touches.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+            if check?.wasFree == true || env.firstRun.replaying {
+                // Decision 0028: one calm line after the first Brief. No pop-up.
+                Text("That was your free check. Want to keep going? Your next ones come from your weekly allowance.")
+                    .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
+                    .padding(.top, ForgeSpacing.s)
+            }
         }
     }
 
@@ -223,7 +238,8 @@ struct BriefSection: View {
                                         caveat: NextStepPlan.caveat(step: evaluation.effectiveStep, experimentTest: evaluation.experiment?.test),
                                         target: NextStepPlan.target(assetTitle: assetSource?.title, step: evaluation.effectiveStep),
                                         dueAt: Calendar.current.date(byAdding: .day, value: evaluation.experiment?.timeboxDays ?? 7, to: .now),
-                                        moves: evaluation.experiment?.metric)
+                                        moves: evaluation.experiment?.metric,
+                                        criterionKey: evaluation.ladderKey)
             if let assetSource {
                 project.notes.append("\(assetSource.title)\n\n\(assetSource.fullText)")
             }
@@ -244,6 +260,8 @@ struct StripedRingCard: View {
     let tint: Color
     let striped: Bool
     let caption: String
+    /// Potential's word ("Unproven", "Promising"), shown under the ring.
+    var word: String? = nil
 
     private var fraction: Double { Double(min(max(value, 0), 100)) / 100 }
 
@@ -259,10 +277,20 @@ struct StripedRingCard: View {
                     .trim(from: 0, to: fraction)
                     .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: striped ? .butt : .round, dash: striped ? [3, 3] : []))
                     .rotationEffect(.degrees(-90))
-                Text("\(value)").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                // "4 of 100", so a 4 never reads as 4 out of 5 (as ScoreRing does everywhere else).
+                VStack(spacing: 0) {
+                    Text("\(value)").font(ForgeType.numeral).foregroundStyle(ForgeColor.ink).monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    Text("of 100").font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundStyle(ForgeColor.inkSecondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                }
+                .padding(10)
             }
             .frame(width: 84, height: 84)
-            Text(caption).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            if let word {
+                Text(word).font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+            }
+            Text(caption).font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 18)
@@ -270,7 +298,7 @@ struct StripedRingCard: View {
         .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label) \(value) out of 100\(striped ? ", proposed by the panel" : ""). \(caption)")
+        .accessibilityLabel("\(label) \(value) out of 100\(word.map { ", \($0)" } ?? "")\(striped ? ", proposed by the panel" : ""). \(caption)")
     }
 }
 
@@ -282,7 +310,7 @@ struct DraftedAssetSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-                    HStack(spacing: ForgeSpacing.xs) { SparkGlyph(); Text("Drafted by the panel · edit freely before you use it").forgeLabel() }
+                    HStack(spacing: ForgeSpacing.xs) { SparkGlyph(); Text("Drafted by the panel · edit freely before you use it").forgeSubhead() }
                     Text(source.fullText)
                         .font(ForgeType.body)
                         .foregroundStyle(ForgeColor.ink)

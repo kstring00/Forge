@@ -1,7 +1,7 @@
 import Foundation
 import ForgeCore
 
-/// "FORGE remembers your track record and shares it with the panel. The AI
+/// "Hunch remembers your track record and shares it with the panel. The AI
 /// itself doesn't change." The about-you note: generated from the user's
 /// settled rulings once there are enough, read, edited and reset in Settings,
 /// and sent with every Sphere call as `aboutUser`.
@@ -11,7 +11,7 @@ enum PanelMemory {
     static let generatedAtKey = "panel.memory.generatedAt"
     nonisolated(unsafe) static var defaults: UserDefaults = .standard
 
-    static let label = "FORGE remembers your track record and shares it with the panel. The AI itself doesn't change."
+    static let label = "Hunch remembers your track record and shares it with the panel. The AI itself doesn't change."
 
     static var note: String {
         get { defaults.string(forKey: noteKey) ?? "" }

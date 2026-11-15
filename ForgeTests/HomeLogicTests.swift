@@ -73,6 +73,66 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertNil(a.track)
     }
 
+    /// Decision 0025: the pipeline nodes, Home's subline and the Ideas sections count the same ideas.
+    func testTrackCountsAreIdeasByTrackAndMatchTheGroups() throws {
+        let a = idea("a", at: 1)                       // Idea
+        let b = idea("b", at: 2); b.stage = .evaluate  // Formation
+        let c = idea("c", at: 3)                       // Reality via a project
+        _ = WorkshopActions.convert(c, with: .init(name: "C", desiredOutcome: "", nextStep: "call"), in: store.context)
+        let d = idea("d", at: 4); d.stage = .build     // Reality without a project
+        let e = idea("e", at: 5); e.archive()          // nowhere
+        // A second project with no idea must not count as an idea in Reality.
+        store.context.insert(Project(name: "stray"))
+
+        let all = [a, b, c, d, e]
+        XCTAssertEqual(TrackCounts.counts(all), [1, 1, 2])
+        XCTAssertEqual(TrackCounts.count(.reality, in: all), 2)
+        let g = TrackCounts.grouped(all)
+        XCTAssertEqual(g[.reality]?.map(\.id), [c.id, d.id], "the Reality section lists exactly what the node counts")
+        XCTAssertEqual(g[.idea]?.count, 1)
+        XCTAssertEqual(TrackCounts.live(all).count, 4)
+    }
+
+    func testHomeSortOrders() throws {
+        let fresh = idea("fresh", at: 30)
+        let checked = idea("checked", at: 20); check(checked, at: 21)
+        let working = idea("working", at: 10)
+        _ = WorkshopActions.convert(working, with: .init(name: "W", desiredOutcome: "", nextStep: "call"), in: store.context)
+        let all = [working, checked, fresh]
+        XCTAssertEqual(HomeSort.sorted(all, by: .newest).map(\.id), [fresh.id, checked.id, working.id])
+        XCTAssertEqual(HomeSort.sorted(all, by: .needsThePanel).first?.id, fresh.id, "the newest unchecked idea leads")
+        XCTAssertEqual(HomeSort.sorted(all, by: .inProgress).first?.id, working.id, "an active step leads")
+        XCTAssertEqual(HomeSort.biggestOpportunity.subline, "Biggest opportunity first")
+    }
+
+    /// Decision 0036: one primary action per card, from the idea's state.
+    func testCardActionFollowsTheIdeasState() throws {
+        let fresh = idea("Weekend site care for RV parks along one corridor", at: 1)
+        XCTAssertEqual(CardAction.of(fresh), .getTake)
+        XCTAssertEqual(CardAction.getTake.title, "Get the panel's take")
+
+        let checked = idea("checked", at: 2)
+        check(checked, at: 3)
+        XCTAssertEqual(CardAction.of(checked), .hearPanel)
+
+        let working = idea("working", at: 4)
+        check(working, at: 5)
+        let p = WorkshopActions.convert(working, with: .init(name: "W", desiredOutcome: "", nextStep: "Talk to five owners"), in: store.context)
+        WorkshopActions.setNextStep(p, "Talk to five owners", target: 5)
+        XCTAssertEqual(CardAction.of(working), .log(count: 0, target: 5))
+        XCTAssertEqual(CardAction.log(count: 2, target: 5).title, "Log a conversation · 2 of 5")
+        p.nextStepCount = 5
+        XCTAssertEqual(CardAction.of(working), .whatHappened, "the target is reached")
+        p.status = .paused
+        XCTAssertEqual(CardAction.of(working), .none)
+
+        let growth = idea("a growth idea", at: 6)
+        growth.lensType = .growth
+        XCTAssertEqual(CardAction.of(growth), .makeItReal)
+        growth.archive()
+        XCTAssertEqual(CardAction.of(growth), .none)
+    }
+
     func testUncheckedIsTheLastResortAndNewestFirst() throws {
         let old = idea("old", at: 1)
         let new = idea("new", at: 2)
@@ -154,7 +214,7 @@ final class HomeLogicTests: XCTestCase {
     func testFailureMessagesSayWhatBrokeAndWhatWasKept() {
         let research = RealityCheckRunner.failurePhase(AIError.offline, step: .research, pagesSaved: 0, spentUSD: 0)
         guard case .offline(let m1) = research else { return XCTFail("expected offline") }
-        XCTAssertTrue(m1.hasPrefix("The desk research stopped"))
+        XCTAssertTrue(m1.hasPrefix("The research stopped"))
         XCTAssertTrue(m1.contains("Nothing was saved."))
 
         let prefill = RealityCheckRunner.failurePhase(AIError.invalidResponse("The model ran out of room"), step: .prefill, pagesSaved: 6, spentUSD: 0.04)
@@ -166,7 +226,7 @@ final class HomeLogicTests: XCTestCase {
         XCTAssertTrue(m2.contains("Settings → Spend"))
 
         let stopped = RealityCheckRunner.stoppedLine(step: .research, spentUSD: 0)
-        XCTAssertEqual(stopped, "Stopped during the desk research. Nothing was saved. Nothing was charged.")
+        XCTAssertEqual(stopped, "Stopped during the research. Nothing was saved. Nothing was charged.")
         XCTAssertFalse(RealityCheckRunner.stoppedLine(step: .prefill, spentUSD: 0.03).contains("$"))
     }
 }

@@ -60,7 +60,10 @@ test("an assertion verifies against the stored key and must advance the counter"
 
   // The same assertion opens the door through requireDevice.
   const req = { headers: { "x-forge-key-id": keyId, "x-forge-assertion": sign(3) }, body: undefined } as never;
-  const device = await requireDevice(req, body);
+  const device = await requireDevice(req, { raw: body, exact: true });
+  // A body that was parsed and written out again cannot carry a signature check.
+  await assert.rejects(requireDevice({ headers: { "x-forge-key-id": keyId, "x-forge-assertion": sign(4) } } as never, { raw: body, exact: false }),
+    (e: unknown) => e instanceof HttpError && e.code === "raw_body_unavailable");
   assert.equal(device.door, "appattest");
   assert.equal(device.id, keyId);
 });
@@ -76,10 +79,10 @@ test("the nonce is read from the App Attest extension", () => {
 
 test("developer tokens open the dev door; nothing else opens any door", async () => {
   useMemoryStore();
-  const ok = await requireDevice({ headers: { authorization: "Bearer dev-token-0123456789abcdef" } } as never, Buffer.from("{}"));
+  const ok = await requireDevice({ headers: { authorization: "Bearer dev-token-0123456789abcdef" } } as never, { raw: Buffer.from("{}"), exact: true });
   assert.equal(ok.door, "dev");
-  await assert.rejects(requireDevice({ headers: { authorization: "Bearer wrong-token-0123456789" } } as never, Buffer.from("{}")), (e: unknown) => e instanceof HttpError && e.status === 401);
-  await assert.rejects(requireDevice({ headers: {} } as never, Buffer.from("{}")), /No device proof/);
+  await assert.rejects(requireDevice({ headers: { authorization: "Bearer wrong-token-0123456789" } } as never, { raw: Buffer.from("{}"), exact: true }), (e: unknown) => e instanceof HttpError && e.status === 401);
+  await assert.rejects(requireDevice({ headers: {} } as never, { raw: Buffer.from("{}"), exact: true }), /No device proof/);
 });
 
 test("the first check on a device is free and counts against nothing; then the allowance applies", async () => {
@@ -115,4 +118,26 @@ test("per-device checks and the daily spend ceiling fail politely", async () => 
   assert.equal(usage.devices[0].checks, 2);
   assert.equal(usage.devices[0].calls, 2);
   assert.equal(usage.devices[0].byAction.prefill, 1);
+});
+
+test("the body is read as it was sent, from the stream first", async () => {
+  const { readRawBody } = await import("../lib/auth.js");
+  const { PassThrough } = await import("node:stream");
+  // What Swift's encoder sends is not what JSON.stringify would write: key order and escaped slashes differ.
+  const sent = Buffer.from('{"b":"https:\\/\\/example.com","a":1}');
+  // Vercel's runtime: the bytes are back on the stream, and req.body is a parsed copy.
+  const stream = new PassThrough();
+  stream.end(sent);
+  const onVercel = Object.assign(stream, { headers: {}, body: JSON.parse(sent.toString()) });
+  const fromStream = await readRawBody(onVercel as never);
+  assert.equal(fromStream.exact, true);
+  assert.ok(fromStream.raw.equals(sent), "the exact bytes, not a rewrite of the parsed body");
+
+  // The bench, the tests and the local server: a parsed body and no stream.
+  const parsed = await readRawBody({ headers: {}, body: { a: 1 } } as never);
+  assert.equal(parsed.exact, false);
+  assert.equal(parsed.raw.toString(), '{"a":1}');
+  // A string or buffer body is still exact; no body at all is empty.
+  assert.equal((await readRawBody({ headers: {}, body: '{"a":1}' } as never)).exact, true);
+  assert.equal((await readRawBody({ headers: {} } as never)).raw.length, 0);
 });

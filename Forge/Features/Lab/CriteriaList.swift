@@ -14,10 +14,14 @@ struct CriteriaList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Criteria · \(frameworks)")
-                .forgeLabel()
-                .lineLimit(1)
-                .padding(.bottom, ForgeSpacing.s)
+            Text("Criteria").forgeLabel()
+            if !frameworks.isEmpty {
+                Text("Drawn from \(frameworks)")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+            }
+            Spacer().frame(height: ForgeSpacing.s)
             ForEach(evaluation.lens.criteria) { criterion in
                 NavigationLink(value: LabRoute.criterion(evaluationID: evaluation.id, key: criterion.key)) {
                     CriterionRow(criterion: criterion,
@@ -50,10 +54,10 @@ struct CriterionRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(criterion.title)
-                    .font(.system(size: 15))
+                    .font(.system(.subheadline))
                     .foregroundStyle(ForgeColor.ink)
                 Text(note)
-                    .font(.system(size: 12))
+                    .font(.system(.footnote))
                     .foregroundStyle(ForgeColor.inkSecondary)
                     .lineLimit(2)
             }

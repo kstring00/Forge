@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ActionRequest, PrefillResult, RoundResult } from "../lib/schemas.js";
-import { enforcePrefill, enforceRound } from "../lib/enforce.js";
+import { ActionRequest, LaunchPlanResult, PrefillResult, RoundResult } from "../lib/schemas.js";
+import { enforceLaunchPlan, enforcePrefill, enforceRound } from "../lib/enforce.js";
 import { costUSD, realityCheckEstimateUSD } from "../lib/pricing.js";
 import { content, lensText, lens } from "../lib/content.js";
 import { actionInstruction, stableSystem } from "../lib/prompts.js";
@@ -70,6 +70,7 @@ test("crossfire survives only between conflicting verdicts, once per pair", () =
 
 test("prefill is clamped to the desk ceiling and known keys", () => {
   const p = PrefillResult.parse({
+    title: "\"Weekend site care for RV parks along one corridor.\"",
     realityCheck: { verdict: "compete", summary: "s", competitors: [{ name: "X", url: null, pricing: "$99", positioning: "p", praises: [], complaints: [], tractionSignals: [], sourceID: UNKNOWN }],
       demandSignals: [{ text: "d", url: null, rung: 5, sourceID: A }], gapMap: "g", fitNotes: "f", experiment: null, costEstimate: "$0.3" },
     explorations: [{ promptKey: "problem", answer: "a", sourceIDs: [A] }, { promptKey: "bogus", answer: "b", sourceIDs: [] }],
@@ -80,11 +81,23 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
     ],
     projection: null,
     projectionLow: 2400, projectionHigh: 900, projectionBasis: "three pricing pages",
+    estimate: {
+      price: { low: 49, high: 29, basis: "two clinic pricing pages", sourceID: A },
+      reachable: { low: 10, high: 30, basis: "clinics nearby", sourceID: UNKNOWN },
+      conversion: { low: 0.1, high: 1.4, basis: "assumed", sourceID: null },
+    },
     riskiestAssumption: { belief: "b", consequence: "c", sourceIDs: [UNKNOWN] },
     nextMove: { recommendation: "testRiskiestAssumption", step: "s", experiment: null },
     draftedAssets: { kind: "interviewQuestions", title: "t", body: "b" },
     panel: [{ sphere: "skeptic", verdict: "onTrack", criterionKey: "A2", reason: "r", sourceIDs: [], evidenceNeeded: null }],
     crossfire: [],
+    pivots: [
+      { whatIf: "you sold to the park owners' association instead of parks one by one", pivotType: "channel", fixes: "A5", why: "Three parks name the same association.", firstTest: "Email the association.", sourceIDs: [A, UNKNOWN] },
+      { whatIf: "What if the site were free and the upsell were bookings?", pivotType: "businessModel", fixes: "Z9", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if only RV parks on I-10?", pivotType: "zoomIn", fixes: "A2", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if a fourth?", pivotType: "zoomOut", fixes: "A1", why: "w", firstTest: "f", sourceIDs: [] },
+      { whatIf: "What if a fifth?", pivotType: "technology", fixes: "A3", why: "w", firstTest: "f", sourceIDs: [] },
+    ],
   });
   const dropped: Record<string, number> = {};
   const e = enforcePrefill(p, new Set([A]), lens("business").criteria.map((c) => c.key), content.explorePrompts.map((x) => x.key), dropped);
@@ -98,6 +111,14 @@ test("prefill is clamped to the desk ceiling and known keys", () => {
   assert.equal(e.criteria[1].evidenceLevel, 1, "no source: at most rung 1");
   assert.deepEqual(e.riskiestAssumption.sourceIDs, []);
   assert.equal(e.panel[0].verdict, "cantTell");
+  assert.deepEqual(e.estimate?.price, { low: 29, high: 49, basis: "two clinic pricing pages", sourceID: A }, "low before high, known source kept");
+  assert.equal(e.estimate?.reachable.sourceID, null, "an unknown source is an assumption");
+  assert.equal(e.estimate?.conversion.high, 1, "conversion is a fraction");
+  assert.equal(e.title, "Weekend site care for RV", "a title is at most five words, unquoted");
+  assert.equal(e.pivots.length, 3, "at most three pivots, and never one that raises a criterion the lens does not have");
+  assert.equal(e.pivots[0].whatIf, "What if you sold to the park owners' association instead of parks one by one?", "phrased as a what-if");
+  assert.deepEqual(e.pivots[0].sourceIDs, [A], "cites only known sources");
+  assert.deepEqual(e.pivots.map((x) => x.fixes), ["A5", "A2", "A1"]);
   // The range is put in order.
   assert.equal(e.projectionLow, 900);
   assert.equal(e.projectionHigh, 2400);
@@ -142,4 +163,55 @@ test("research runs on Haiku with the basic web tools and capped page size", asy
   assert.ok((haiku[1].max_content_tokens ?? 99_999) <= 4000);
   const sonnet = researchTools("claude-sonnet-5-5") as Array<{ type: string }>;
   assert.deepEqual(sonnet.map((t) => t.type), ["web_search_20260209", "web_fetch_20260209"]);
+});
+
+test("a launch plan's proven lines need a source the app sent; the rest become beliefs", () => {
+  const phase = { title: "Sell to 3 clinics", detail: "Visit three.", decide: "If 2 say yes, build." };
+  const raw = LaunchPlanResult.parse({
+    oneLine: "Tags for clinics", forWho: "ABA clinics.",
+    proven: [
+      { text: "3 directors said lost cards are weekly", sourceID: A },
+      { text: "Parents love it", sourceID: null },
+      { text: "Invented source", sourceID: UNKNOWN },
+    ],
+    unproven: ["No clinic has paid yet"], riskiest: "Clinics pay",
+    days1to30: phase, days31to60: phase, days61to90: phase,
+    customerNoun: "clinics", stopRule: "If no clinic pays by day 45.", stewardNote: null,
+  });
+  const dropped: Record<string, number> = {};
+  const p = enforceLaunchPlan(raw, new Set([A, B]), dropped);
+  assert.deepEqual(p.proven.map((c) => c.sourceID), [A]);
+  assert.deepEqual(p.unproven, ["No clinic has paid yet", "Parents love it", "Invented source"]);
+  assert.equal(dropped["launchPlan.provenWithoutSource"], 2);
+  assert.ok(actionInstruction("launchPlan").includes("decide"));
+});
+
+test("every URL the research notes cite becomes its own source with its claims", async () => {
+  const { notedSources } = await import("../api/research.js");
+  const notes = [
+    "RESEARCH NOTES",
+    "- Bundled RV park sites cost $35 to $65 per month (https://www.campspot.com/pricing).",
+    "- A $299 agency option exists — https://parkwebsites.example.com/plans",
+    "- Owners complain booking widgets break on mobile https://www.reddit.com/r/RVLiving/comments/abc and https://www.campspot.com/pricing",
+    "- Fetched page claim https://fetched.example.com/page",
+    "- short https://x.com/a",
+    "No URL on this line at all.",
+  ].join("\n");
+  const found = [
+    { url: "https://fetched.example.com/page", title: "Fetched", text: "full page", kind: "fetched" as const, retrievedAt: null },
+    { url: "https://www.campspot.com/pricing", title: "Campspot pricing", text: "", kind: "searchHit" as const, retrievedAt: "2026-10-01" },
+  ];
+  const out = notedSources(notes, found);
+  const campspot = out.find((s) => s.url === "https://www.campspot.com/pricing");
+  assert.ok(campspot);
+  assert.equal(campspot.title, "Campspot pricing");
+  assert.equal(campspot.kind, "noted");
+  assert.equal(campspot.text.split("\n").length, 2, "two claims cite it");
+  assert.equal(campspot.text.split("\n")[0], "- Bundled RV park sites cost $35 to $65 per month.");
+  assert.equal(out.find((s) => s.url.includes("parkwebsites"))?.text, "- A $299 agency option exists");
+  assert.ok(!campspot.text.includes("http"));
+  assert.equal(out.find((s) => s.url.includes("parkwebsites"))?.title, "parkwebsites.example.com");
+  assert.ok(out.some((s) => s.url.includes("reddit.com")));
+  assert.ok(!out.some((s) => s.url.includes("fetched.example.com")), "a fetched page is already a source");
+  assert.ok(!out.some((s) => s.url === "https://x.com/a"), "too short to be a claim");
 });

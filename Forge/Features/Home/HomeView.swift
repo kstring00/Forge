@@ -2,25 +2,34 @@ import SwiftUI
 import SwiftData
 import ForgeCore
 
-/// "Home · leveled up" (brief v4.2 §7): a grainy sky behind the date, the
-/// settings button and "From idea to reality" with a live subline; the pipeline
-/// as glowing nodes in the stage colours; the one next move with what's riding
-/// on it; capture; then the ideas by stakes. The next move's idea never
-/// appears twice.
+/// Home (decision 0044, the usability pass): what to do next in one glance,
+/// and how every idea is doing in one scroll. A short sky header with the
+/// checks pill and settings; the three stages, which filter the list; one
+/// "Your next move" card with the only filled orange button; then the ideas
+/// as compact rows that open in place. Capture is the mic button.
+@MainActor
 struct HomeView: View {
-    let onCapture: () -> Void
-
-    @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \Idea.createdAt, order: .reverse) private var ideas: [Idea]
     @Query(filter: #Predicate<Project> { $0.statusRaw == "active" }) private var activeProjects: [Project]
+    /// Home pass (a): the status bar above and the tab bar below, and how solid the cover over the status bar is.
+    @State private var safeArea = EdgeInsets()
+    @State private var topCover: Double = 0
+    private static let scrollSpace = "home.scroll"
+    /// The window's own insets are the floor, in case the reading above comes back empty.
+    private var topInset: CGFloat { max(safeArea.top, WindowInsets.current.top) }
+    private var bottomInset: CGFloat { max(safeArea.bottom, WindowInsets.current.bottom) }
+    /// Home pass (b): the stage the list is filtered to, and the row opened or closed by hand.
+    @State private var stageFilter: Track?
+    @AppStorage("home.openRow") private var openRowRaw = ""
 
-    private var live: [Idea] { ideas.filter { !$0.isArchived } }
+    private var live: [Idea] { TrackCounts.live(ideas) }
     private var move: HomeCard {
         HomeCard.choose(justCaptured: env.justCapturedIdeaID, ideas: ideas, projects: activeProjects, unseenBriefs: env.realityChecks.unseenBriefs,
                         failedChecks: Set(env.realityChecks.failures.keys))
     }
-    /// The idea the next-move card is about, kept out of the list below.
+    /// The idea the next-move card is about. It is also the first row, tagged "Next".
     private var moveIdeaID: UUID? {
         switch move {
         case .afterCapture(let id), .briefReady(let id), .unchecked(let id): id
@@ -28,93 +37,104 @@ struct HomeView: View {
         case .none: nil
         }
     }
-    private func count(_ track: Track) -> Int { live.filter { $0.track == track }.count }
-    private var byStakes: [Idea] {
-        live.filter { $0.id != moveIdeaID }.sorted { a, b in
-            let ma = EstimatedReturn.sortKey(for: a), mb = EstimatedReturn.sortKey(for: b)
-            if (ma ?? -1) != (mb ?? -1) { return (ma ?? -1) > (mb ?? -1) }
-            let ca = a.latestEvaluation?.confidence ?? -1, cb = b.latestEvaluation?.confidence ?? -1
-            if ca != cb { return ca > cb }
-            return a.updatedAt > b.updatedAt
-        }
+
+    private func state(_ idea: Idea) -> HomeRowState {
+        HomeRowState.of(idea, checking: env.realityChecks.isRunning(idea.id), failed: env.realityChecks.failure(for: idea.id) != nil,
+                        offline: env.realityChecks.isOffline(idea.id), unseenBrief: env.realityChecks.unseenBriefs.contains(idea.id))
+    }
+    /// Every live idea as its row needs it (decision 0025: the same ideas the stage counts count).
+    private var rowIdeas: [HomeRowIdea] {
+        live.compactMap { idea in idea.track.map { HomeRowIdea(id: idea.id, track: $0, workedAt: idea.updatedAt, state: state(idea)) } }
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    header
-                    VStack(alignment: .leading, spacing: ForgeSpacing.l) {
-                        if live.isEmpty {
-                            EmptyPanel()
-                            QuickCaptureField(focusOnAppear: true)
-                        } else {
-                            PipelineStrip(counts: Track.allCases.map(count)) { env.tab = ForgeTab($0) }
-                            nextMove
-                            QuickCaptureField()
-                            stakes
-                            NavigationLink { PatternsView() } label: {
-                                HStack {
-                                    Text("Your patterns").font(.system(size: 14, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                                    Text("your record against the panel").font(.system(size: 13)).foregroundStyle(ForgeColor.inkSecondary)
-                                    Spacer()
-                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+        let rows = rowIdeas
+        let list = HomeRows.list(rows, nextMoveID: moveIdeaID, stage: stageFilter)
+        let open = HomeRows.openRow(rows, nextMoveID: moveIdeaID, memory: HomeOpenRowMemory(raw: openRowRaw))
+        return NavigationStack {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        header
+                        VStack(alignment: .leading, spacing: ForgeSpacing.l) {
+                            if live.isEmpty {
+                                HomeEmptyState()
+                            } else {
+                                PipelineStrip(counts: TrackCounts.counts(ideas), selected: stageFilter) { tapped in
+                                    withAnimation(reduceMotion ? ForgeMotion.fade : ForgeMotion.settle) {
+                                        stageFilter = HomeRows.toggled(stageFilter, tapped: tapped)
+                                    }
                                 }
-                                .modifier(SecondaryButtonChrome())
+                                nextMove
+                                ideaRows(list, open: open, all: rows, proxy: proxy)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .padding(ForgeSpacing.m)
+                        // The last row stops clear of the fade, the capture button and the tab bar.
+                        .padding(.bottom, HomeEdges.listBottomPadding(button: CaptureDockButton.diameter, inset: CaptureDockButton.bottomInset))
                     }
-                    .padding(ForgeSpacing.m)
-                    .padding(.bottom, ForgeSpacing.xxl)
+                    .tracksHomeTopCover($topCover, in: Self.scrollSpace)
                 }
+                .coordinateSpace(.named(Self.scrollSpace))
             }
-            .scrollDismissesKeyboard(.interactively)
             .background(ForgeColor.canvas)
             .ignoresSafeArea(edges: .top)
+            // Read outside the line above: inside it, the top inset reads as zero.
+            .readsSafeArea($safeArea)
+            // The sky fills the top at rest; once Home scrolls, rows pass behind the canvas, not under the clock.
+            // The overlay is laid out inside the safe area even though the list runs above it (seen on
+            // the Mac, Nov 10: the cover sat one status bar too low). A clear layer stretched to the
+            // top of the screen carries the cover, so it starts at the very top either way.
+            .overlay {
+                Color.clear
+                    .overlay(alignment: .top) { HomeTopCover(height: topInset, amount: topCover) }
+                    .ignoresSafeArea(edges: .top)
+                    .allowsHitTesting(false)
+            }
+            // Rows fade out above the tab bar and the capture button; the canvas carries on behind the bar.
+            .overlay(alignment: .bottom) { HomeBottomFade(below: bottomInset).offset(y: bottomInset) }
             .toolbar(.hidden, for: .navigationBar)
+            .captureDock()
             .forgeDestinations()
+            // A light tap when a row opens or closes.
+            .sensoryFeedback(.selection, trigger: open)
         }
     }
 
     // MARK: Header
 
-    private var inMotion: Int { count(.idea) + count(.formation) }
-
+    /// Shorter than before: the date and settings, the name, the checks pill.
     private var header: some View {
         ZStack(alignment: .bottomLeading) {
             SkyHeader()
-            VStack(alignment: .leading, spacing: ForgeSpacing.m) {
+            VStack(alignment: .leading, spacing: ForgeSpacing.s) {
                 HStack {
-                    Text(Date.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()).replacingOccurrences(of: ", ", with: " · "))
-                        .forgeLabel().foregroundStyle(.white.opacity(0.92))
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                        .font(.system(.footnote, weight: .medium)).foregroundStyle(.white.opacity(0.92))
                         .shadow(color: .black.opacity(0.3), radius: 4, y: 1)
                     Spacer()
                     NavigationLink { SettingsView() } label: {
                         Image(systemName: "gearshape")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(.subheadline, weight: .medium))
                             .foregroundStyle(.white)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .background(.white.opacity(0.18), in: Circle())
                     }
                     .accessibilityLabel("Settings")
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("From idea\nto reality")
-                        .font(Font.custom("Fraunces-SemiBold", size: 40, relativeTo: .largeTitle))
-                        .foregroundStyle(ForgeColor.ink)
-                        .lineSpacing(-2)
-                        .shadow(color: .black.opacity(0.35), radius: 10, y: 2)
-                    if !live.isEmpty {
-                        Text("\(inMotion) \(inMotion == 1 ? "idea" : "ideas") in motion · \(count(.reality)) out in the world")
-                            .font(.system(size: 15)).foregroundStyle(ForgeColor.ink.opacity(0.9))
-                            .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
-                    }
-                }
+                Text("Have a hunch?")
+                    .font(Font.custom("Fraunces-SemiBold", size: 32, relativeTo: .largeTitle))
+                    .foregroundStyle(ForgeColor.ink)
+                    .shadow(color: .black.opacity(0.35), radius: 10, y: 2)
+                    .fixedSize(horizontal: false, vertical: true)
+                // Decision 0032: the checks pill, always on Home.
+                ChecksPill()
+                BillingIssueBanner()
             }
             .padding(.horizontal, ForgeSpacing.m)
-            .padding(.top, 60)
-            .padding(.bottom, ForgeSpacing.l)
+            // Below the status bar or Dynamic Island on every phone.
+            .padding(.top, HomeEdges.headerTop(safeAreaTop: topInset))
+            .padding(.bottom, ForgeSpacing.m)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -123,77 +143,80 @@ struct HomeView: View {
 
     @ViewBuilder
     private var nextMove: some View {
-        switch move {
-        case .afterCapture(let id):
-            if let idea = ideas.first(where: { $0.id == id }) { AfterCaptureCard(idea: idea) }
-        case .briefReady(let id):
-            if let idea = ideas.first(where: { $0.id == id }), let check = idea.latestRealityCheck {
-                NavigationLink(value: VaultRoute.idea(id)) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
-                            Spacer()
-                            Text(Track.formation.displayName).forgeLabel()
-                        }
-                        Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                        Text("Hear the panel and rule on each voice.")
-                            .font(.system(size: 16, weight: .medium)).foregroundStyle(ForgeColor.ink)
-                        HStack(spacing: ForgeSpacing.s) {
-                            IdeaSpark(idea: idea, size: 28)
-                            Text(check.verdict.displayName).forgeLabelSmall().foregroundStyle(ForgeColor.emberText)
-                        }
-                        Text("Hear the panel")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                            .frame(maxWidth: .infinity).frame(height: 48)
-                            .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .padding(ForgeSpacing.cardPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
-                }
-                .buttonStyle(.plain)
-            }
-        case .nextStep(let pid):
-            if let project = activeProjects.first(where: { $0.id == pid }) {
-                NextStepCard(project: project, style: .home, label: "Your next move", context: Track.reality.displayName)
-            }
-        case .unchecked(let id):
-            if let idea = ideas.first(where: { $0.id == id }) { UncheckedCard(idea: idea) }
-        case .none:
-            EmptyView()
+        if let id = moveIdeaID, let idea = ideas.first(where: { $0.id == id }) {
+            let s = state(idea)
+            HomeNextMoveCard(idea: idea, state: s, move: HomeNextMoveCard.moveLine(for: idea, state: s), justCaptured: env.justCapturedIdeaID == id)
+        } else if case .nextStep(let pid) = move, let project = activeProjects.first(where: { $0.id == pid }) {
+            // A step with no idea behind it (older data): the step's own card.
+            NextStepCard(project: project, style: .home, label: "Your next move", context: Track.reality.displayName)
         }
     }
 
-    // MARK: By stakes
+    // MARK: Your ideas
 
-    private var stakes: some View {
+    private func ideaRows(_ list: HomeRows.List, open: UUID?, all: [HomeRowIdea], proxy: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Your ideas, by stakes").font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                Text(stageFilter.map { "Your ideas in \($0.displayName)" } ?? "Your ideas")
+                    .font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Button("All") { env.tab = .idea }
-                    .font(.system(size: 13, weight: .medium)).foregroundStyle(ForgeColor.emberText)
-                    .accessibilityLabel("All ideas")
-            }
-            if byStakes.isEmpty {
-                Text("Everything you have is in the card above.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-            }
-            ForEach(byStakes.prefix(8)) { idea in
-                if let project = idea.project {
-                    NavigationLink(value: WorkshopRoute.project(project.id)) {
-                        StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
+                if stageFilter != nil {
+                    Button("Show all") {
+                        withAnimation(reduceMotion ? ForgeMotion.fade : ForgeMotion.settle) { stageFilter = nil }
                     }
-                    .buttonStyle(.plain)
-                } else {
-                    NavigationLink(value: VaultRoute.idea(idea.id)) {
-                        StakeCard(idea: idea, checking: env.realityChecks.isRunning(idea.id))
-                    }
-                    .buttonStyle(.plain)
+                    .font(.system(.subheadline, weight: .medium)).foregroundStyle(ForgeColor.ink)
+                    .frame(minHeight: 44)
                 }
             }
+            if list.rows.isEmpty, let stage = stageFilter {
+                Text("Nothing in \(stage.displayName) yet. \(Self.emptyStageLine(stage))")
+                    .font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(list.rows) { row in
+                if let idea = ideas.first(where: { $0.id == row.id }) {
+                    HomeIdeaRow(idea: idea, state: row.state, isNext: row.id == moveIdeaID, isOpen: row.id == open) {
+                        let opening = open != row.id
+                        // A short spring; a plain fade with Reduce Motion.
+                        withAnimation(reduceMotion ? ForgeMotion.fade : .spring(response: 0.32, dampingFraction: 0.86)) {
+                            openRowRaw = HomeRows.afterTap(row.id, open: open, ideas: all).raw
+                            if opening { proxy.scrollTo(Self.anchor(row.id)) }
+                        }
+                    }
+                    // A point just above the row, below the status bar: scrolling to it brings the title into view.
+                    .background(alignment: .top) {
+                        Color.clear.frame(height: 1)
+                            .alignmentGuide(.top) { d in d[.top] + topInset + ForgeSpacing.m }
+                            .id(Self.anchor(row.id))
+                    }
+                }
+            }
+            if list.hasMore {
+                Button { env.showIdeas(stageFilter) } label: {
+                    HStack(spacing: 4) {
+                        Text(stageFilter.map { "See all \(list.total) in \($0.displayName)" } ?? "See all \(list.total) ideas")
+                            .font(.system(.subheadline, weight: .medium))
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                    }
+                    .foregroundStyle(ForgeColor.ink)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(ForgeColor.line))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(.top, ForgeSpacing.s)
+    }
+
+    private static func anchor(_ id: UUID) -> String { "home.row.\(id.uuidString)" }
+
+    private static func emptyStageLine(_ stage: Track) -> String {
+        switch stage {
+        case .idea: "New ideas land here until the panel has looked at them."
+        case .formation: "An idea moves here once the panel has given its take."
+        case .reality: "An idea moves here when you take a first step with real people."
+        }
     }
 }
 
@@ -263,13 +286,13 @@ struct StakeCard: View {
                     }
                 }
                 .buttonStyle(.plain)
-                HStack(alignment: .bottom, spacing: 8) {
-                    EstimatedReturnRow(idea: idea, prefix: idea.latestRealityCheck?.verdict.displayName)
-                    Spacer(minLength: 0)
-                    if idea.track == .reality && idea.latestRealityCheck == nil && RealityCheckPolicy.isOffered(for: idea.lensType) {
-                        RealityCheckButton(idea: idea, pill: true, pillTitle: "Check it")
-                    }
+                // Decision 0025: the verdict word on its own line, the figure beneath it, never more than two lines.
+                VStack(alignment: .leading, spacing: 6) {
+                    PanelAndProof(idea: idea)
+                    EstimatedReturnRow(idea: idea)
                 }
+                // Decision 0036: one primary action, full width, at the bottom of the card.
+                CardPrimaryAction(idea: idea).padding(.top, 4)
             }
             .padding(.vertical, 14).padding(.trailing, 14)
         }
@@ -282,12 +305,13 @@ struct StakeCard: View {
     private var heading: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).lineLimit(1)
+                Text(stageLine).forgeLabelSmall().foregroundStyle(Self.color(track)).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 StageTrail(track: idea.track)
             }
             Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink).lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            IdeaSubtitle(idea: idea)
         }
         .contentShape(Rectangle())
     }
@@ -303,7 +327,7 @@ struct StakeCard: View {
     private var stageLine: String {
         var parts = [track.displayName]
         if checking { parts.append("Checking") }
-        else if track == .reality && idea.latestRealityCheck == nil { parts.append("started without the panel") }
+        else if track == .reality && idea.latestRealityCheck == nil { parts.append("No panel yet") }
         else if let project = idea.project, project.nextStep != nil {
             parts.append("\(min(project.nextStepCount, project.effectiveTarget)) of \(project.effectiveTarget)")
         } else if tally.total > 0 {
@@ -319,9 +343,12 @@ struct StakeCard: View {
 }
 
 /// Idea (n) → Formation (n) → Reality (n): glowing 40 pt nodes in the stage
-/// colours on a gradient line, each with a one-line status. Tap for the tab.
+/// colours on a gradient line, each with a one-line status. Tapping a stage
+/// filters Home's list to it; tapping it again clears the filter. The chosen
+/// stage gets a ring and a tick, not only its colour.
 struct PipelineStrip: View {
     let counts: [Int]
+    var selected: Track? = nil
     var onTap: (Track) -> Void
 
     var body: some View {
@@ -333,10 +360,17 @@ struct PipelineStrip: View {
                             Circle().fill(StakeCard.color(track)).frame(width: 40, height: 40)
                                 .shadow(color: StakeCard.color(track).opacity(0.55), radius: 10)
                             Text("\(counts[i])").font(ForgeType.numeralSmall).foregroundStyle(.white)
+                            if selected == track {
+                                Circle().strokeBorder(ForgeColor.ink, lineWidth: 2).frame(width: 48, height: 48)
+                            }
                         }
+                        .frame(width: 48, height: 48)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(track.displayName), \(counts[i]). \(status(track, counts[i]))")
+                    .accessibilityHint(selected == track ? "Showing only these. Tap to show all ideas." : "Shows only these ideas.")
+                    .accessibilityAddTraits(selected == track ? .isSelected : [])
                     if i < Track.allCases.count - 1 {
                         LinearGradient(colors: [StakeCard.color(track), StakeCard.color(Track.allCases[i + 1])], startPoint: .leading, endPoint: .trailing)
                             .frame(height: 2)
@@ -346,11 +380,18 @@ struct PipelineStrip: View {
             HStack(alignment: .top, spacing: 8) {
                 ForEach(Array(Track.allCases.enumerated()), id: \.element) { i, track in
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(track.displayName).forgeLabelSmall()
-                        Text(status(track, counts[i])).font(.system(size: 12)).foregroundStyle(ForgeColor.inkSecondary)
+                        HStack(spacing: 4) {
+                            if selected == track {
+                                Image(systemName: "checkmark").font(.footnote.weight(.bold)).foregroundStyle(ForgeColor.ink)
+                            }
+                            Text(track.displayName).font(.system(.footnote, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+                        }
+                        Text(selected == track ? "Showing these" : status(track, counts[i]))
+                            .font(.system(.footnote)).foregroundStyle(ForgeColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityHidden(true)
                 }
             }
         }
@@ -360,84 +401,9 @@ struct PipelineStrip: View {
         if n == 0 { return "Nothing here yet" }
         switch t {
         case .idea: return "Waiting for the panel"
-        case .formation: return "Waiting on your ruling"
+        case .formation: return "Waiting on your decision"
         case .reality: return "Out in the world"
         }
-    }
-}
-
-/// §7 after capture: Home turns toward the new idea. One tap to the panel.
-struct AfterCaptureCard: View {
-    let idea: Idea
-    @Environment(AppEnvironment.self) private var env
-
-    private var runner: RealityCheckRunner { env.realityChecks.runner(for: idea.id) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
-            Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-            if runner.isRunning {
-                HStack(spacing: ForgeSpacing.s) {
-                    ProgressView().controlSize(.small)
-                    Text("Working. The panel is on it; the idea sits in Formation when it's back.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                    Spacer()
-                    StopCheckButton(ideaID: idea.id)
-                }
-            } else {
-                Text(Spheres.afterCaptureLine).font(ForgeType.statement).foregroundStyle(ForgeColor.ink)
-                RealityCheckButton(idea: idea)
-                HStack {
-                    Spacer()
-                    Button("Later") { env.justCapturedIdeaID = nil }
-                        .font(.caption.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
-                }
-            }
-        }
-        .padding(ForgeSpacing.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.6)))
-        .onChange(of: runner.isRunning) { _, running in
-            if running { env.justCapturedIdeaID = nil }
-        }
-    }
-}
-
-/// The most recent unchecked idea, with the Reality Check button on the card.
-struct UncheckedCard: View {
-    let idea: Idea
-    @Environment(AppEnvironment.self) private var env
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ForgeSpacing.m) {
-            NavigationLink(value: VaultRoute.idea(idea.id)) {
-                VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
-                    HStack {
-                        Text("Your next move").forgeLabel().foregroundStyle(ForgeColor.emberText)
-                        Spacer()
-                        Text(env.realityChecks.failure(for: idea.id) == nil ? Track.idea.displayName : "Last check didn't finish").forgeLabel()
-                    }
-                    Text(idea.title).font(ForgeType.ideaTitle).foregroundStyle(ForgeColor.ink)
-                    OriginalText(text: idea.originalText).lineLimit(3)
-                }
-            }
-            .buttonStyle(.plain)
-            if env.realityChecks.isRunning(idea.id) {
-                HStack {
-                    ProgressView().controlSize(.small)
-                    Text("The panel is on it.").font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                    Spacer()
-                    StopCheckButton(ideaID: idea.id)
-                }
-            } else {
-                RealityCheckButton(idea: idea, compact: true)
-            }
-        }
-        .padding(ForgeSpacing.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ForgeColor.surface, in: RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.cardRadius, style: .continuous).strokeBorder(ForgeColor.line))
     }
 }
 

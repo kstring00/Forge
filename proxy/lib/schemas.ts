@@ -2,10 +2,11 @@
 // Structured outputs guarantee the shape; the clamps in `enforce.ts` guarantee
 // the honesty rules (desk research never exceeds rung 2, no source → cantTell).
 import { z } from "zod";
+import { packetSections } from "./packet.js";
 
 export const actions = [
   "expand", "summarize", "explainCriterion", "designExperiment", "nextStep", "plan",
-  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill",
+  "compare", "pivot", "pitch", "runRound", "realityCheck", "prefill", "launchPlan", "rescore",
 ] as const;
 export type Action = (typeof actions)[number];
 
@@ -45,6 +46,19 @@ export const AIContext = z.object({
   constraints: z.array(z.string()).default([]),
   stewardCharter: z.string().nullable().optional(),
   aboutUser: z.string().nullable().optional(),
+  /// The check's shared research (decision 0042): findings with the Library
+  /// source each came from. When present, Library pages arrive without their
+  /// text; the packet is what the panel reads.
+  packet: z.object({
+    researchedAt: z.string().nullable().optional(),
+    findings: z.array(z.object({
+      section: z.enum(packetSections),
+      text: z.string(),
+      url: z.string(),
+      sourceID: uuid.nullable(),
+    })).default([]),
+    gaps: z.array(z.string()).default([]),
+  }).nullable().optional(),
   spheres: z.array(sphere).default([...["investor", "customer", "builder", "strategist", "skeptic"]] as z.infer<typeof sphere>[]),
 });
 export type AIContextT = z.infer<typeof AIContext>;
@@ -129,8 +143,23 @@ export const RealityCheckResult = z.object({
   costEstimate: z.string(),
 });
 
+/// One "What if…" pivot: the sentence, its type, the criterion it raises, why, and the first test.
+export const PivotDraft = z.object({
+  whatIf: z.string(),
+  pivotType,
+  fixes: z.string(),
+  why: z.string(),
+  firstTest: z.string(),
+  sourceIDs: z.array(sourceId),
+});
+
+/// Decision 0037: one input to the Investor's bottom-up return. sourceID null is an assumption.
+export const EstimateInput = z.object({ low: z.number(), high: z.number(), basis: z.string(), sourceID: sourceId.nullable() });
+
 /// §0A. One typed object that pre-fills the whole Lab, every field carrying source IDs.
 export const PrefillResult = z.object({
+  /// The idea's name, 2 to 5 plain words. Null only if the idea gives nothing to name.
+  title: z.string().nullable(),
   realityCheck: RealityCheckResult,
   explorations: z.array(z.object({ promptKey: z.string(), answer: z.string(), sourceIDs: z.array(sourceId) })),
   criteria: z.array(z.object({ key: z.string(), score: z.number().int(), evidenceLevel: z.number().int(), note: z.string(), sourceIDs: z.array(sourceId) })),
@@ -145,11 +174,45 @@ export const PrefillResult = z.object({
   projectionLow: z.number().nullable(),
   projectionHigh: z.number().nullable(),
   projectionBasis: z.string(),
+  /// Decision 0037: price per month × reachable customers in year one × conversion. Null when nothing can be said.
+  estimate: z.object({ price: EstimateInput, reachable: EstimateInput, conversion: EstimateInput }).nullable(),
   riskiestAssumption: z.object({ belief: z.string(), consequence: z.string(), sourceIDs: z.array(sourceId) }),
   nextMove: z.object({ recommendation, step: z.string(), experiment: ExperimentCard.nullable() }),
   draftedAssets: z.object({ kind: z.enum(["interviewQuestions", "outreachScript", "landingCopy"]), title: z.string(), body: z.string() }),
   panel: z.array(VerdictDraft),
   crossfire: z.array(CrossfireDraft),
+  /// "What if…" pivots (decision 0024): two or three when the idea is weak, grounded in the Library; empty otherwise.
+  pivots: z.array(PivotDraft),
+});
+
+/// Decision 0042: a check runs in two calls. The five panelists score on the
+/// scoring model; the brief model writes the Brief from the packet and
+/// those scores. The proxy merges them into one PrefillResult for the app.
+export const ScoreResult = PrefillResult.pick({
+  criteria: true, projection: true, projectionLow: true, projectionHigh: true, projectionBasis: true,
+  estimate: true, panel: true, crossfire: true,
+});
+export const BriefResult = PrefillResult.pick({
+  title: true, realityCheck: true, explorations: true, riskiestAssumption: true, nextMove: true, draftedAssets: true, pivots: true,
+});
+
+/// Decision 0041: a launch plan, two pages, built only from what Hunch knows.
+/// A "proven" line must point at a Library source; one that doesn't is moved
+/// to "unproven" by `enforceLaunchPlan`.
+export const PlanClaim = z.object({ text: z.string(), sourceID: sourceId.nullable() });
+export const PlanPhase = z.object({ title: z.string(), detail: z.string(), decide: z.string() });
+export const LaunchPlanResult = z.object({
+  oneLine: z.string(),
+  forWho: z.string(),
+  proven: z.array(PlanClaim),
+  unproven: z.array(z.string()),
+  riskiest: z.string(),
+  days1to30: PlanPhase,
+  days31to60: PlanPhase,
+  days61to90: PlanPhase,
+  customerNoun: z.string(),
+  stopRule: z.string(),
+  stewardNote: z.string().nullable(),
 });
 
 export const payloadSchemas = {
@@ -165,6 +228,9 @@ export const payloadSchemas = {
   runRound: RoundResult,
   realityCheck: RealityCheckResult,
   prefill: PrefillResult,
+  launchPlan: LaunchPlanResult,
+  /// After a logged conversation: the panelists score again from the saved packet. No research, no Brief.
+  rescore: ScoreResult,
 } satisfies Record<Action, z.ZodTypeAny>;
 
 /// What goes back to the app: the payload, a short rationale, and accounting.

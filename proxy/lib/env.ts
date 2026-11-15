@@ -1,6 +1,7 @@
-// Configuration from environment variables. Only ANTHROPIC_API_KEY and
-// FORGE_PROXY_TOKEN are required. Nothing here is ever sent to the app.
+// Configuration from environment variables. ANTHROPIC_API_KEY and
+// APPLE_TEAM_ID are required. Nothing here is ever sent to the app.
 // Read on access, not at import, so load order never decides what is seen.
+import { modelFor } from "./config.js";
 
 const num = (name: string, fallback: number) => {
   const v = Number(process.env[name]);
@@ -37,13 +38,8 @@ export const config = {
   /// Limits. Both fail politely.
   get checksPerDevicePerDay() { return num("FORGE_CHECKS_PER_DEVICE_PER_DAY", 5); },
   get dailySpendUSD() { return num("FORGE_DAILY_SPEND_USD", 5); },
-  /// Desk research (web search and fetch, writing notes). Haiku: reading is
-  /// most of the tokens and needs little judgment.
-  get researchModel() { return process.env.FORGE_RESEARCH_MODEL ?? "claude-haiku-5-5"; },
-  /// Spheres, the prefill and every verdict. Brief v4 §11: Sonnet.
-  get sphereModel() { return process.env.FORGE_SPHERE_MODEL ?? "claude-sonnet-5-5"; },
-  /// Summaries, expansions, transcript cleanup. Brief v4 §11: Haiku.
-  get fastModel() { return process.env.FORGE_FAST_MODEL ?? "claude-haiku-5-5"; },
+  /// Models live in config/hunch.ts (decision 0042), read through lib/config.ts.
+  get researchModel() { return modelFor("research"); },
   /// Per research turn; a paused turn's continuations count against the same
   /// cap. Searches are billed per use ($0.01 each), so this is the main cost
   /// lever. Fetches are billed only as the tokens they add.
@@ -52,7 +48,7 @@ export const config = {
   /// Each fetched page is cut to about this many tokens before the model reads it.
   get maxTokensPerFetch() { return num("FORGE_MAX_FETCH_TOKENS", 4000); },
   get requestsPerMinute() { return num("FORGE_REQUESTS_PER_MINUTE", 30); },
-  version: "0.3.0",
+  version: "0.2.0",
 };
 
 export function missingConfig(): string[] {

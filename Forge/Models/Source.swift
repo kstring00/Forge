@@ -32,4 +32,14 @@ public final class Source {
         get { SourceClass(rawValue: sourceClassRaw) ?? .assumption }
         set { sourceClassRaw = newValue.rawValue }
     }
+
+    /// Decision 0037: the person's own evidence is lived; a fetched page is
+    /// ranked by where it came from; the model's own notes are opinion.
+    public var evidenceRank: EvidenceRank {
+        switch sourceClass {
+        case .userVerified: return .lived
+        case .assumption: return .opinion
+        case .aiFound: return url == nil ? .opinion : EvidenceRank.classify(url: url)
+        }
+    }
 }

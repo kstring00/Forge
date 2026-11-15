@@ -16,6 +16,18 @@ public enum RealityCheckPolicy {
     public static let notOfferedLine = "The Reality Check researches markets, so it runs on Business ideas. This lens is judged by its impact instead."
 }
 
+/// Decision 0024: when the Brief offers "What if…" pivots. Under 40 Confidence,
+/// or a verdict that says the idea as stated is not yet a go.
+public enum WhatIfPolicy {
+    public static let confidenceFloor = 40
+
+    /// Decision 0040: every check comes with What-ifs, strong idea or weak, on every plan.
+    public static func shows(confidence: Int, verdict: RealityVerdict) -> Bool { true }
+
+    /// The label on a card: the weakness the pivot fixes.
+    public static func raisesLabel(criterionTitle: String) -> String { "Raises \(criterionTitle)" }
+}
+
 /// What a Reality Check costs, in the words the card uses (§0A: cost is visible).
 public enum RealityCheckCost {
     /// How many recent real runs the average uses. Recent, so a change in the

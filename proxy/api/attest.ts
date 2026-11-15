@@ -4,9 +4,6 @@ import { HttpError, requireMethod, sendError } from "../lib/http.js";
 import { parseJSONBody, readRawBody } from "../lib/auth.js";
 import { AttestError, issueChallenge, saveKey, takeChallenge, verifyAttestation } from "../lib/attest.js";
 
-export const config_ = { api: { bodyParser: false } };
-export { config_ as config };
-
 /// POST /api/attest
 ///   {}                                   → { challenge }       a one-time challenge, good for five minutes
 ///   { keyId, attestation, challenge }    → { ok: true }        the key is on record; assertions may follow
@@ -15,7 +12,7 @@ export { config_ as config };
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     requireMethod(req, "POST");
-    const body = parseJSONBody<{ keyId?: string; attestation?: string; challenge?: string }>(await readRawBody(req).then((b) => (b.length ? b : Buffer.from("{}"))));
+    const body = parseJSONBody<{ keyId?: string; attestation?: string; challenge?: string }>(await readRawBody(req).then((b) => (b.raw.length ? b.raw : Buffer.from("{}"))));
     if (!body.keyId && !body.attestation) {
       res.status(200).json({ challenge: await issueChallenge() });
       return;

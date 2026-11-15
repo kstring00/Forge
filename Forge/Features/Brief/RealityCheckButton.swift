@@ -13,11 +13,14 @@ struct RealityCheckButton: View {
     var compact = false
     /// A small capsule for list rows: "To the panel".
     var pill = false
-    var pillTitle = "To the panel"
+    var pillTitle = "To the panel · \(PlanRules.label(checks: PlanRules.current.costs.check))"
+    /// The one-line cost disclosure under the primary button; off on cards (decision 0036).
+    var showsDisclosure = true
     @Environment(\.modelContext) private var context
     @Environment(AppEnvironment.self) private var env
     @State private var confirming = false
     @State private var blocked: IdeaGuard.Verdict?
+    @State private var outOfChecks = false
 
     private var runner: RealityCheckRunner { env.realityChecks.runner(for: idea.id) }
     private var failure: String? { env.realityChecks.failure(for: idea.id) }
@@ -30,65 +33,57 @@ struct RealityCheckButton: View {
         VStack(alignment: .trailing, spacing: 4) {
             Button { tap() } label: {
                 Text(failure == nil ? pillTitle : "Try again")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(ForgeColor.emberText)
-                    .padding(.horizontal, 12).frame(height: 32)
-                    .overlay(Capsule().strokeBorder(ForgeColor.emberText))
+                    .font(.system(.footnote, weight: .medium))
+                    .foregroundStyle(ForgeColor.ink)
+                    .padding(.horizontal, 14).frame(minHeight: 36)
+                    .overlay(Capsule().strokeBorder(ForgeColor.line))
+                    .contentShape(Capsule())
             }
             .buttonStyle(.plain)
             .disabled(runner.isRunning)
             .opacity(runner.isRunning ? 0.5 : 1)
             .accessibilityLabel("Send to the panel. Opens a confirmation first.")
             if blocked != nil {
-                Text(IdeaGuard.blockedLine).font(.caption2).foregroundStyle(ForgeColor.inkSecondary)
+                Text(IdeaGuard.blockedLine).font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
                     .multilineTextAlignment(.trailing).frame(maxWidth: 180)
             }
         }
         .sheet(isPresented: $confirming) { confirmSheet }
     }
 
+    /// Decision 0036: the primary action, full width, 44 pt, verb first.
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: ForgeSpacing.s) {
             Button { tap() } label: {
-                HStack(alignment: .center, spacing: ForgeSpacing.m) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(failure == nil ? "Reality check" : "Try the reality check again")
-                            .font(ForgeType.label).textCase(.uppercase).kerning(1.3)
-                            .foregroundStyle(Color(red: 1.0, green: 0.886, blue: 0.839))
-                        if !compact {
-                            Text("Who already does this, what they charge, what people complain about, and what the panel makes of it.")
-                                .font(.system(size: 15)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                }
-                .padding(compact ? 14 : 18)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(ForgeColor.ember, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                // Decision 0042: every button states its cost.
+                PrimaryButtonLabel(title: failure == nil ? "Get the panel's take · \(PlanRules.label(checks: PlanRules.current.costs.check))" : "Try again")
             }
             .buttonStyle(.plain)
             .disabled(runner.isRunning)
-            .accessibilityLabel(failure == nil ? "Run a Reality Check. Opens a confirmation first." : "Run the Reality Check again. Opens a confirmation first.")
+            .accessibilityLabel(failure == nil ? "Get the panel's take. Opens a confirmation first." : "Run the check again. Opens a confirmation first.")
 
             if let failure {
                 noticeBox(title: "The last check didn't finish", message: failure, detail: env.realityChecks.failureDetails[idea.id]) { env.realityChecks.dismissFailure(idea.id) }
+            } else if outOfChecks {
+                outOfChecksBox
             } else if blocked != nil {
                 noticeBox(title: "The panel needs more to go on", message: IdeaGuard.blockedLine) { blocked = nil }
             } else if case .overCeiling = runner.phase {
                 Text("This month's AI ceiling is reached. Raise it in Settings to run another check.")
-                    .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
             }
 
-            Text(RealityCheckCost.disclosure + " Nothing is sent until you confirm.")
-                .font(.caption).foregroundStyle(ForgeColor.inkSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if showsDisclosure {
+                Text(RealityCheckCost.disclosure + " Nothing is sent until you confirm.")
+                    .font(.footnote).foregroundStyle(ForgeColor.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .sheet(isPresented: $confirming) { confirmSheet }
     }
 
     private var confirmSheet: some View {
-        AIConfirmSheet(content: .realityCheck(ideaTitle: idea.title)) { send in
+        AIConfirmSheet(content: .realityCheck(ideaTitle: idea.title, allowance: env.entitlements.balance.line)) { send in
             if send { start() }
         }
     }
@@ -99,24 +94,24 @@ struct RealityCheckButton: View {
                 .foregroundStyle(ForgeColor.emberText)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: ForgeSpacing.xs) {
-                Text(title).font(.caption.weight(.semibold)).foregroundStyle(ForgeColor.ink)
-                Text(message).font(.caption).foregroundStyle(ForgeColor.ink)
+                Text(title).font(.footnote.weight(.semibold)).foregroundStyle(ForgeColor.ink)
+                Text(message).font(.footnote).foregroundStyle(ForgeColor.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
                 if let detail {
                     DisclosureGroup {
-                        Text(detail).font(.caption2.monospaced()).foregroundStyle(ForgeColor.inkSecondary)
+                        Text(detail).font(.footnote.monospaced()).foregroundStyle(ForgeColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                             .textSelection(.enabled)
                     } label: {
-                        Text("Details").font(.caption2.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
+                        Text("Details").font(.footnote.weight(.medium)).foregroundStyle(ForgeColor.inkSecondary)
                     }
                     .tint(ForgeColor.inkSecondary)
                 }
             }
             Spacer(minLength: 0)
             Button("Dismiss", action: dismiss)
-                .font(.caption.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
         .padding(ForgeSpacing.m)
@@ -125,7 +120,28 @@ struct RealityCheckButton: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// The guard runs on the phone, for free, before anything else.
+    /// Decision 0032, the out-of-checks state: the AI pauses, nothing else does.
+    private var outOfChecksBox: some View {
+        VStack(alignment: .leading, spacing: ForgeSpacing.s) {
+            Text("You're out of checks for now").font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.ink)
+            Text("So the panel can't look into this one yet. \(env.entitlements.balance.resetsText).")
+                .font(.subheadline).foregroundStyle(ForgeColor.ink)
+            Text("Still free: score it yourself in the Lab, write down what you know, take it straight to Reality, and log and rule on other ideas.")
+                .font(.footnote).foregroundStyle(ForgeColor.inkSecondary).fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button("See plans") { env.showingMembership = true }
+                    .font(.system(.subheadline, weight: .semibold)).foregroundStyle(ForgeColor.emberText)
+                Spacer()
+                Button("Not now") { withAnimation(ForgeMotion.fade) { outOfChecks = false } }
+                    .font(.subheadline).foregroundStyle(ForgeColor.inkSecondary)
+            }
+        }
+        .padding(ForgeSpacing.m)
+        .background(ForgeColor.canvas, in: RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: ForgeSpacing.controlRadius, style: .continuous).strokeBorder(ForgeColor.ember.opacity(0.5)))
+    }
+
+    /// The guard runs on the phone, for free, before anything else; then the allowance.
     private func tap() {
         let verdict = IdeaGuard.check(idea.originalText + " " + idea.notes)
         guard verdict == .ok else {
@@ -133,6 +149,11 @@ struct RealityCheckButton: View {
             return
         }
         blocked = nil
+        guard env.entitlements.canStartCheck(inFlight: env.realityChecks.runningCount) else {
+            if pill { env.showingMembership = true } else { withAnimation(ForgeMotion.fade) { outOfChecks = true } }
+            return
+        }
+        outOfChecks = false
         confirming = true
     }
 
@@ -152,7 +173,7 @@ struct StopCheckButton: View {
     var body: some View {
         Button { env.realityChecks.stop(ideaID) } label: {
             Label("Stop", systemImage: "stop.fill")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(.footnote, weight: .medium))
                 .foregroundStyle(ForgeColor.ink)
                 .padding(.horizontal, 12).frame(height: 32)
                 .background(ForgeColor.canvas, in: Capsule())

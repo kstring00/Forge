@@ -26,7 +26,7 @@ struct ImpactStartSection: View {
                     line("What changes for them")
                     line("How you'd know")
                     Text("Tap to answer the three. No dollar figures on this lens; the bar goes solid when you have observed the signal, not when you hope for it.")
-                        .font(.system(size: 13))
+                        .font(.system(.footnote))
                         .foregroundStyle(ForgeColor.ink.opacity(0.85))
                         .padding(.top, 8)
                         .overlay(alignment: .top) { Rectangle().fill(ForgeColor.line).frame(height: 1) }
@@ -42,7 +42,7 @@ struct ImpactStartSection: View {
             .accessibilityLabel("Impact. Who this helps, what changes for them, how you'd know.")
 
             Text(RealityCheckPolicy.notOfferedLine)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(ForgeColor.inkSecondary)
         }
         .sheet(isPresented: $editing) { ImpactStartSheet(idea: idea, lens: lens) }

@@ -33,7 +33,7 @@ final class ExploreAIController {
     private(set) var state: State = .idle
     private let client: any AIClient
 
-    static let offlineMessage = "AI isn't connected yet. Your notes are safe here; this works once the proxy is set up."
+    static let offlineMessage = "The panel can't be reached right now. Your notes are safe here; try again later."
 
     init(client: any AIClient) {
         self.client = client
@@ -96,13 +96,13 @@ final class ExploreAIController {
         } catch let error as AIError {
             switch error {
             case .offline, .notConfigured: state = .offline(Self.offlineMessage)
-            case .rateLimited: state = .failed("The proxy is rate limiting. Try again in a minute.")
+            case .rateLimited: state = .failed("The panel is busy. Try again in a minute.")
             case .resting(let line): state = .failed(line)
-            case .staleAttestation: state = .failed("This device had to re-register with the proxy. Try again.")
+            case .staleAttestation: state = .failed("This phone had to check in with Hunch again. Try once more.")
             case .invalidResponse(let detail):
                 print("Explore AI failure: \(detail)")
                 state = .failed(RealityCheckRunner.trippedLine)
-            case .server(let status): state = .failed("The proxy answered with status \(status).")
+            case .server(let status): state = .failed("Something went wrong on Hunch's side (\(status)). Try again in a little while.")
             }
         } catch {
             state = .failed(error.localizedDescription)

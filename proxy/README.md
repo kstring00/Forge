@@ -19,7 +19,8 @@ evidence rules server-side, and runs desk research for Reality Checks.
    | Name | Value |
    |---|---|
    | `ANTHROPIC_API_KEY` | your key from console.anthropic.com |
-   | `FORGE_PROXY_TOKEN` | a long random string; generate with `openssl rand -hex 32` |
+   | `FORGE_PROXY_TOKEN` | a developer token for simulators; `openssl rand -hex 32`. Release builds use App Attest instead (below). |
+   | `APPLE_TEAM_ID` | your Apple team id, for App Attest |
 
    Optional: `FORGE_RESEARCH_MODEL` (default `claude-haiku-5-5`),
    `FORGE_SPHERE_MODEL` (default `claude-sonnet-5-5`), `FORGE_FAST_MODEL`
@@ -61,6 +62,43 @@ evidence rules server-side, and runs desk research for Reality Checks.
 - `POST /api/research` — `{ idea, advantages?, constraints?, messages? }` → one research
   turn with web search and fetch; `status` is `done` or `paused`. When paused, call again
   with the returned `messages`. Fetched pages come back as `sources` for the Library.
+
+## Who may call it (decision 0021)
+
+No shared secret ships in the app. A release build proves it is a genuine copy of
+Hunch with **App Attest**: once per install the app sends an attestation object for a
+Secure Enclave key to `POST /api/attest` (after fetching a one-time challenge from the
+same route), and every later request carries `X-Forge-Key-Id` and `X-Forge-Assertion`,
+a signature over SHA-256 of the exact request body. The proxy verifies the certificate
+chain to Apple's App Attest root, the nonce, the App ID, the credential id, and a counter
+that only moves forward. Where App Attest is unavailable, the app sends a **DeviceCheck**
+token with a per-install id (`X-Forge-Device-Token`, `X-Forge-Install-Id`), validated
+with Apple once a day. Developer tokens (`Authorization: Bearer`) remain for simulators
+and debug builds.
+
+Set on Vercel:
+
+| Variable | Purpose |
+|---|---|
+| `APPLE_TEAM_ID` | Your team id; with the bundle id it forms the App ID the attestation names. Required. |
+| `APP_BUNDLE_ID` | Defaults to `com.stringhamwebdesign.hunch`. |
+| `APP_ATTEST_ENVIRONMENT` | `production` (TestFlight, App Store; default) or `development` to also accept Xcode builds on a device. |
+| `APPLE_APP_ATTEST_ROOT_PEM` | Optional pin of Apple's App Attest root. Otherwise fetched once per instance from apple.com. |
+| `DEVICECHECK_KEY_ID`, `DEVICECHECK_PRIVATE_KEY` | A DeviceCheck key (.p8 contents, newlines as `\n`) from the developer account, for the fallback. |
+| `FORGE_DEV_TOKENS` | Comma-separated developer tokens (16+ characters). `FORGE_PROXY_TOKEN` is read as the first. |
+| `FORGE_ADMIN_TOKEN` | Bearer for `GET /api/usage`. |
+| `FORGE_CHECKS_PER_DEVICE_PER_DAY` | Reality Checks a device may start per UTC day. Default 5. |
+| `FORGE_DAILY_SPEND_USD` | The whole proxy's ceiling per UTC day. Default 5. |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Set by Vercel's Upstash Redis integration (or `UPSTASH_REDIS_REST_URL/_TOKEN`). Holds attested keys, challenges and usage. Without it the proxy falls back to per-instance memory and `/api/health` reports `store: "memory"`: keys and limits then reset on every cold start. |
+
+Past either limit the proxy answers 429 with "The panel is resting until tomorrow."; the
+app shows that line as is. Every served call logs one JSON line
+`{ at: "usage", device, door, action, costUSD }`, and `GET /api/usage?day=YYYY-MM-DD`
+(admin token) lists every device with its checks, calls and spend against the ceiling.
+
+App side: the App Attest capability on the App ID, the entitlement in
+`Forge/Config/Forge.entitlements`, and `PROXY_TOKEN` blanked for Release in
+`Base.xcconfig`.
 
 ## Rules enforced here, not just in prompts
 

@@ -12,8 +12,11 @@ export function prepareEnv(): void {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error("No API key. In this Terminal window run:  set -a; source .env; set +a  (then try again). The bench calls the real Claude API.");
   }
-  process.env.FORGE_PROXY_TOKEN ||= "bench-token";
+  // A developer token (16 characters or more): the bench comes in by the developer door.
+  if ((process.env.FORGE_PROXY_TOKEN ?? "").trim().length < 16) process.env.FORGE_PROXY_TOKEN = "bench-token-for-local-runs";
   process.env.FORGE_REQUESTS_PER_MINUTE ||= "1000";
+  // The daily ceiling protects the live proxy; a bench run is counted by hand.
+  process.env.FORGE_DAILY_SPEND_USD ||= "1000";
 }
 
 export function call<T = any>(handler: Handler, body: unknown, method = "POST"): Promise<Reply<T>> {

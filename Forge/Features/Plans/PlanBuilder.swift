@@ -149,6 +149,7 @@ final class PlanBuilder {
         switch error as? AIError {
         case .offline?: "The plan didn't finish: the connection dropped. Try again when you're online. No checks were used."
         case .rateLimited?: "The panel is busy. Try again in a minute. No checks were used."
+        case .resting(let line)?: "\(line) No checks were used."
         default: "The plan didn't finish. No checks were used. Try again in a little while."
         }
     }

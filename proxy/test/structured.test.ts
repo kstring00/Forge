@@ -8,7 +8,7 @@ test("a cut-off structured answer is retried as plain JSON, not a 500", async ()
   const mock = await startMock({ truncateFirst: true });
   process.env.ANTHROPIC_BASE_URL = mock.url;
   process.env.ANTHROPIC_API_KEY = "mock";
-  process.env.FORGE_PROXY_TOKEN = "t";
+  process.env.FORGE_PROXY_TOKEN = "test-token-0123456789";
   try {
     const { default: action } = await import("../api/action.js");
     const reply = await new Promise<{ status: number; body: any }>((resolve) => {
@@ -18,7 +18,7 @@ test("a cut-off structured answer is retried as plain JSON, not a 500", async ()
         setHeader() {},
         json(b: unknown) { resolve({ status: this.statusCode, body: b }); },
       };
-      action({ method: "POST", headers: { authorization: "Bearer t" },
+      action({ method: "POST", headers: { authorization: "Bearer test-token-0123456789" },
         body: { action: "rescore", context: { ideaID: "11111111-1111-4111-8111-111111111111", originalText: "x", title: "t",
           sources: [{ id: "22222222-2222-4222-8222-222222222222", title: "p", sourceClass: "aiFound", reviewed: false, chunks: [] }] } } } as never, res as never);
     });

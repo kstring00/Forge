@@ -97,6 +97,8 @@ final class ExploreAIController {
             switch error {
             case .offline, .notConfigured: state = .offline(Self.offlineMessage)
             case .rateLimited: state = .failed("The panel is busy. Try again in a minute.")
+            case .resting(let line): state = .failed(line)
+            case .staleAttestation: state = .failed("This phone had to check in with Hunch again. Try once more.")
             case .invalidResponse(let detail):
                 print("Explore AI failure: \(detail)")
                 state = .failed(RealityCheckRunner.trippedLine)

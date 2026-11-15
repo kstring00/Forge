@@ -4,6 +4,8 @@ import { requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { realityCheckEstimateUSD } from "../lib/pricing.js";
 import { content } from "../lib/content.js";
 import { hunchConfig, models } from "../lib/config.js";
+import { store } from "../lib/store.js";
+import { deviceCheckConfigured } from "../lib/devicecheck.js";
 
 /// GET /api/health — is the proxy configured and is this token accepted?
 /// Without a token it still answers, minus the configuration detail, so a
@@ -25,6 +27,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       estimate: { realityCheckUSD: realityCheckEstimateUSD(config.maxSearchesPerResearchCall) },
       // Decision 0042: the plan numbers, for every app, authorized or not.
       rules: hunchConfig.rules,
+      // Decision 0021: how this proxy tells a real device from anything else. No secrets here.
+      protection: {
+        appAttest: Boolean(config.appleTeamID),
+        appAttestEnvironment: config.appAttestEnvironment,
+        deviceCheck: deviceCheckConfigured(),
+        devTokens: config.devTokens.length,
+        store: store().kind,
+        checksPerDevicePerDay: config.checksPerDevicePerDay,
+        dailySpendUSD: config.dailySpendUSD,
+      },
     });
   } catch (err) {
     sendError(res, err, "health");

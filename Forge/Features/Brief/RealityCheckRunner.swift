@@ -177,6 +177,8 @@ final class RealityCheckRunner {
         case .notConfigured: return "The server refused the request (401/403/503). In development: PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and ANTHROPIC_API_KEY."
         case .server(let s): return "The server answered \(s). Vercel → Logs has the detail."
         case .rateLimited: return "429 from the server's rate limiter."
+        case .resting: return "429: the device's daily limit or the day's spend ceiling (decision 0021)."
+        case .staleAttestation: return "401 attest_unknown_key: the server had no record of this device's key."
         default: return nil
         }
     }
@@ -220,6 +222,11 @@ final class RealityCheckRunner {
             return .failed("\(what): Hunch couldn't reach the panel just now.\(kept) Try again in a little while.")
         case .rateLimited:
             return .failed("\(what): the panel is busy. Try again in a minute.\(kept)")
+        case .resting(let line):
+            // Decision 0021: the server's own polite line ("The panel is resting until tomorrow.").
+            return .failed("\(line)\(kept)")
+        case .staleAttestation:
+            return .failed("\(what): this phone had to check in with Hunch again. Try once more.\(kept)")
         case .invalidResponse:
             return .failed("\(trippedLine)\(kept)\(spent)")
         case .server(let s):

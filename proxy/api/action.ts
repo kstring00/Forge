@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { z } from "zod";
-import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
+import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
+import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
+import { recordUsage, refuseIfResting } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { ActionRequest, BriefResult, ScoreResult, payloadSchemas, withRationale, type Action, type Envelope } from "../lib/schemas.js";
 import { actionInstruction, briefInstruction, panelSystem, scoreInstruction, userTurn } from "../lib/prompts.js";
@@ -90,10 +92,13 @@ export function scoresText(s: z.infer<typeof ScoreResult>, lensType: string): st
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     requireMethod(req, "POST");
-    requireAuth(req);
+    // The device's assertion signs the exact bytes of the body.
+    const body = await readRawBody(req);
+    const device = await requireDevice(req, body);
     rateLimit();
+    await refuseIfResting();
 
-    const parsed = ActionRequest.safeParse(readJSON(req));
+    const parsed = ActionRequest.safeParse(parseJSONBody(body.raw));
     if (!parsed.success) {
       throw new HttpError(400, "bad_request", "Request did not match the contract: " + parsed.error.issues.map((i) => i.path.join(".") + " " + i.message).join("; "));
     }
@@ -146,6 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const fallback = modes.find((m) => m !== "structured");
     if (fallback) res.setHeader("X-Forge-Mode", fallback === "jsonRetry" ? "json-retry" : "json-fallback");
     if (Object.keys(dropped).length) console.warn(JSON.stringify({ at: `action.${action}`, dropped }));
+    await recordUsage(device, action, envelope.costUSD);
     res.status(200).json(envelope);
   } catch (err) {
     sendError(res, err, "action");

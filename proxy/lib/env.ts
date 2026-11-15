@@ -1,5 +1,5 @@
-// Configuration from environment variables. Only ANTHROPIC_API_KEY and
-// FORGE_PROXY_TOKEN are required. Nothing here is ever sent to the app.
+// Configuration from environment variables. ANTHROPIC_API_KEY and
+// APPLE_TEAM_ID are required. Nothing here is ever sent to the app.
 // Read on access, not at import, so load order never decides what is seen.
 import { modelFor } from "./config.js";
 
@@ -12,7 +12,32 @@ export const config = {
   // Trimmed: a trailing newline from a pasted `openssl rand` or a piped
   // `vercel env add` must not make a correct token fail.
   get anthropicApiKey() { return (process.env.ANTHROPIC_API_KEY ?? "").trim(); },
-  get proxyToken() { return (process.env.FORGE_PROXY_TOKEN ?? "").trim(); },
+  /// Developer tokens, for simulators and development builds only. A release
+  /// build carries no token; it proves itself with App Attest. Comma-separated.
+  /// FORGE_PROXY_TOKEN is still read as the first of them.
+  get devTokens(): string[] {
+    return [process.env.FORGE_PROXY_TOKEN ?? "", ...(process.env.FORGE_DEV_TOKENS ?? "").split(",")]
+      .map((t) => t.trim()).filter((t) => t.length >= 16);
+  },
+  /// Kept for the health endpoint's "configured" check.
+  get proxyToken() { return this.devTokens[0] ?? ""; },
+  /// App Attest: "TEAMID.bundle.id". Both parts come from the developer account.
+  get appleTeamID() { return (process.env.APPLE_TEAM_ID ?? "").trim(); },
+  get appBundleID() { return (process.env.APP_BUNDLE_ID ?? "com.stringhamwebdesign.hunch").trim(); },
+  get appID() { return `${this.appleTeamID}.${this.appBundleID}`; },
+  /// "production" for TestFlight and the App Store; "development" accepts
+  /// development attestations too (Xcode builds on a device).
+  get appAttestEnvironment(): "production" | "development" {
+    return process.env.APP_ATTEST_ENVIRONMENT === "development" ? "development" : "production";
+  },
+  /// DeviceCheck fallback: a key from the developer account.
+  get deviceCheckKeyID() { return (process.env.DEVICECHECK_KEY_ID ?? "").trim(); },
+  get deviceCheckPrivateKey() { return (process.env.DEVICECHECK_PRIVATE_KEY ?? "").trim(); },
+  /// The developer's token for /api/usage.
+  get adminToken() { return (process.env.FORGE_ADMIN_TOKEN ?? "").trim(); },
+  /// Limits. Both fail politely.
+  get checksPerDevicePerDay() { return num("FORGE_CHECKS_PER_DEVICE_PER_DAY", 5); },
+  get dailySpendUSD() { return num("FORGE_DAILY_SPEND_USD", 5); },
   /// Models live in config/hunch.ts (decision 0042), read through lib/config.ts.
   get researchModel() { return modelFor("research"); },
   /// Per research turn; a paused turn's continuations count against the same
@@ -29,6 +54,6 @@ export const config = {
 export function missingConfig(): string[] {
   const missing: string[] = [];
   if (!config.anthropicApiKey) missing.push("ANTHROPIC_API_KEY");
-  if (!config.proxyToken) missing.push("FORGE_PROXY_TOKEN");
+  if (!config.appleTeamID) missing.push("APPLE_TEAM_ID");
   return missing;
 }

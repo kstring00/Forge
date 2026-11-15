@@ -13,6 +13,12 @@ if (missing.length) {
   process.exit(1);
 }
 process.env.FORGE_REQUESTS_PER_MINUTE ||= "1000";
+// The daily ceiling protects the live proxy; on your Mac it would only get in the way.
+process.env.FORGE_DAILY_SPEND_USD ||= "1000";
+if (process.env.FORGE_PROXY_TOKEN!.trim().length < 16) {
+  console.error("FORGE_PROXY_TOKEN in .env is shorter than 16 characters. The proxy ignores developer tokens that short. Use the long one from Local.xcconfig.");
+  process.exit(1);
+}
 
 const { default: action } = await import("../api/action.js");
 const { default: research } = await import("../api/research.js");

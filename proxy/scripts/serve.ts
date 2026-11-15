@@ -23,8 +23,11 @@ if (process.env.FORGE_PROXY_TOKEN!.trim().length < 16) {
 const { default: action } = await import("../api/action.js");
 const { default: research } = await import("../api/research.js");
 const { default: health } = await import("../api/health.js");
+const { default: spend } = await import("../api/spend.js");
+const { default: owner } = await import("../api/owner.js");
 const routes: Record<string, (req: never, res: never) => unknown> = {
   "/": health, "/api/health": health, "/api/action": action, "/api/research": research,
+  "/api/spend": spend, "/owner": owner, "/api/owner": owner,
 };
 
 function adapt(res: ServerResponse) {
@@ -35,6 +38,10 @@ function adapt(res: ServerResponse) {
     json(body: unknown) {
       res.writeHead(this.statusCode, { "content-type": "application/json" });
       res.end(JSON.stringify(body));
+    },
+    send(body: string) {
+      res.writeHead(this.statusCode);
+      res.end(body);
     },
   };
 }

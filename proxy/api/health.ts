@@ -1,14 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { config, missingConfig } from "../lib/env.js";
-import { requireAuth, requireMethod, sendError } from "../lib/http.js";
+import { paused, requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { realityCheckEstimateUSD } from "../lib/pricing.js";
 import { content } from "../lib/content.js";
 import { hunchConfig, models } from "../lib/config.js";
 
-/// GET /api/health — is the proxy configured and is this token accepted?
-/// Without a token it still answers, minus the configuration detail, so a
-/// browser can tell the deployment is alive.
+/// GET /api/health — is the deployment alive? With the kill switch on it
+/// answers 503 like every other route. Nothing is "authorized" any more (the
+/// bearer token is gone), so the configuration detail is never returned.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (paused(res)) return;
   try {
     requireMethod(req, "GET");
     const missing = missingConfig();

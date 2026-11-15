@@ -12,7 +12,6 @@ export function prepareEnv(): void {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error("No API key. In this Terminal window run:  set -a; source .env; set +a  (then try again). The bench calls the real Claude API.");
   }
-  process.env.FORGE_PROXY_TOKEN ||= "bench-token";
   process.env.FORGE_REQUESTS_PER_MINUTE ||= "1000";
 }
 
@@ -25,7 +24,8 @@ export function call<T = any>(handler: Handler, body: unknown, method = "POST"):
       setHeader(k: string, v: string) { this.headers[k] = v; },
       json(b: T) { resolve({ status: this.statusCode, body: b, headers: this.headers }); },
     };
-    const req = { method, headers: { authorization: `Bearer ${process.env.FORGE_PROXY_TOKEN}` }, body };
+    // Parked (PARKED.md): the bearer token is gone, so the handlers refuse this. The bench cannot run until a new door exists.
+    const req = { method, headers: {}, body };
     Promise.resolve(handler(req, res)).catch(reject);
   });
 }

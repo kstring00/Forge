@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { config, missingConfig } from "./env.js";
+import { config } from "./env.js";
 import { logUpstream, upstreamMessage } from "./upstream.js";
 
 export class HttpError extends Error {
@@ -8,24 +8,23 @@ export class HttpError extends Error {
   }
 }
 
-/// Bearer-token check. Constant-time compare so timing does not leak the token.
-export function requireAuth(req: VercelRequest): void {
-  const missing = missingConfig();
-  if (missing.length > 0) {
-    throw new HttpError(503, "not_configured", `Proxy is missing: ${missing.join(", ")}`);
-  }
-  const header = req.headers.authorization ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!token || !timingSafeEqual(token, config.proxyToken)) {
-    throw new HttpError(401, "unauthorized", "Missing or invalid proxy token.");
-  }
+/// The kill switch (PARKED.md). With PROXY_DISABLED set to "true", every route
+/// answers 503 {"error":"Service paused"} and returns true. It is the first
+/// thing each handler does: before the method check, before any auth, before
+/// anything is read from the request or sent upstream.
+export function paused(res: VercelResponse): boolean {
+  if ((process.env.PROXY_DISABLED ?? "").trim().toLowerCase() !== "true") return false;
+  res.status(503).json({ error: "Service paused" });
+  return true;
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
+/// The proxy used to accept one shared bearer token (FORGE_PROXY_TOKEN). That
+/// token was exposed and Hunch is parked, so the token is gone from the code:
+/// nothing reads it, and no Authorization header opens anything. There is no
+/// other door on this branch, so every request is refused here. A future app
+/// would bring its own (the App Attest work in PR #16 is the starting point).
+export function requireAuth(_req: VercelRequest): void {
+  throw new HttpError(401, "unauthorized", "This proxy accepts no requests.");
 }
 
 /// Best-effort per-instance rate limit. Serverless instances do not share

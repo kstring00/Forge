@@ -1,5 +1,9 @@
 # FORGE proxy
 
+> **Parked on November 15, 2026. This proxy is shut down.** See `PARKED.md` at the root of the repo.
+> - Kill switch: with `PROXY_DISABLED=true` every route answers 503 `{"error":"Service paused"}` before anything else runs.
+> - The shared bearer token (`FORGE_PROXY_TOKEN`, `PROXY_TOKEN` in the app) was exposed and has been removed from the code. Nothing reads it and no `Authorization` header opens anything, so the steps below that mention it no longer work. They are kept as a record of how it was set up.
+
 A small Vercel project that holds the Anthropic API key so none ships in the
 app, validates every model answer against the typed contracts, enforces the
 evidence rules server-side, and runs desk research for Reality Checks.

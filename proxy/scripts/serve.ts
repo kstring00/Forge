@@ -1,15 +1,17 @@
 // The proxy on your Mac, for testing a branch in the iPhone simulator before
 // it is merged and deployed. The same handlers Vercel runs, on
-// http://localhost:8787. Reads ANTHROPIC_API_KEY and FORGE_PROXY_TOKEN from
-// the environment (see the PR's "How to run" steps).
+// http://localhost:8787. Reads ANTHROPIC_API_KEY from the environment.
+//
+// Parked (PARKED.md): the shared bearer token is gone, so the handlers refuse
+// every request. This only shows that they do.
 //
 //   set -a; source .env; set +a
 //   npm run serve
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
-const missing = ["ANTHROPIC_API_KEY", "FORGE_PROXY_TOKEN"].filter((k) => !process.env[k]?.trim());
+const missing = ["ANTHROPIC_API_KEY"].filter((k) => !process.env[k]?.trim());
 if (missing.length) {
-  console.error(`Missing ${missing.join(" and ")}. In this Terminal window run:\n\n  set -a; source .env; set +a\n\nthen npm run serve again. (.env holds both lines; see the PR.)`);
+  console.error(`Missing ${missing.join(" and ")}. In this Terminal window run:\n\n  set -a; source .env; set +a\n\nthen npm run serve again.`);
   process.exit(1);
 }
 process.env.FORGE_REQUESTS_PER_MINUTE ||= "1000";

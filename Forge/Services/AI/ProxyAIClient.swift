@@ -5,19 +5,21 @@ import ForgeCore
 /// validates every answer against the contracts and enforces the evidence
 /// rules. Configured from Local.xcconfig via Info.plist; absent that, the app
 /// stays on the offline client.
+///
+/// Parked (PARKED.md): the shared bearer token this client used to send is
+/// gone from the app and the proxy, and nothing replaces it yet. The proxy
+/// refuses every request, which the app shows as "couldn't reach the panel".
 struct ProxyAIClient: AIClient {
     let baseURL: URL
-    let token: String
     var session: URLSession = .shared
 
     var isAvailable: Bool { true }
 
-    /// Nil unless both PROXY_URL and PROXY_TOKEN were set at build time.
+    /// Nil unless PROXY_URL was set at build time.
     static func configured(bundle: Bundle = .main) -> ProxyAIClient? {
         guard let urlString = bundle.object(forInfoDictionaryKey: "ForgeProxyURL") as? String, !urlString.isEmpty,
-              let token = bundle.object(forInfoDictionaryKey: "ForgeProxyToken") as? String, !token.isEmpty,
               let url = URL(string: urlString) else { return nil }
-        return ProxyAIClient(baseURL: url, token: token)
+        return ProxyAIClient(baseURL: url)
     }
 
     private struct ActionRequest<C: Encodable>: Encodable {
@@ -57,7 +59,6 @@ struct ProxyAIClient: AIClient {
         request.httpMethod = "POST"
         request.timeoutInterval = timeout
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         request.httpBody = try encoder.encode(body)
@@ -111,7 +112,6 @@ struct ProxyAIClient: AIClient {
     func health() async throws -> Health {
         var request = URLRequest(url: baseURL.appending(path: "api/health"))
         request.timeoutInterval = 15
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw AIError.server(status: (response as? HTTPURLResponse)?.statusCode ?? 0)

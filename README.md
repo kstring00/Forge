@@ -1,5 +1,7 @@
 # FORGE
 
+> **Parked on November 15, 2026.** Read `PARKED.md` first: why, where things stand, and what is reusable.
+
 Capture the idea. Test its potential. Make it real.
 
 A native iOS app (SwiftUI, SwiftData, iOS 17+) for one person to capture ideas,

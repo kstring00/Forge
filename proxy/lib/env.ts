@@ -1,5 +1,6 @@
-// Configuration from environment variables. Only ANTHROPIC_API_KEY and
-// FORGE_PROXY_TOKEN are required. Nothing here is ever sent to the app.
+// Configuration from environment variables. Nothing here is ever sent to the
+// app. The shared bearer token (FORGE_PROXY_TOKEN) is no longer read anywhere:
+// see PARKED.md.
 // Read on access, not at import, so load order never decides what is seen.
 import { modelFor } from "./config.js";
 
@@ -9,10 +10,8 @@ const num = (name: string, fallback: number) => {
 };
 
 export const config = {
-  // Trimmed: a trailing newline from a pasted `openssl rand` or a piped
-  // `vercel env add` must not make a correct token fail.
+  // Trimmed: a trailing newline from a piped `vercel env add` must not make a correct key fail.
   get anthropicApiKey() { return (process.env.ANTHROPIC_API_KEY ?? "").trim(); },
-  get proxyToken() { return (process.env.FORGE_PROXY_TOKEN ?? "").trim(); },
   /// Models live in config/hunch.ts (decision 0042), read through lib/config.ts.
   get researchModel() { return modelFor("research"); },
   /// Per research turn; a paused turn's continuations count against the same
@@ -29,6 +28,5 @@ export const config = {
 export function missingConfig(): string[] {
   const missing: string[] = [];
   if (!config.anthropicApiKey) missing.push("ANTHROPIC_API_KEY");
-  if (!config.proxyToken) missing.push("FORGE_PROXY_TOKEN");
   return missing;
 }

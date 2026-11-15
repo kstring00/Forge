@@ -142,16 +142,17 @@ test("Haiku switches rate card past 100K prompt tokens", () => {
 });
 
 
-test("the bearer token is compared trimmed on both sides", async () => {
-  process.env.FORGE_PROXY_TOKEN = "  abc123\n";
+test("no bearer token opens the proxy any more, even the one in the environment", async () => {
+  process.env.FORGE_PROXY_TOKEN = "the-old-token-0123456789";
   process.env.ANTHROPIC_API_KEY = "sk-test";
   const { requireAuth } = await import("../lib/http.js?" + Date.now());
-  const { config } = await import("../lib/env.js?" + Date.now());
-  assert.equal(config.proxyToken, "abc123");
-  const ok = { headers: { authorization: "Bearer abc123 " } } as never;
-  assert.doesNotThrow(() => requireAuth(ok));
-  const bad = { headers: { authorization: "Bearer abc124" } } as never;
-  assert.throws(() => requireAuth(bad), /invalid proxy token/);
+  const { config, missingConfig } = await import("../lib/env.js?" + Date.now());
+  assert.equal("proxyToken" in config, false, "the token is not read");
+  assert.equal(missingConfig().includes("FORGE_PROXY_TOKEN"), false, "and not asked for");
+  for (const headers of [{ authorization: "Bearer the-old-token-0123456789" }, { authorization: "Bearer anything-else" }, {}]) {
+    assert.throws(() => requireAuth({ headers } as never), /accepts no requests/);
+  }
+  delete process.env.FORGE_PROXY_TOKEN;
 });
 
 test("research runs on Haiku with the basic web tools and capped page size", async () => {

@@ -91,6 +91,6 @@ final class AppEnvironment {
         Self.applyTestingOverrides(defaults: defaults)
     }
 
-    /// The proxy client when Local.xcconfig provides a URL and token; otherwise offline.
+    /// The proxy client when Local.xcconfig provides a URL; otherwise offline.
     static let live = AppEnvironment(ai: ProxyAIClient.configured() ?? OfflineAIClient(), speech: SpeechCapture())
 }

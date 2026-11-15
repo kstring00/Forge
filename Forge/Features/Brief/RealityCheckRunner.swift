@@ -174,7 +174,7 @@ final class RealityCheckRunner {
         guard let ai = error as? AIError else { return nil }
         switch ai {
         case .invalidResponse(let d): return d
-        case .notConfigured: return "The server refused the request (401/403/503). In development: PROXY_TOKEN in Local.xcconfig against FORGE_PROXY_TOKEN on Vercel, and ANTHROPIC_API_KEY."
+        case .notConfigured: return "The server refused the request (401/403/503). Hunch is parked and its server is switched off: see PARKED.md."
         case .server(let s): return "The server answered \(s). Vercel → Logs has the detail."
         case .rateLimited: return "429 from the server's rate limiter."
         default: return nil

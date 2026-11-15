@@ -3,7 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { anthropic } from "../lib/anthropic.js";
 import { config } from "../lib/env.js";
-import { HttpError, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
+import { HttpError, paused, rateLimit, readJSON, requireAuth, requireMethod, sendError } from "../lib/http.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { logCache } from "../lib/cachelog.js";
 import { researchSystem } from "../lib/prompts.js";
@@ -61,6 +61,7 @@ export interface ResearchResponse {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (paused(res)) return;
   try {
     requireMethod(req, "POST");
     requireAuth(req);

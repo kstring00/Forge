@@ -5,7 +5,7 @@ import { anthropic } from "../lib/anthropic.js";
 import { config } from "../lib/env.js";
 import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
 import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
-import { recordUsage, refuseIfResting, startCheck } from "../lib/limits.js";
+import { recordUsage, refuseIfResting, startCheck, tierOf } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { logCache } from "../lib/cachelog.js";
 import { researchSystem } from "../lib/prompts.js";
@@ -20,6 +20,8 @@ const ResearchRequest = z.object({
   advantages: z.array(z.string()).default([]),
   constraints: z.array(z.string()).default([]),
   messages: z.array(z.any()).optional(),
+  /// The plan the app is on, for the 70% rule. Absent from older apps: free.
+  plan: z.enum(["free", "plus", "pro"]).optional(),
 });
 
 /// Dynamic filtering (the _20260209 tools) is documented for the larger models, not Haiku;
@@ -80,11 +82,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // check is remembered per device, not per install.
     let freeCheck = false;
     if (parsed.data.messages?.length) {
-      await refuseIfResting();
+      await refuseIfResting(tierOf(device, parsed.data.plan));
     } else {
       const h = req.headers["x-forge-device-token"];
       const deviceToken = (Array.isArray(h) ? h[0] : h)?.trim() || null;
-      freeCheck = (await startCheck(device, device.door === "appattest" ? deviceToken : null)).free;
+      freeCheck = (await startCheck(device, device.door === "appattest" ? deviceToken : null, parsed.data.plan)).free;
     }
 
     const messages: Anthropic.MessageParam[] = parsed.data.messages?.length

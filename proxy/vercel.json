@@ -5,7 +5,8 @@
     "api/research.ts": { "maxDuration": 120, "memory": 1024 },
     "api/health.ts": { "maxDuration": 10, "memory": 1024 },
     "api/attest.ts": { "maxDuration": 30, "memory": 1024 },
-    "api/usage.ts": { "maxDuration": 10, "memory": 1024 }
+    "api/usage.ts": { "maxDuration": 10, "memory": 1024 },
+    "api/spend.ts": { "maxDuration": 10, "memory": 1024 }
   },
   "rewrites": [
     { "source": "/", "destination": "/api/health" }

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { z } from "zod";
 import { HttpError, rateLimit, requireMethod, sendError } from "../lib/http.js";
 import { parseJSONBody, readRawBody, requireDevice } from "../lib/auth.js";
-import { recordUsage, refuseIfResting } from "../lib/limits.js";
+import { recordUsage, refuseIfResting, tierOf } from "../lib/limits.js";
 import { costUSD, round4 } from "../lib/pricing.js";
 import { ActionRequest, BriefResult, ScoreResult, payloadSchemas, withRationale, type Action, type Envelope } from "../lib/schemas.js";
 import { actionInstruction, briefInstruction, panelSystem, scoreInstruction, userTurn } from "../lib/prompts.js";
@@ -96,13 +96,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = await readRawBody(req);
     const device = await requireDevice(req, body);
     rateLimit();
-    await refuseIfResting();
 
     const parsed = ActionRequest.safeParse(parseJSONBody(body.raw));
     if (!parsed.success) {
       throw new HttpError(400, "bad_request", "Request did not match the contract: " + parsed.error.issues.map((i) => i.path.join(".") + " " + i.message).join("; "));
     }
     const { action, context, options } = parsed.data;
+    // "realityCheck" starts a check on its own; everything else follows one that is under way or done.
+    await refuseIfResting(tierOf(device, parsed.data.plan), action === "realityCheck");
     const lensType = context.lens ?? "business";
     const known = new Set(context.sources.map((s) => s.id));
     const lensKeys = lens(lensType).criteria.map((c) => c.key);

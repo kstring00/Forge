@@ -59,6 +59,9 @@ evidence rules server-side, and runs desk research for Reality Checks.
   Actions: expand, summarize, explainCriterion, designExperiment, nextStep, plan, compare,
   pivot, pitch, runRound, realityCheck, prefill. Payload shapes are in `lib/schemas.ts`
   and mirrored in `Forge/Services/AI/AIContracts.swift`.
+- `GET /api/spend` — the owner's spend numbers (owner's secret as a bearer token).
+- `GET /api/usage?day=YYYY-MM-DD` — every device's calls and spend that day (owner's secret).
+- `POST /api/attest` — how a device registers its App Attest key (decision 0021).
 - `POST /api/research` — `{ idea, advantages?, constraints?, messages? }` → one research
   turn with web search and fetch; `status` is `done` or `paused`. When paused, call again
   with the returned `messages`. Fetched pages come back as `sources` for the Library.
@@ -89,15 +92,26 @@ Set on Vercel:
 | `APPLE_APP_ATTEST_ROOT_PEM` | Optional pin of Apple's App Attest root. Otherwise fetched once per instance from apple.com. |
 | `DEVICECHECK_KEY_ID`, `DEVICECHECK_PRIVATE_KEY` | A DeviceCheck key (.p8 contents, newlines as `\n`) from the developer account, for the fallback. |
 | `FORGE_DEV_TOKENS` | Comma-separated developer tokens (16+ characters). `FORGE_PROXY_TOKEN` is read as the first. |
-| `FORGE_ADMIN_TOKEN` | Bearer for `GET /api/usage`. |
-| `FORGE_CHECKS_PER_DEVICE_PER_DAY` | Reality Checks a device may start per UTC day. Default 5. |
-| `FORGE_DAILY_SPEND_USD` | The whole proxy's ceiling per UTC day. Default 5. |
+| `FORGE_OWNER_SECRET` | The owner's secret (16+ characters): bearer for `GET /api/spend` and `GET /api/usage`, and the key the owner types into the app for Settings → Spend. `FORGE_ADMIN_TOKEN` is read as the older name. |
+| `FORGE_CHECKS_PER_DEVICE_PER_DAY` | Reality Checks a device may start per day. Default 5. |
+| `FORGE_DAILY_SPEND_USD` | The whole proxy's ceiling per day, in dollars, counted from actual token usage. Default 3. |
+| `FORGE_FREE_TIER_SHARE` | The share of the ceiling at which free-tier users can no longer start a check. Default 0.7. Paid plans carry on to the ceiling. |
+| `FORGE_DAY_TIMEZONE` | Where a "day" rolls over. Default `America/Chicago`. |
+| `RESEND_API_KEY` | A Resend API key, so the proxy can email the owner when a day's spend reaches 70% and 100% of the ceiling. Without it the alerts are only logged. |
+| `ALERT_EMAIL_TO`, `ALERT_EMAIL_FROM` | Default `kyle@stringhamwebdesign.com` and `Hunch <onboarding@resend.dev>` (Resend's test sender, which only delivers to the address the Resend account was opened with). |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Set by Vercel's Upstash Redis integration (or `UPSTASH_REDIS_REST_URL/_TOKEN`). Holds attested keys, challenges and usage. Without it the proxy falls back to per-instance memory and `/api/health` reports `store: "memory"`: keys and limits then reset on every cold start. |
 
 Past either limit the proxy answers 429 with "The panel is resting until tomorrow."; the
 app shows that line as is. Every served call logs one JSON line
 `{ at: "usage", device, door, action, costUSD }`, and `GET /api/usage?day=YYYY-MM-DD`
-(admin token) lists every device with its checks, calls and spend against the ceiling.
+(owner's secret) lists every device with its checks, calls and spend against the ceiling.
+
+**Spend rules (decision 0046).** Every request carries the plan the app is on (`plan`:
+free, plus or pro) inside the signed body. Under 70% of the day's ceiling everyone is
+served. From 70%, a free-tier user can no longer *start* a check (a check already under
+way and follow-ups on a checked idea carry on). At 100% everything rests until midnight.
+The owner is emailed once per day at each mark. `GET /api/spend` (owner's secret) returns
+today, this week (from Monday) and this month.
 
 App side: the App Attest capability on the App ID, the entitlement in
 `Forge/Config/Forge.entitlements`, and `PROXY_TOKEN` blanked for Release in

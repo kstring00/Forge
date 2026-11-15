@@ -33,11 +33,23 @@ export const config = {
   /// DeviceCheck fallback: a key from the developer account.
   get deviceCheckKeyID() { return (process.env.DEVICECHECK_KEY_ID ?? "").trim(); },
   get deviceCheckPrivateKey() { return (process.env.DEVICECHECK_PRIVATE_KEY ?? "").trim(); },
-  /// The developer's token for /api/usage.
-  get adminToken() { return (process.env.FORGE_ADMIN_TOKEN ?? "").trim(); },
+  /// The owner's secret, for the spend numbers, /api/usage and the /owner
+  /// dashboard. 16 characters or more. FORGE_ADMIN_TOKEN is the older name.
+  get ownerSecret() {
+    const s = (process.env.FORGE_OWNER_SECRET ?? process.env.FORGE_ADMIN_TOKEN ?? "").trim();
+    return s.length >= 16 ? s : "";
+  },
+  get adminToken() { return this.ownerSecret; },
   /// Limits. Both fail politely.
   get checksPerDevicePerDay() { return num("FORGE_CHECKS_PER_DEVICE_PER_DAY", 5); },
-  get dailySpendUSD() { return num("FORGE_DAILY_SPEND_USD", 5); },
+  /// The day's ceiling in dollars, across every device, from actual token usage.
+  get dailySpendUSD() { return num("FORGE_DAILY_SPEND_USD", 3); },
+  /// The share of the ceiling at which free-tier checks stop. Paid plans go on to the ceiling.
+  get freeTierShare() { const v = num("FORGE_FREE_TIER_SHARE", 0.7); return v > 0 && v <= 1 ? v : 0.7; },
+  /// Owner alerts by email, through Resend's HTTP API. Without a key, alerts are only logged.
+  get resendApiKey() { return (process.env.RESEND_API_KEY ?? "").trim(); },
+  get alertEmailTo() { return (process.env.ALERT_EMAIL_TO ?? "kyle@stringhamwebdesign.com").trim(); },
+  get alertEmailFrom() { return (process.env.ALERT_EMAIL_FROM ?? "Hunch <onboarding@resend.dev>").trim(); },
   /// Models live in config/hunch.ts (decision 0042), read through lib/config.ts.
   get researchModel() { return modelFor("research"); },
   /// Per research turn; a paused turn's continuations count against the same

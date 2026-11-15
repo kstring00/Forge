@@ -41,7 +41,8 @@ protocol EntitlementService: AnyObject {
 @MainActor
 final class LocalEntitlements: EntitlementService {
     static let ledgerKey = "membership.ledger"
-    static let stateKey = "membership.state"
+    /// Shared with `PlanSignal`, which reads the plan for the network client.
+    static let stateKey = PlanSignal.stateKey
     static let fairUseKey = "membership.fairUse"
 
     private let defaults: UserDefaults

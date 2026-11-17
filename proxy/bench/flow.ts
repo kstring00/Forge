@@ -53,16 +53,20 @@ function context(idea: Idea, library: BenchSource[], packet?: any, researchedAt?
   };
 }
 
-export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promise<CheckRecord> {
-  const rec: CheckRecord = { flowVersion, idea, stages: [], research: { turns: 0, notes: "", sources: [] }, library: [], prefill: null, rationale: "", followUps: [], errors: [] };
+/// What one research pass leaves behind: the Library the app would save and
+/// the packet every later call reads.
+export interface Researched { library: BenchSource[]; packet?: any; researchedAt: string }
 
+/// Steps 1 and 2 of a check: research one turn per call, then saveResearch.
+/// Fills `rec` as it goes; returns null when research failed (see rec.errors).
+export async function research(idea: Idea, rec: Pick<CheckRecord, "stages" | "research" | "library" | "errors">): Promise<Researched | null> {
   // 1. Research, one turn per call, while paused.
   let messages: unknown[] | undefined;
   const gathered: any[] = [];
   for (let turn = 1; turn <= maxResearchTurns; turn++) {
     const t0 = Date.now();
     const r = await call(researchHandler as never, { idea: { id: idea.id, title: idea.title, originalText: idea.text }, advantages: [], constraints: [], messages });
-    if (r.status !== 200) { rec.errors.push(`research ${r.status}: ${JSON.stringify(r.body).slice(0, 300)}`); return rec; }
+    if (r.status !== 200) { rec.errors.push(`research ${r.status}: ${JSON.stringify(r.body).slice(0, 300)}`); return null; }
     rec.stages.push(stageFrom("research", r.body, Date.now() - t0));
     rec.research.turns = turn;
     gathered.push(...r.body.sources);
@@ -84,8 +88,26 @@ export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promis
   }
   if (rec.research.notes.trim()) library.push(source("Research notes", rec.research.notes.trim(), null, "text"));
   rec.library = library.map((s) => ({ id: s.id, title: s.title, url: s.url, kind: s.kind }));
+  return { library, packet: rec.research.packet, researchedAt: new Date().toISOString() };
+}
 
-  const researchedAt = new Date().toISOString();
+/// The scoring step of a check on its own: the five panelists score from the
+/// packet. The same instruction, schema, model and request a check's scoring
+/// uses (the server's "rescore" is that call), without the Brief after it.
+export async function score(idea: Idea, r: Researched): Promise<{ criteria: any[]; panel: any[]; stage: StageCost } | { error: string }> {
+  const t0 = Date.now();
+  const re = await call(actionHandler as never, { action: "rescore", context: context(idea, r.library, r.packet, r.researchedAt) });
+  if (re.status !== 200) return { error: `score ${re.status}: ${JSON.stringify(re.body).slice(0, 300)}` };
+  return { criteria: re.body.payload.criteria ?? [], panel: re.body.payload.panel ?? [], stage: stageFrom("scoring", re.body, Date.now() - t0) };
+}
+
+export async function runCheck(idea: Idea, opts: { followUps: boolean }): Promise<CheckRecord> {
+  const rec: CheckRecord = { flowVersion, idea, stages: [], research: { turns: 0, notes: "", sources: [] }, library: [], prefill: null, rationale: "", followUps: [], errors: [] };
+
+  const researched = await research(idea, rec);
+  if (!researched) return rec;
+  const { library, researchedAt } = researched;
+
   // 3. The prefill reads the packet.
   const t0 = Date.now();
   const p = await call(actionHandler as never, { action: "prefill", context: context(idea, library, rec.research.packet, researchedAt) });

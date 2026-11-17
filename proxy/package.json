@@ -12,6 +12,8 @@
     "deploy": "vercel --prod",
     "bench:checks": "tsx bench/run-checks.ts",
     "bench:compare": "tsx bench/compare.ts",
+    "bench:swing": "tsx bench/swing.ts",
+    "bench:swing-report": "tsx bench/swing-report.ts",
     "serve": "tsx scripts/serve.ts"
   },
   "engines": {
